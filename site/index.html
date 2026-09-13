@@ -1,0 +1,562 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font:14px system-ui;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Asterisk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F4F1; --surface:#FFFFFF; --ink:#14130F; --muted:#6A6862; --line:#D8D9D3; --line-strong:#B9BAB3;
+  --ast:#D9442A; --ast-ink:#FFFFFF; --ast-soft:#FBE4DE;
+  --hl:#FFE94D; --hl-ink:#14130F;
+  --ok:#1E6B52; --ok-soft:#DDEEE6;
+  --warn:#8A6A00; --warn-soft:#F5EBC8;
+  --shadow:0 18px 40px rgba(20,19,15,.12);
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121311; --surface:#1A1B18; --ink:#ECECE6; --muted:#A2A29A; --line:#2E2F2A; --line-strong:#4A4B45;
+    --ast:#FF8A70; --ast-ink:#1A0F0C; --ast-soft:#3A221D;
+    --hl:#5E4F00; --hl-ink:#FFF3B0;
+    --ok:#5FBFA0; --ok-soft:#1E3A30;
+    --warn:#E3C25A; --warn-soft:#3A3114;
+    --shadow:0 18px 40px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121311; --surface:#1A1B18; --ink:#ECECE6; --muted:#A2A29A; --line:#2E2F2A; --line-strong:#4A4B45;
+  --ast:#FF8A70; --ast-ink:#1A0F0C; --ast-soft:#3A221D;
+  --hl:#5E4F00; --hl-ink:#FFF3B0;
+  --ok:#5FBFA0; --ok-soft:#1E3A30;
+  --warn:#E3C25A; --warn-soft:#3A3114;
+  --shadow:0 18px 40px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;padding-inline:20px;padding-block:0 48px}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ast);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto}
+.ast{color:var(--ast);font-weight:800}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.015em;text-wrap:balance;margin:0}
+h2{font-weight:800;font-size:clamp(28px,3.6vw,42px);line-height:1.08;margin-bottom:14px}
+h3{font-weight:700;font-size:20px;margin-bottom:6px}
+p{margin:0 0 14px}
+.lead{font-size:19px;line-height:1.55;max-width:58ch}
+.small{font-size:14px;color:var(--muted)}
+.fine{font-family:var(--body);font-size:12.5px;line-height:1.5;color:var(--muted);letter-spacing:.01em}
+/* nav */
+.nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.brand{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.02em;text-decoration:none}
+.navlinks{display:flex;gap:22px;font-family:var(--display);font-size:14.5px;font-weight:500}
+.navlinks a{text-decoration:none;color:var(--muted)}
+.navlinks a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-family:var(--display);font-weight:700;font-size:15px;padding:11px 18px;border-radius:4px;text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--ast);border-color:var(--ast);color:var(--ast-ink)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover{background:var(--surface);color:var(--ink);border-color:var(--ink)}
+.btn.red{background:var(--ast);border-color:var(--ast);color:var(--ast-ink)}
+.btn.red:hover{filter:brightness(.95)}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:center;padding-block:64px 56px}
+.hero h1{font-weight:800;font-size:clamp(44px,7vw,92px);line-height:.98}
+.hero h1 .star{display:inline-block;color:var(--ast);cursor:pointer;transform-origin:60% 40%;animation:pulse 1.4s ease-out 1;text-decoration:none}
+.hero h1 .star:hover{transform:rotate(15deg)}
+@keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.hero .lead{margin-top:22px}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;max-width:560px}
+.cta input{flex:1 1 220px;min-width:0;font:inherit;font-size:16px;padding:11px 14px;border:1px solid var(--line-strong);border-radius:4px;background:var(--surface);color:var(--ink)}
+.cta .note{flex-basis:100%;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:2px}
+.cta .done{flex-basis:100%;background:var(--ok-soft);color:var(--ok);font-family:var(--display);font-weight:600;padding:10px 14px;border-radius:4px}
+/* mock stack */
+.stack{position:relative;min-height:540px}
+.checkout{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px 22px 20px;width:min(100%,372px);box-shadow:var(--shadow);font-family:var(--display);transform:rotate(-1.5deg);transform-origin:top left}
+.checkout .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+.checkout .logo i{display:inline-block;width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#6C7CFF,#2B3BD9)}
+.checkout .plan{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.checkout .plan b{font-size:16px}
+.checkout .plan span{font-size:13px;color:var(--muted)}
+.checkout .price{font-size:34px;font-weight:800;margin:16px 0 2px;letter-spacing:-.02em}
+.checkout .due{font-size:13px;color:var(--muted)}
+.checkout .cbtn{margin-top:16px;width:100%;border:0;border-radius:8px;background:#2B3BD9;color:#fff;font-family:var(--display);font-weight:700;font-size:16px;padding:13px}
+.checkout .legal{margin-top:12px;font-size:10.5px;color:var(--muted);line-height:1.35}
+.card{position:absolute;right:-8px;top:150px;width:min(100%,384px);background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--ast);border-radius:10px;padding:16px 18px 14px;box-shadow:var(--shadow);font-family:var(--display);transition:opacity .2s,transform .2s}
+.card.hidden-card{opacity:0;transform:translateY(8px);pointer-events:none}
+.card .hd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.card .hd b{font-size:15px;letter-spacing:-.01em}
+.score{font-family:var(--mono);font-size:12px;letter-spacing:.04em;background:var(--ast);color:var(--ast-ink);padding:3px 8px;border-radius:3px;white-space:nowrap}
+.flag{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.4}
+.flag:first-of-type{border-top:0}
+.flag i{display:block;width:10px;height:10px;border-radius:50%;background:var(--ast);margin-top:6px}
+.flag i.med{background:var(--warn)}
+.flag i.low{background:var(--muted)}
+.flag b{display:block}
+.flag q{quotes:none;display:block;font-family:var(--body);font-style:italic;font-size:13px;color:var(--muted);margin-top:2px}
+.flag q mark{background:var(--hl);color:var(--hl-ink);padding:0 2px}
+.card .act{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+.card .act b{color:var(--ink)}
+.reveal{position:absolute;left:0;bottom:-6px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;background:transparent;border:1px solid var(--line-strong);color:var(--muted);padding:6px 10px;border-radius:3px}
+.reveal:hover{color:var(--ink);border-color:var(--ink)}
+/* proof */
+.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding-block:40px 8px}
+.proof div{border-top:2px solid var(--ink);padding-top:12px}
+.proof .n{font-family:var(--display);font-weight:800;font-size:clamp(30px,4vw,44px);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.proof .n sup{font-size:.45em;color:var(--ast);vertical-align:top;margin-left:2px}
+.proof p{margin:8px 0 0;font-size:15px;max-width:30ch}
+section{padding-block:56px 20px}
+section.tight{padding-block:36px 8px}
+/* moments */
+.moments{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+.moment{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 20px 18px}
+.moment .k{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ast);margin-bottom:10px}
+.moment p{font-size:15.5px;margin:0}
+.vig{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--bg);font-family:var(--display);font-size:13px;line-height:1.45}
+.vig .row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px dashed var(--line)}
+.vig .row:first-child{border-top:0}
+.vig .row span:last-child{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.vig .ok{color:var(--ok);font-weight:600}
+.vig .bad{color:var(--ast);font-weight:600}
+/* traps */
+.traps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.trap{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 14px 12px}
+.trap b{font-family:var(--display);font-size:15px;display:block;margin-bottom:6px}
+.trap q{quotes:none;font-style:italic;font-size:13.5px;color:var(--muted);line-height:1.45;display:block}
+.trap q mark{background:var(--hl);color:var(--hl-ink);padding:0 2px}
+/* demo */
+.demo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-top:20px;align-items:start}
+.demo textarea{width:100%;min-height:260px;resize:vertical;font-family:var(--body);font-size:14.5px;line-height:1.5;padding:14px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
+.chip{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-family:var(--display);font-size:13.5px;font-weight:600;padding:7px 12px;border-radius:999px}
+.chip:hover,.chip[aria-pressed="true"]{border-color:var(--ast);color:var(--ast)}
+.demo .status{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:10px;min-height:18px}
+.result{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--ast);border-radius:10px;padding:18px 20px 16px;font-family:var(--display);min-height:260px}
+.result .hd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.result .sum{font-family:var(--body);font-size:15.5px;margin:0 0 8px}
+.result .empty{color:var(--muted);font-family:var(--body);font-size:15px}
+.result ul.acts{margin:10px 0 0;padding-left:18px;font-size:14px}
+.result ul.acts li{margin-bottom:4px}
+/* index */
+.index{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-top:20px;overflow-x:auto}
+.index table{width:100%;min-width:560px;border-collapse:collapse;font-family:var(--display);font-size:14.5px}
+.index th{text-align:left;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+.index td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.index tr:last-child td{border-bottom:0}
+.index .bar{display:inline-block;height:8px;width:120px;background:var(--line);vertical-align:middle;margin-right:8px;position:relative;top:-1px}
+.index .bar i{display:block;height:100%;background:var(--ast)}
+.index td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.index .tag{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+/* campus */
+.campus{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start;background:var(--ok-soft);border-radius:12px;padding:32px;margin-top:20px}
+.campus ul{margin:0;padding-left:20px}
+.campus li{margin-bottom:8px;font-size:15.5px}
+.campus li b{font-family:var(--display)}
+/* pricing */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.tier{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+.tier.pick{border-color:var(--ast);box-shadow:var(--shadow)}
+.tier .name{font-family:var(--display);font-weight:800;font-size:18px}
+.tier .price{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-.02em;margin:8px 0 2px}
+.tier .per{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tier ul{padding-left:18px;margin:14px 0 0;font-size:14.5px}
+.tier li{margin-bottom:6px}
+/* final */
+.final{background:var(--ink);color:var(--bg);border-radius:12px;padding:44px 36px;margin-top:20px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:28px;align-items:center}
+.final h2{color:var(--bg)}
+.final .cta input{background:var(--bg);color:var(--ink);border-color:transparent}
+.final .cta .note{color:color-mix(in srgb,var(--bg) 70%,transparent)}
+.final .btn{background:var(--ast);border-color:var(--ast);color:var(--ast-ink)}
+footer{margin-top:40px;border-top:1px solid var(--line);padding-top:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+footer .fine p{margin:0 0 6px}
+footer .fine sup{color:var(--ast)}
+@media (prefers-reduced-motion: reduce){.hero h1 .star{animation:none}.card{transition:none}html{scroll-behavior:auto}}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:70px;padding-block:44px 40px}
+  .stack{min-height:0;padding-bottom:60px}
+  .checkout{transform:none}
+  .card{position:relative;right:auto;top:auto;margin-top:-30px;margin-left:auto;width:min(100%,400px)}
+  .reveal{position:static;margin-top:12px}
+  .proof,.moments,.traps,.tiers{grid-template-columns:1fr 1fr}
+  .demo,.campus,.final,footer{grid-template-columns:1fr}
+  .navlinks{display:none}
+}
+@media (max-width:560px){
+  .proof,.moments,.traps,.tiers{grid-template-columns:1fr}
+  .campus{padding:22px}
+  .final{padding:30px 22px}
+}
+</style>
+
+<nav class="nav" aria-label="Site">
+  <div class="wrap">
+    <a class="brand" href="#top">Asterisk<span class="ast">*</span></a>
+    <div class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#traps">What it catches</a>
+      <a href="#demo">Try it</a>
+      <a href="#campus">On campus</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <a class="btn" href="#join">Get early access</a>
+  </div>
+</nav>
+
+<main class="wrap" id="top">
+<section class="hero">
+  <div>
+    <p class="eyebrow">The fine-print shield · launch preview</p>
+    <h1>Start your free trial<a class="star" id="star" href="#stack" aria-label="Reveal what the asterisk hides">*</a></h1>
+    <p class="lead">Asterisk reads the terms before you commit, remembers exactly what you agreed to, and gets you out when you need out. Every trial, subscription, lease, ticket and contract, checked in the moment your finger is over the button.</p>
+    <form class="cta" id="join" onsubmit="return joinList(event)">
+      <label for="email" class="visually-hidden" style="position:absolute;left:-9999px">Email</label>
+      <input id="email" type="email" placeholder="you@anywhere.com" required autocomplete="email">
+      <button class="btn red" type="submit">Get early access</button>
+      <span class="note">No affiliate links. No bank connection. Nothing sold. Ever.</span>
+    </form>
+  </div>
+  <div class="stack" id="stack">
+    <div class="checkout" aria-label="Example checkout page">
+      <div class="logo"><i></i>StreamMax</div>
+      <div class="plan"><div><b>Premium</b><br><span>4K · 4 screens · no ads</span></div><span>7-day free trial</span></div>
+      <div class="price">$0.00</div>
+      <div class="due">due today</div>
+      <button class="cbtn" type="button" onclick="toggleCard(true)">Start free trial</button>
+      <div class="legal">By continuing you agree to the Terms of Service and Privacy Policy. Offer available to new subscribers. Cancellation terms apply. See details.</div>
+    </div>
+    <div class="card" id="card" role="status" aria-live="polite">
+      <div class="hd"><b>Asterisk<span class="ast">*</span> read this page</b><span class="score">Trap score 8 / 10</span></div>
+      <div class="flag"><i></i><div><b>Renews at $19.99 a month on 20 Sep</b><q>"…automatically converts to a <mark>monthly Premium subscription at $19.99</mark> after the trial period…"</q></div></div>
+      <div class="flag"><i></i><div><b>Cancel by phone only, weekdays 9–5 ET</b><q>"…cancellation requests must be made by <mark>calling Member Services</mark> during business hours…"</q></div></div>
+      <div class="flag"><i class="med"></i><div><b>Arbitration, class-action waiver, 30-day mail opt-out</b><q>"…you waive the right to participate in a <mark>class action</mark>…"</q></div></div>
+      <div class="flag"><i class="low"></i><div><b>Price can change with 7 days' notice</b></div></div>
+      <div class="act"><b>Do this:</b> pay with a virtual card, save the snapshot, set a cancel reminder for 18 Sep.</div>
+    </div>
+    <button class="reveal" id="revealBtn" type="button" onclick="toggleCard()">Hide the card</button>
+  </div>
+</section>
+
+<div class="proof" aria-label="Why it matters">
+  <div><div class="n">$219<sup>1</sup></div><p>a month is what households actually pay for subscriptions. They estimate $86.</p></div>
+  <div><div class="n">76%<sup>2</sup></div><p>of adults say cancelling is made deliberately hard. Three in four sites use dark patterns.</p></div>
+  <div><div class="n">0<sup>3</sup></div><p>tools read the terms while your finger is over the button. All of them make you upload a document afterwards.</p></div>
+</div>
+
+<section id="how">
+  <p class="eyebrow">How it works</p>
+  <h2>Three moments. One record you own.</h2>
+  <p class="lead">Every tool for fine print today works after the fact. Asterisk works before the charge exists, and keeps the evidence for the day you need it.</p>
+  <div class="moments">
+    <div class="moment">
+      <div class="k">1 · Shield, at commitment</div>
+      <h3>It reads the page you are about to accept.</h3>
+      <p>A browser extension on Chrome, Edge and Safari, and a share sheet on your phone for leases, gym contracts and screenshots. The card appears in under three seconds, with the exact clause quoted.</p>
+      <div class="vig">
+        <div class="row"><span class="bad">Auto-renews after trial</span><span>$19.99 / mo</span></div>
+        <div class="row"><span class="bad">Cancel by phone only</span><span>M–F 9–5</span></div>
+        <div class="row"><span>Junk fees</span><span class="ok">none</span></div>
+        <div class="row"><span>Data sold to partners</span><span class="ok">none</span></div>
+      </div>
+    </div>
+    <div class="moment">
+      <div class="k">2 · Memory, after commitment</div>
+      <h3>One tap saves what you agreed to.</h3>
+      <p>Merchant, price, renewal date, how to cancel, and a timestamped snapshot of the terms as they were shown to you. Companies change their terms. Your snapshot is the leverage.</p>
+      <div class="vig">
+        <div class="row"><span>StreamMax Premium</span><span>renews 20 Sep</span></div>
+        <div class="row"><span>IronWorks Fitness</span><span>30-day notice</span></div>
+        <div class="row"><span>Maple Court lease</span><span>renews 1 Jun</span></div>
+        <div class="row"><span class="ok">Reminder set</span><span>18 Sep, 9:00</span></div>
+      </div>
+    </div>
+    <div class="moment">
+      <div class="k">3 · Action, when it goes wrong</div>
+      <h3>Cancel for me. Dispute this.</h3>
+      <p>Asterisk follows the merchant's known cancellation path and files proof. If they charge you anyway, it drafts the refund demand, the chargeback statement or the complaint from your own snapshot, with the deadlines tracked.</p>
+      <div class="vig">
+        <div class="row"><span>Cancellation sent</span><span>email + portal</span></div>
+        <div class="row"><span>Confirmation saved</span><span>#48213</span></div>
+        <div class="row"><span class="bad">Charged after cancel</span><span>$19.99</span></div>
+        <div class="row"><span class="ok">Dispute drafted</span><span>ready to send</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="traps">
+  <p class="eyebrow">What it catches</p>
+  <h2>The eight sentences that cost people money.</h2>
+  <div class="traps">
+    <div class="trap"><b>Auto-renewal</b><q>"…will automatically renew for successive <mark>annual</mark> terms unless cancelled…"</q></div>
+    <div class="trap"><b>Cancellation traps</b><q>"…must provide written notice <mark>30 days prior</mark>, in person or by certified mail…"</q></div>
+    <div class="trap"><b>Junk fees</b><q>"…plus a <mark>$39 resort fee</mark>, service fee and processing fee at checkout…"</q></div>
+    <div class="trap"><b>Early termination</b><q>"…an early termination fee equal to <mark>the remaining months</mark> of the term…"</q></div>
+    <div class="trap"><b>Price changes</b><q>"…we may change the price <mark>at any time</mark> with notice by email…"</q></div>
+    <div class="trap"><b>Arbitration</b><q>"…resolved by <mark>binding arbitration</mark>; you waive any right to a jury or class action…"</q></div>
+    <div class="trap"><b>Joint liability</b><q>"…each tenant is <mark>jointly and severally</mark> liable for the full rent…"</q></div>
+    <div class="trap"><b>Data sale</b><q>"…share your information with <mark>marketing partners</mark> unless you opt out…"</q></div>
+  </div>
+</section>
+
+<section id="demo">
+  <p class="eyebrow">Try it</p>
+  <h2>Paste the fine print. Get the card.</h2>
+  <p class="lead">Pick a sample or paste anything: a lease, a gym contract, the terms under a "Start free trial" button.</p>
+  <div class="demo">
+    <div>
+      <div class="chips" role="group" aria-label="Samples">
+        <button class="chip" type="button" data-sample="stream" onclick="pickSample('stream',this)">Streaming trial</button>
+        <button class="chip" type="button" data-sample="gym" onclick="pickSample('gym',this)">Gym contract</button>
+        <button class="chip" type="button" data-sample="lease" onclick="pickSample('lease',this)">Student lease</button>
+        <button class="chip" type="button" data-sample="phone" onclick="pickSample('phone',this)">Phone plan</button>
+      </div>
+      <label for="terms" style="position:absolute;left:-9999px">Terms text</label>
+      <textarea id="terms" placeholder="Paste terms, a lease, or the text under a checkout button…"></textarea>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+        <button class="btn red" type="button" id="readBtn" onclick="readTerms()">Read the fine print</button>
+        <button class="btn ghost" type="button" id="stopBtn" onclick="stopRead()" hidden>Stop</button>
+        <span class="status" id="status"></span>
+      </div>
+    </div>
+    <div class="result" id="result" aria-live="polite">
+      <div class="empty">Your card appears here. Samples work instantly. Anything you paste is read live by Claude when you open this page signed in; otherwise the samples show what it does.</div>
+    </div>
+  </div>
+</section>
+
+<section id="index">
+  <p class="eyebrow">Coming at launch</p>
+  <h2>The Trap Index.</h2>
+  <p class="lead">Every catch, anonymized, rolls into public scorecards: which companies hide the renewal, which ones make you call to cancel, which ones charge the fees. A how-to-cancel page for every one of them.</p>
+  <div class="index">
+    <table>
+      <thead><tr><th>Category</th><th>Trap score</th><th>Most common trap</th></tr></thead>
+      <tbody>
+        <tr><td>Gym memberships</td><td class="num"><span class="bar"><i style="width:88%"></i></span>8.8</td><td>Cancel in person or by certified mail</td></tr>
+        <tr><td>Ticketing</td><td class="num"><span class="bar"><i style="width:82%"></i></span>8.2</td><td>Fees revealed at the last step</td></tr>
+        <tr><td>Meal kits</td><td class="num"><span class="bar"><i style="width:74%"></i></span>7.4</td><td>Weekly auto-ship after the intro box</td></tr>
+        <tr><td>Streaming</td><td class="num"><span class="bar"><i style="width:69%"></i></span>6.9</td><td>Trial converts to a higher tier</td></tr>
+        <tr><td>Student housing</td><td class="num"><span class="bar"><i style="width:66%"></i></span>6.6</td><td>Joint liability and auto-renewal</td></tr>
+        <tr><td>Dating apps</td><td class="num"><span class="bar"><i style="width:61%"></i></span>6.1</td><td>Weekly billing shown as a daily price</td></tr>
+      </tbody>
+    </table>
+    <p class="fine" style="margin:12px 0 0">Illustrative categories and scores for the launch preview, not measurements of any company. The live index is built from real scans after launch.</p>
+  </div>
+</section>
+
+<section id="campus">
+  <p class="eyebrow">On campus</p>
+  <h2>Students sign more fine print than anyone.</h2>
+  <div class="campus">
+    <div>
+      <p class="lead" style="margin-bottom:10px">First leases. Student deals that quietly convert to full price. Textbooks billed to tuition unless you opt out by a buried deadline. Asterisk launches campus by campus, free for students on a school email for the launch semester.</p>
+      <a class="btn" href="#join">Bring Asterisk to your school</a>
+    </div>
+    <ul>
+      <li><b>Lease Clinic.</b> Photograph the lease, get the card, and add to your school's landlord index. The more students at your campus scan, the better the index for everyone after you.</li>
+      <li><b>Student deal watchdog.</b> A warning 14 days before Prime Student, Spotify, Adobe or any student plan converts to full price, with the one-tap cancel path.</li>
+      <li><b>Campus deadlines.</b> Textbook opt-out and payment-plan deadlines for your school, once, for everyone who selects it.</li>
+      <li><b>Roommate groups.</b> Shared leases, utilities and split subscriptions in one place, so nobody gets stuck with the bill.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="pricing">
+  <p class="eyebrow">Pricing</p>
+  <h2>The first catch is free. The record costs less than one forgotten trial.</h2>
+  <div class="tiers">
+    <div class="tier">
+      <div class="name">Free</div>
+      <div class="price">$0</div>
+      <div class="per">forever</div>
+      <ul><li>5 shield scans a month</li><li>The vault and renewal alerts</li><li>Students: unlimited scans for the launch semester</li></ul>
+    </div>
+    <div class="tier pick">
+      <div class="name">Plus</div>
+      <div class="price">$4.99</div>
+      <div class="per">a month, or $39.99 a year · students $19.99 a year</div>
+      <ul><li>Unlimited scans on web and phone</li><li>Cancellation paths for every merchant</li><li>Evidence snapshots and family sharing</li></ul>
+    </div>
+    <div class="tier">
+      <div class="name">Pro</div>
+      <div class="price">$9.99</div>
+      <div class="per">a month</div>
+      <ul><li>"Cancel for me" execution with proof</li><li>"Dispute this": refunds, chargebacks, complaints</li><li>Priority call agent when it ships</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="final">
+    <div>
+      <h2>They hide it. We find it.<span class="ast">*</span></h2>
+      <p class="lead" style="color:inherit;opacity:.85">Early access opens campus by campus this winter. Get on the list and we will tell you the day it reaches yours.</p>
+    </div>
+    <form class="cta" onsubmit="return joinList(event)">
+      <label for="email2" style="position:absolute;left:-9999px">Email</label>
+      <input id="email2" type="email" placeholder="you@anywhere.com" required autocomplete="email">
+      <button class="btn" type="submit">Get early access</button>
+      <span class="note">One email when it launches. Nothing else.</span>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <a class="brand" href="#top">Asterisk<span class="ast">*</span></a>
+    <p class="small" style="margin-top:8px">We read the * so you don't. A working name; the company and the product are in preview.</p>
+  </div>
+  <div class="fine">
+    <p><sup>1</sup> C+R Research via Self Financial, "cost of unused subscriptions": actual spend $219 a month against an estimate of $86. <sup>2</sup> EmailTooltester survey on cancellation, and the ICPEN sweep that found dark patterns on 75.7% of 642 sites. <sup>3</sup> Our September 2026 review of FinePrint, Redline, Justee, Contract Crab, DocuSign Iris and ToS;DR: all require uploading a document after the fact.</p>
+    <p>Our fine print: Asterisk summarizes documents and drafts letters you file yourself. It is not a law firm and does not replace one. It never takes affiliate or merchant money, never connects to your bank, and never sells data. It reads a page only when you are on a commitment page or you ask it to.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+// ----- hero card toggle -----
+var cardShown = true;
+function toggleCard(force){
+  var card = document.getElementById('card');
+  var btn = document.getElementById('revealBtn');
+  cardShown = (typeof force === 'boolean') ? force : !cardShown;
+  card.classList.toggle('hidden-card', !cardShown);
+  btn.textContent = cardShown ? 'Hide the card' : 'Reveal what the * hides';
+}
+document.getElementById('star').addEventListener('click', function(e){ e.preventDefault(); toggleCard(true); document.getElementById('stack').scrollIntoView({behavior:'smooth', block:'center'}); });
+
+// ----- waitlist (preview: front-end state only) -----
+function joinList(e){
+  e.preventDefault();
+  var form = e.target;
+  var input = form.querySelector('input[type=email]');
+  var email = (input.value || '').trim();
+  if(!email) return false;
+  try { localStorage.setItem('asterisk_waitlist', JSON.stringify({email: email, at: Date.now()})); } catch(_) {}
+  var done = document.createElement('div');
+  done.className = 'done';
+  done.textContent = "You're on the list, " + email + ". This preview keeps it on your device; the live site sends one email at launch.";
+  form.innerHTML = '';
+  form.appendChild(done);
+  return false;
+}
+
+// ----- demo -----
+var SAMPLES = {
+  stream: {
+    text: "StreamMax Premium Free Trial Terms. Your 7-day free trial begins when you click Start free trial. Unless you cancel before the end of the trial period, your membership automatically converts to a monthly Premium subscription at $19.99 per month, billed to the payment method on file, and renews monthly until cancelled. Cancellation requests must be made by calling Member Services at 1-800-555-0148 during business hours (Monday to Friday, 9am to 5pm ET). Refunds are not provided for partial billing periods. We may change the price of your subscription at any time with 7 days' notice by email. Any dispute will be resolved by binding individual arbitration and you waive the right to participate in a class action; you may opt out of arbitration by mailing written notice within 30 days of accepting these terms.",
+    card: {trapScore: 8, summary: "A $0 trial that converts to $19.99 a month, cancellable only by phone on weekdays, with arbitration and price-change clauses.", flags: [
+      {title:"Renews at $19.99 a month after the 7-day trial", detail:"Converts automatically to a monthly subscription unless cancelled before the trial ends.", quote:"automatically converts to a monthly Premium subscription at $19.99", severity:"high"},
+      {title:"Cancel by phone only, weekdays 9–5 ET", detail:"No online cancellation; weekend or evening attempts will not work.", quote:"must be made by calling Member Services", severity:"high"},
+      {title:"Arbitration and class-action waiver, 30-day mail opt-out", detail:"You keep the right to sue only if you mail an opt-out within 30 days.", quote:"binding individual arbitration", severity:"medium"},
+      {title:"Price can change with 7 days' notice", detail:"The price you see today is not guaranteed.", quote:"change the price of your subscription at any time", severity:"low"}
+    ], actions:["Pay with a virtual card you can freeze", "Save this snapshot and set a cancel reminder two days before the trial ends", "Mail the arbitration opt-out this week if you care about it"]}
+  },
+  gym: {
+    text: "IronWorks Fitness Membership Agreement. Initial term: 12 months, then month-to-month. Monthly dues of $44.99 plus an annual enhancement fee of $59 charged in the second month and every 12 months thereafter. To cancel, the member must deliver written notice in person at the home club or by certified mail at least 30 days before the next billing date; email and phone cancellations are not accepted. Cancellation during the initial term requires payment of an early termination fee equal to the remaining months of the initial term or $199, whichever is less. Dues may be increased with 30 days' notice. Membership freezes are available for a $10 monthly fee.",
+    card: {trapScore: 9, summary: "A 12-month commitment with a hidden $59 annual fee, cancellation only in person or by certified mail, and an early-termination fee.", flags: [
+      {title:"Cancel in person or by certified mail only, 30 days ahead", detail:"Email and phone cancellations are refused; missing the 30-day window costs another month.", quote:"in person at the home club or by certified mail", severity:"high"},
+      {title:"$59 annual fee on top of dues", detail:"Charged in month two and every year after; not part of the advertised monthly price.", quote:"annual enhancement fee of $59", severity:"high"},
+      {title:"Early termination fee up to $199", detail:"Leaving before month 12 costs the remaining months or $199.", quote:"early termination fee equal to the remaining months", severity:"high"},
+      {title:"Dues can rise with 30 days' notice", detail:"The price is not locked for the term.", quote:"Dues may be increased with 30 days' notice", severity:"low"}
+    ], actions:["Ask for the month-to-month option before signing", "Photograph this agreement and save the snapshot now", "Set a reminder for 45 days before the term ends to send certified-mail notice"]}
+  },
+  lease: {
+    text: "Residential Lease, Maple Court Apartments, Unit 3B. Term: August 15 to July 31. Rent $2,400 per month. Each tenant is jointly and severally liable for the full rent and all charges under this lease. Security deposit $2,400, refundable within 45 days of move-out less deductions for cleaning, painting and any damage beyond normal wear. Unless either party gives written notice at least 60 days before the end of the term, this lease automatically renews for a further 12 months at a rent not to exceed 8% above the current rent. Late fee $75 after the 3rd of the month. Subletting is prohibited without written consent. Tenant pays a $250 non-refundable administrative fee at signing.",
+    card: {trapScore: 7, summary: "Each roommate is on the hook for the whole rent, the lease auto-renews for a year unless you give 60 days' notice, and painting is deducted from the deposit.", flags: [
+      {title:"Jointly and severally liable for the full $2,400", detail:"If a roommate leaves or does not pay, the landlord can collect all of it from you.", quote:"jointly and severally liable for the full rent", severity:"high"},
+      {title:"Auto-renews for 12 months unless you give 60 days' written notice", detail:"Silence by 1 June means another year at up to 8% more rent.", quote:"automatically renews for a further 12 months", severity:"high"},
+      {title:"Deposit deductions include painting", detail:"Routine repainting is often normal wear; this clause tries to charge you for it. Check your state's rules.", quote:"deductions for cleaning, painting", severity:"medium"},
+      {title:"$250 non-refundable administrative fee and $75 late fee", detail:"Fees beyond rent and deposit; the late fee starts on the 4th.", quote:"$250 non-refundable administrative fee", severity:"low"}
+    ], actions:["Ask to strike joint liability or split it per tenant", "Save the snapshot and set a reminder for 1 May to send notice", "Photograph every wall and fixture on move-in day"]}
+  },
+  phone: {
+    text: "Nimbus Mobile Service Agreement. Plan: Unlimited Plus, $55 per month per line with AutoPay and paperless billing ($65 without). Promotional rate applies for 12 months; thereafter standard pricing applies. Device Payment Agreement: $32.50 per month for 36 months; if you cancel service, the remaining device balance becomes due immediately. Taxes, a $4.99 monthly administrative fee and a $3.49 regulatory recovery fee are added to each bill. A $35 activation fee applies per line. You agree to resolve disputes through binding arbitration. We may adjust fees at any time.",
+    card: {trapScore: 7, summary: "A $55 plan that costs about $63 with fees, jumps after 12 months, and locks you in through a 36-month device balance that comes due if you leave.", flags: [
+      {title:"About $8.48 a month in fees not in the advertised price", detail:"Administrative and regulatory fees are added to every bill, and they can change any time.", quote:"$4.99 monthly administrative fee and a $3.49 regulatory recovery fee", severity:"high"},
+      {title:"Promo rate ends after 12 months", detail:"The price rises to standard pricing, which is not stated here.", quote:"Promotional rate applies for 12 months", severity:"high"},
+      {title:"Cancelling service makes the whole device balance due", detail:"Up to 36 months of $32.50 becomes payable immediately if you switch carriers.", quote:"remaining device balance becomes due immediately", severity:"medium"},
+      {title:"$35 activation fee per line; arbitration clause", detail:"One-time fee plus a waiver of court and class action.", quote:"$35 activation fee applies per line", severity:"low"}
+    ], actions:["Ask for the activation fee to be waived before signing", "Save the snapshot; set a reminder for month 11 to renegotiate", "Compare the true monthly total, about $63 plus device, against a bring-your-own-phone plan"]}
+  }
+};
+
+var sampleFn = null;          // Claude, when this view can ask it
+var ctl = null;
+var currentSample = null;
+
+function pickSample(key, btn){
+  currentSample = key;
+  document.getElementById('terms').value = SAMPLES[key].text;
+  var chips = document.querySelectorAll('.chip');
+  for (var i=0;i<chips.length;i++) chips[i].setAttribute('aria-pressed', chips[i]===btn ? 'true' : 'false');
+  renderCard(SAMPLES[key].card, 'Sample card');
+  setStatus('Sample loaded. Read the fine print to run it live, or paste your own text.');
+}
+function setStatus(t){ document.getElementById('status').textContent = t || ''; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function renderCard(card, label){
+  var el = document.getElementById('result');
+  if(!card || typeof card !== 'object'){ el.innerHTML = '<div class="empty">No card could be built from that text.</div>'; return; }
+  var score = Math.max(0, Math.min(10, Number(card.trapScore) || 0));
+  var flags = Array.isArray(card.flags) ? card.flags.slice(0,6) : [];
+  var acts = Array.isArray(card.actions) ? card.actions.slice(0,4) : [];
+  var html = '<div class="hd"><b>Asterisk<span class="ast">*</span> read this ' + (label ? '· ' + esc(label) : '') + '</b><span class="score">Trap score ' + score + ' / 10</span></div>';
+  if(card.summary) html += '<p class="sum">' + esc(card.summary) + '</p>';
+  if(!flags.length) html += '<div class="empty">No traps found in this text.</div>';
+  for (var i=0;i<flags.length;i++){
+    var f = flags[i] || {};
+    var sev = f.severity === 'high' ? '' : (f.severity === 'medium' ? 'med' : 'low');
+    html += '<div class="flag"><i class="' + sev + '"></i><div><b>' + esc(f.title) + '</b>' + (f.detail ? '<span style="font-size:13.5px;color:var(--muted)">' + esc(f.detail) + '</span>' : '') + (f.quote ? '<q>"…<mark>' + esc(f.quote) + '</mark>…"</q>' : '') + '</div></div>';
+  }
+  if(acts.length){ html += '<ul class="acts">'; for (var j=0;j<acts.length;j++) html += '<li>' + esc(acts[j]) + '</li>'; html += '</ul>'; }
+  el.innerHTML = html;
+}
+
+function buildPrompt(text){
+  return "You are Asterisk, a consumer fine-print reader. Analyze the terms text below for traps that cost people money or rights: auto-renewal and post-trial pricing, cancellation obstacles (phone-only, in-person, notice periods, certified mail), junk fees, early-termination fees, minimum terms, price-change clauses, arbitration and class-action waivers, joint liability, data sale or marketing consent. Be concrete and quote the exact words.\n\nReply with only JSON of this shape:\n{\"trapScore\": 0-10 integer, \"summary\": \"one sentence under 30 words\", \"flags\": [{\"title\": \"short plain-language headline with the number or date if present\", \"detail\": \"one sentence under 25 words on what it means for the reader\", \"quote\": \"an exact excerpt from the text, under 15 words\", \"severity\": \"high\"|\"medium\"|\"low\"}], \"actions\": [\"three short imperative steps the reader should take now\"]}\nIf the text contains no terms at all, return {\"trapScore\": 0, \"summary\": \"No terms found.\", \"flags\": [], \"actions\": []}. Order flags by severity. At most 6 flags.\n\nTERMS TEXT:\n" + text.slice(0, 6000);
+}
+
+async function readTerms(){
+  var text = (document.getElementById('terms').value || '').trim();
+  if(!text){ setStatus('Paste some terms or pick a sample first.'); return; }
+  if(!sampleFn){
+    var hit = null;
+    for (var k in SAMPLES) if (SAMPLES[k].text === text) hit = k;
+    if(hit){ renderCard(SAMPLES[hit].card, 'Sample card'); setStatus('Showing the prepared card for this sample. Live reading needs this page open inside Claude, signed in.'); }
+    else { setStatus('Live reading is available when this page is opened inside Claude, signed in. Try a sample to see the card.'); }
+    return;
+  }
+  var btn = document.getElementById('readBtn'), stop = document.getElementById('stopBtn');
+  btn.disabled = true; stop.hidden = false;
+  setStatus('Reading… Claude is checking every clause. This usually takes a few seconds.');
+  ctl = new AbortController();
+  try{
+    var card = await sampleFn.json(buildPrompt(text), {modelTier: 'quick', signal: ctl.signal});
+    renderCard(card, 'Live');
+    setStatus('Done. This card was generated live from the text on the left.');
+  }catch(e){
+    var code = e && e.code;
+    if(code === 'cancelled'){ setStatus('Stopped.'); }
+    else if(code === 'not_granted'){ sampleFn = null; setStatus('Live reading was not allowed in this view. Samples still work.'); }
+    else if(code === 'rate_limited'){ setStatus('Too many reads in a row. Wait a moment and try again.'); }
+    else if(code === 'invalid_json'){ setStatus('The reply could not be read as a card. Try shorter text.'); }
+    else if(code === 'prompt_too_large'){ setStatus('That text is too long. Paste the section under the button, not the whole site.'); }
+    else { setStatus('Live reading is unavailable right now. Samples still work.'); }
+  }finally{
+    btn.disabled = false; stop.hidden = true; ctl = null;
+  }
+}
+function stopRead(){ if(ctl) ctl.abort(); }
+
+// Light the live demo up only if this view can ask Claude.
+(function(){
+  try{
+    if (window.claude && typeof window.claude.use === 'function'){
+      window.claude.use('sample').then(function(fn){ if(fn){ sampleFn = fn; } }).catch(function(){});
+    }
+  }catch(_){}
+})();
+</script>
+</body></html>
