@@ -1,0 +1,382 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font:14px system-ui;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Lore</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF0F2; --surface:#FFFFFF; --ink:#181A20; --muted:#666A75; --line:#D3D6DC; --line-strong:#AEB3BC;
+  --tile:#FFFFFF; --tile-ink:#181A20; --tile-sel:#181A20; --tile-sel-ink:#FFFFFF;
+  --g1:#F2B441; --g2:#7DBE8A; --g3:#6FA8DC; --g4:#B48EDE; --g-ink:#181A20;
+  --accent:#2F3BD6; --accent-ink:#FFFFFF; --accent-soft:#E2E5FB;
+  --ok:#1E6B52; --bad:#C43D2F; --warn-soft:#FFF3C4;
+  --shadow:0 12px 30px rgba(24,26,32,.10);
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --ui:"IBM Plex Sans","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141519; --surface:#1D1F26; --ink:#ECEDF0; --muted:#9A9FAB; --line:#2E313A; --line-strong:#4A4E5A;
+    --tile:#262932; --tile-ink:#ECEDF0; --tile-sel:#ECEDF0; --tile-sel-ink:#141519;
+    --g1:#D9A238; --g2:#5FA772; --g3:#5B93C9; --g4:#9E78CF; --g-ink:#141519;
+    --accent:#8B93FF; --accent-ink:#0F1130; --accent-soft:#272A4D;
+    --ok:#5FBFA0; --bad:#F07A6E; --warn-soft:#3A3114;
+    --shadow:0 12px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141519; --surface:#1D1F26; --ink:#ECEDF0; --muted:#9A9FAB; --line:#2E313A; --line-strong:#4A4E5A;
+  --tile:#262932; --tile-ink:#ECEDF0; --tile-sel:#ECEDF0; --tile-sel-ink:#141519;
+  --g1:#D9A238; --g2:#5FA772; --g3:#5B93C9; --g4:#9E78CF; --g-ink:#141519;
+  --accent:#8B93FF; --accent-ink:#0F1130; --accent-soft:#272A4D;
+  --ok:#5FBFA0; --bad:#F07A6E; --warn-soft:#3A3114;
+  --shadow:0 12px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:0 48px}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{max-width:560px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;padding-block:16px 8px}
+.brand{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.02em}
+.brand span{color:var(--accent)}
+.streak{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.streak b{color:var(--ink)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,6vw,40px);line-height:1.05;letter-spacing:-.02em;margin:18px 0 6px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:20px;margin:0 0 6px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+/* community picker */
+.pick{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);margin:14px 0 18px}
+.pick label{font-family:var(--display);font-weight:700;font-size:15px;display:block;margin-bottom:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row input{flex:1 1 220px;min-width:0;font:inherit;padding:11px 13px;border:1px solid var(--line-strong);border-radius:10px;background:var(--bg);color:var(--ink)}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-weight:700;font-size:15px;padding:10px 16px;border-radius:10px;white-space:nowrap}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+.btn.ghost:hover{border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:13px;font-weight:500;padding:6px 10px;border-radius:999px}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:8px;min-height:18px}
+details.more{margin-top:8px}
+details.more summary{cursor:pointer;font-size:13.5px;color:var(--muted)}
+details.more textarea{width:100%;margin-top:8px;min-height:80px;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line-strong);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
+/* game */
+.game{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.game .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+.game .hd .t{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.01em}
+.game .hd .c{font-family:var(--mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;text-align:right}
+.solved{display:grid;gap:8px;margin-bottom:8px}
+.group{border-radius:10px;padding:10px 12px;color:var(--g-ink);text-align:center;animation:pop .25s ease-out}
+.group b{font-family:var(--display);font-weight:800;display:block;font-size:14px;letter-spacing:.02em;text-transform:uppercase}
+.group span{font-size:14px;font-weight:500}
+.group.d1{background:var(--g1)} .group.d2{background:var(--g2)} .group.d3{background:var(--g3)} .group.d4{background:var(--g4)}
+@keyframes pop{from{transform:scale(.96);opacity:.4}to{transform:scale(1);opacity:1}}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{aspect-ratio:1.55;border:1px solid var(--line);background:var(--tile);color:var(--tile-ink);border-radius:10px;font-family:var(--display);font-weight:700;font-size:clamp(11px,3.2vw,15px);letter-spacing:.01em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;line-height:1.15;overflow-wrap:anywhere;transition:transform .08s}
+.tile:hover{border-color:var(--line-strong)}
+.tile[aria-pressed="true"]{background:var(--tile-sel);color:var(--tile-sel-ink);border-color:var(--tile-sel);transform:scale(.97)}
+.tile.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.lives{font-family:var(--mono);font-size:12.5px;color:var(--muted);letter-spacing:.06em}
+.lives i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ink);margin-right:5px;vertical-align:middle}
+.lives i.off{background:var(--line)}
+.msg{font-size:14px;min-height:20px;margin-top:8px}
+.msg.ok{color:var(--ok)} .msg.bad{color:var(--bad)}
+/* result */
+.result{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.result pre{font-family:var(--mono);font-size:15px;line-height:1.25;letter-spacing:2px;margin:6px 0 10px;white-space:pre}
+.why{display:grid;gap:6px;font-size:13.5px;color:var(--muted);margin-top:6px}
+.why b{color:var(--ink);font-family:var(--display)}
+/* board */
+.board{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.board table{width:100%;border-collapse:collapse;font-size:14px}
+.board td{padding:6px 4px;border-top:1px solid var(--line)}
+.board tr:first-child td{border-top:0}
+.board td.n{font-family:var(--mono);color:var(--muted);width:28px}
+.board td.s{font-family:var(--mono);text-align:right;white-space:nowrap}
+.board td.s span{display:inline-block;width:9px;height:9px;border-radius:2px;margin-left:2px;vertical-align:middle}
+.board .you td{font-weight:600}
+.board .note{font-size:12px;color:var(--muted);margin:8px 0 0}
+.tomorrow{margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tomorrow div{background:var(--surface);border:1px dashed var(--line-strong);border-radius:12px;padding:12px;font-size:13px}
+.tomorrow b{font-family:var(--display);display:block;font-size:14px;margin-bottom:2px}
+.foot{margin-top:22px;font-size:12.5px;color:var(--muted);line-height:1.5}
+@media (prefers-reduced-motion: reduce){.group,.tile{animation:none!important;transition:none}}
+@media (max-width:420px){.tomorrow{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">Lore<span>.</span></div>
+    <div class="streak">Streak <b id="streak">0</b> · <span id="dateLabel"></span></div>
+  </div>
+
+  <h1>Today's game is about <em id="commName">your school</em>.</h1>
+  <p class="muted">A three-minute daily set built from your world, not the whole world. This prototype plays <strong>Sixteen</strong>: sixteen tiles, four hidden groups of four, four mistakes.</p>
+
+  <div class="pick">
+    <label for="comm">Which world should today's game be about?</label>
+    <div class="row">
+      <input id="comm" type="text" placeholder="e.g. UCLA, Ohio State, Stripe, my hometown, Formula 1" autocomplete="off">
+      <button class="btn" id="genBtn" type="button" onclick="generate()">Make today's game</button>
+    </div>
+    <div class="chips">
+      <button class="chip" type="button" onclick="setComm('University of Michigan')">University of Michigan</button>
+      <button class="chip" type="button" onclick="setComm('NYU')">NYU</button>
+      <button class="chip" type="button" onclick="setComm('Y Combinator startups')">Y Combinator startups</button>
+      <button class="chip" type="button" onclick="setComm('Taylor Swift fans')">Taylor Swift fans</button>
+      <button class="chip" type="button" onclick="playCanned()">Play the sample (no AI needed)</button>
+    </div>
+    <details class="more">
+      <summary>Friend-group mode: add a few facts or inside jokes and the game is built from them</summary>
+      <textarea id="facts" placeholder="e.g. Sam always orders the same burrito · we call the library the dungeon · Priya's car is named Gerald · the group chat is named after a typo…"></textarea>
+    </details>
+    <div class="status" id="status">Pick a world. When this page is open inside Claude, the game is generated live; otherwise play the sample.</div>
+  </div>
+
+  <div class="game" id="game" hidden>
+    <div class="hd"><div class="t" id="title">Sixteen</div><div class="c" id="sub"></div></div>
+    <div class="solved" id="solved"></div>
+    <div class="grid" id="grid" role="group" aria-label="Tiles"></div>
+    <div class="controls">
+      <div class="lives" id="lives" aria-label="Mistakes remaining"></div>
+      <div class="row">
+        <button class="btn ghost" type="button" onclick="shuffleTiles()">Shuffle</button>
+        <button class="btn ghost" type="button" onclick="clearSel()">Deselect</button>
+        <button class="btn" type="button" id="submitBtn" onclick="submitSel()" disabled>Submit</button>
+      </div>
+    </div>
+    <div class="msg" id="msg" aria-live="polite"></div>
+    <div class="result" id="resultBox" hidden>
+      <div class="eyebrow" id="resHead">Result</div>
+      <pre id="shareGrid"></pre>
+      <div class="row"><button class="btn" type="button" onclick="copyShare()">Copy result</button><button class="btn ghost" type="button" onclick="revealAll()">Reveal groups</button></div>
+      <div class="why" id="why"></div>
+    </div>
+  </div>
+
+  <div class="board" id="board" hidden>
+    <div class="eyebrow">Leaderboard · <span id="boardComm"></span></div>
+    <table><tbody id="boardBody"></tbody></table>
+    <p class="note">Illustrative leaderboard for the prototype. In the product, this is the people from your world who played today.</p>
+  </div>
+
+  <div class="tomorrow">
+    <div><b>Two Truths</b>Three statements about your world, one invented. Tomorrow.</div>
+    <div><b>Who Said It</b>A line from your feed or your group chat, four possible authors.</div>
+    <div><b>The Local</b>One photo clue from around your world. Guess the place.</div>
+  </div>
+
+  <p class="foot">Lore is a working name and this is a playable prototype. Live games are generated when the page is opened inside Claude and signed in (the first run asks your permission). Generated clues are not verified; the product grounds every clue in a source and lets players dispute it. Original formats; no affiliation with any newspaper's games.</p>
+</div>
+
+<script>
+var CANNED = {
+  community: "College life",
+  title: "Sixteen · College life",
+  groups: [
+    {name: "Things you swear you'll do before finals", difficulty: 1, words: ["Sleep", "Outline", "Office hours", "Laundry"], why: "Every one of these gets promised and postponed."},
+    {name: "Dining hall food groups", difficulty: 2, words: ["Cereal", "Pizza", "Mystery meat", "Soft serve"], why: "The four pillars of a campus diet."},
+    {name: "Group project roles", difficulty: 3, words: ["Ghost", "Overachiever", "Formatter", "Presenter"], why: "Someone vanishes, someone does everything, someone fixes the fonts, someone talks."},
+    {name: "Words before 'week'", difficulty: 4, words: ["Welcome", "Dead", "Rush", "Finals"], why: "Welcome week, dead week, rush week, finals week."}
+  ]
+};
+var GROUP_CLASS = {1: "d1", 2: "d2", 3: "d3", 4: "d4"};
+var SQ = {1: "🟨", 2: "🟩", 3: "🟦", 4: "🟪"};
+var state = null;      // {groups, tiles, selected, solved:[], mistakes, history:[], done}
+var sampleFn = null;
+var ctl = null;
+
+function setComm(name){ document.getElementById('comm').value = name; generate(); }
+function setStatus(t){ document.getElementById('status').textContent = t || ''; }
+function shuffle(a){ for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function todayKey(){ var d = new Date(); return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+(function(){
+  var d = new Date();
+  document.getElementById('dateLabel').textContent = d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+  try{ var s = JSON.parse(localStorage.getItem('lore_streak') || '{}'); document.getElementById('streak').textContent = s.count || 0; }catch(_){}
+})();
+function bumpStreak(){
+  try{
+    var s = JSON.parse(localStorage.getItem('lore_streak') || '{}');
+    var today = todayKey();
+    if (s.last === today) return;
+    var y = new Date(); y.setDate(y.getDate()-1);
+    var yk = y.getFullYear() + '-' + (y.getMonth()+1) + '-' + y.getDate();
+    s.count = (s.last === yk) ? (s.count || 0) + 1 : 1;
+    s.last = today;
+    localStorage.setItem('lore_streak', JSON.stringify(s));
+    document.getElementById('streak').textContent = s.count;
+  }catch(_){}
+}
+
+function validPuzzle(p){
+  if(!p || !Array.isArray(p.groups) || p.groups.length !== 4) return false;
+  var seen = {};
+  for (var i=0;i<4;i++){
+    var g = p.groups[i];
+    if(!g || !Array.isArray(g.words) || g.words.length !== 4 || !g.name) return false;
+    for (var j=0;j<4;j++){
+      var w = String(g.words[j]).trim();
+      if(!w || w.length > 24) return false;
+      var k = w.toLowerCase();
+      if(seen[k]) return false;
+      seen[k] = true;
+    }
+  }
+  return true;
+}
+
+function startPuzzle(p, label){
+  var groups = p.groups.map(function(g, i){ return {name: String(g.name), difficulty: Math.min(4, Math.max(1, Number(g.difficulty) || (i+1))), words: g.words.map(function(w){ return String(w).trim(); }), why: g.why ? String(g.why) : ''}; });
+  groups.sort(function(a,b){ return a.difficulty - b.difficulty; });
+  var tiles = [];
+  groups.forEach(function(g, gi){ g.words.forEach(function(w){ tiles.push({w: w, g: gi}); }); });
+  state = {groups: groups, tiles: shuffle(tiles), selected: [], solved: [], mistakes: 0, history: [], done: false, community: p.community || label || ''};
+  document.getElementById('commName').textContent = state.community || 'your world';
+  document.getElementById('title').textContent = 'Sixteen';
+  document.getElementById('sub').textContent = (label || '') ;
+  document.getElementById('game').hidden = false;
+  document.getElementById('resultBox').hidden = true;
+  document.getElementById('msg').textContent = '';
+  document.getElementById('msg').className = 'msg';
+  renderBoard(state.community);
+  render();
+  document.getElementById('game').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+function render(){
+  var solvedEl = document.getElementById('solved'); solvedEl.innerHTML = '';
+  state.solved.forEach(function(gi){ var g = state.groups[gi]; var d = document.createElement('div'); d.className = 'group ' + GROUP_CLASS[g.difficulty]; d.innerHTML = '<b>' + esc(g.name) + '</b><span>' + g.words.map(esc).join(', ') + '</span>'; solvedEl.appendChild(d); });
+  var grid = document.getElementById('grid'); grid.innerHTML = '';
+  state.tiles.forEach(function(t, idx){
+    if (state.solved.indexOf(t.g) !== -1) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'tile'; b.textContent = t.w;
+    b.setAttribute('aria-pressed', state.selected.indexOf(idx) !== -1 ? 'true' : 'false');
+    b.onclick = function(){ toggle(idx); };
+    grid.appendChild(b);
+  });
+  var lives = document.getElementById('lives'); lives.innerHTML = 'Mistakes ';
+  for (var i=0;i<4;i++){ var d = document.createElement('i'); if (i < state.mistakes) d.className = 'off'; lives.appendChild(d); }
+  document.getElementById('submitBtn').disabled = state.selected.length !== 4 || state.done;
+}
+function toggle(idx){
+  if (state.done) return;
+  var p = state.selected.indexOf(idx);
+  if (p !== -1) state.selected.splice(p,1); else if (state.selected.length < 4) state.selected.push(idx);
+  render();
+}
+function clearSel(){ if(!state) return; state.selected = []; render(); }
+function shuffleTiles(){ if(!state || state.done) return; var sel = state.selected.map(function(i){ return state.tiles[i]; }); state.tiles = shuffle(state.tiles.slice()); state.selected = sel.map(function(t){ return state.tiles.indexOf(t); }); render(); }
+function submitSel(){
+  if (!state || state.selected.length !== 4 || state.done) return;
+  var gs = state.selected.map(function(i){ return state.tiles[i].g; });
+  var counts = {}; gs.forEach(function(g){ counts[g] = (counts[g]||0)+1; });
+  var best = 0, bestG = null; for (var g in counts) if (counts[g] > best){ best = counts[g]; bestG = Number(g); }
+  var msg = document.getElementById('msg');
+  state.history.push(state.selected.map(function(i){ return state.tiles[i].g; }));
+  if (best === 4){
+    state.solved.push(bestG); state.selected = [];
+    msg.className = 'msg ok'; msg.textContent = state.solved.length === 4 ? 'All four. Nice.' : 'Correct.';
+    if (state.solved.length === 4) finish(true);
+  } else {
+    state.mistakes += 1;
+    msg.className = 'msg bad'; msg.textContent = best === 3 ? 'One away.' : 'Not a group.';
+    var tiles = document.querySelectorAll('.tile[aria-pressed="true"]'); for (var i=0;i<tiles.length;i++) tiles[i].classList.add('shake');
+    if (state.mistakes >= 4){ finish(false); }
+  }
+  render();
+}
+function finish(won){
+  state.done = true;
+  bumpStreak();
+  var head = document.getElementById('resHead');
+  head.textContent = won ? 'Solved with ' + state.mistakes + ' mistake' + (state.mistakes === 1 ? '' : 's') + ' · share it' : 'Out of mistakes · share it';
+  var lines = state.history.map(function(h){ return h.map(function(g){ return SQ[state.groups[g].difficulty]; }).join(''); });
+  var share = 'Lore · Sixteen · ' + (state.community || 'today') + '\n' + lines.join('\n');
+  document.getElementById('shareGrid').textContent = share;
+  document.getElementById('resultBox').hidden = false;
+  var why = document.getElementById('why'); why.innerHTML = '';
+  if (won) revealAll();
+  updateBoardYou();
+}
+function revealAll(){
+  if(!state) return;
+  state.groups.forEach(function(g, gi){ if (state.solved.indexOf(gi) === -1) state.solved.push(gi); });
+  state.done = true; render();
+  var why = document.getElementById('why'); why.innerHTML = '';
+  state.groups.forEach(function(g){ if (g.why){ var d = document.createElement('div'); d.innerHTML = '<b>' + esc(g.name) + ':</b> ' + esc(g.why); why.appendChild(d); } });
+  document.getElementById('resultBox').hidden = false;
+}
+function copyShare(){
+  var t = document.getElementById('shareGrid').textContent;
+  var done = function(ok){ document.getElementById('msg').className = 'msg ok'; document.getElementById('msg').textContent = ok ? 'Copied. Paste it in the group chat.' : 'Select the grid above and copy it.'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){ done(true); }, function(){ done(false); }); else done(false);
+}
+
+// illustrative leaderboard
+var NAMES = ['Maya R.', 'Jordan K.', 'Priya S.', 'Theo M.', 'Alex C.', 'Sam O.', 'Lena W.'];
+function renderBoard(comm){
+  document.getElementById('board').hidden = false;
+  document.getElementById('boardComm').textContent = comm || 'your world';
+  var body = document.getElementById('boardBody'); body.innerHTML = '';
+  var rows = NAMES.slice(0, 5).map(function(n, i){ return {n: n, m: [0,0,1,1,2][i], t: [58, 71, 84, 92, 130][i]}; });
+  rows.push({n: 'You', m: null, t: null, you: true});
+  rows.forEach(function(r, i){
+    var tr = document.createElement('tr'); if (r.you) tr.className = 'you';
+    var sq = r.m === null ? '' : ['🟨','🟩','🟦','🟪'].slice(0, 4).map(function(s){ return '<span style="background:' + ({'🟨':'var(--g1)','🟩':'var(--g2)','🟦':'var(--g3)','🟪':'var(--g4)'})[s] + '"></span>'; }).join('');
+    tr.innerHTML = '<td class="n">' + (i+1) + '</td><td>' + esc(r.n) + '</td><td class="s">' + (r.m === null ? 'playing…' : r.m + ' miss · ' + r.t + 's ' + sq) + '</td>';
+    body.appendChild(tr);
+  });
+}
+function updateBoardYou(){
+  var rows = document.querySelectorAll('#boardBody tr'); var you = rows[rows.length-1]; if (!you) return;
+  var s = you.querySelector('.s'); s.textContent = state.mistakes + ' miss · today';
+}
+
+function playCanned(){ setStatus('Playing the sample set about college life.'); startPuzzle(CANNED, 'Sample'); }
+
+function buildPrompt(comm, facts){
+  var base = "Create today's 'Sixteen' puzzle for the community: " + comm + ".\n" +
+  "Sixteen tiles form four hidden groups of four. Each group is a category specific to this community's world (places, slang, traditions, people, rituals, foods, rivalries, jargon, running jokes). Categories must be things an insider recognizes and an outsider might not. Make the four groups escalate in difficulty from 1 (easy) to 4 (tricky wordplay or a red herring that overlaps another group). Tiles must be short (1 to 3 words, under 20 characters), all sixteen distinct, no offensive content, no private individuals (public figures and well-known campus roles are fine). Prefer real, well-known facts about the community; do not invent facts about real people.\n";
+  if (facts && facts.trim()) base += "Also use these facts and inside jokes supplied by the group (they are the best material):\n" + facts.trim().slice(0, 3000) + "\n";
+  base += "\nReply with only JSON: {\"community\": \"" + comm.replace(/"/g,'') + "\", \"groups\": [{\"name\": \"category name, under 40 characters\", \"difficulty\": 1, \"words\": [\"tile\",\"tile\",\"tile\",\"tile\"], \"why\": \"one short sentence an insider would say\"}]} with exactly four groups and exactly four words each.";
+  return base;
+}
+async function generate(){
+  var comm = (document.getElementById('comm').value || '').trim();
+  var facts = (document.getElementById('facts').value || '');
+  if(!comm && !facts.trim()){ setStatus('Type a school, company, city, team or fandom.'); return; }
+  if(!comm) comm = 'our friend group';
+  if(!sampleFn){ setStatus('Live generation needs this page open inside Claude, signed in. Playing the sample instead.'); playCanned(); return; }
+  var btn = document.getElementById('genBtn'); btn.disabled = true;
+  setStatus('Building today\'s game about ' + comm + '… usually 5–15 seconds.');
+  ctl = new AbortController();
+  try{
+    var p = await sampleFn.json(buildPrompt(comm, facts), {modelTier: 'quick', signal: ctl.signal, cache: false});
+    if(!validPuzzle(p)) throw {code: 'invalid_json'};
+    p.community = comm;
+    setStatus('Generated live. Not verified; the product grounds clues in sources and lets players dispute them.');
+    startPuzzle(p, 'Generated for ' + comm);
+  }catch(e){
+    var code = e && e.code;
+    if(code === 'not_granted'){ sampleFn = null; setStatus('Live generation was not allowed in this view. Playing the sample.'); playCanned(); }
+    else if(code === 'rate_limited'){ setStatus('Too many games in a row. Wait a moment and try again.'); }
+    else if(code === 'invalid_json'){ setStatus('That one did not come out as a valid puzzle. Try again or add a few facts.'); }
+    else if(code === 'cancelled'){ setStatus('Stopped.'); }
+    else { setStatus('Live generation is unavailable right now. Playing the sample.'); playCanned(); }
+  }finally{ btn.disabled = false; ctl = null; }
+}
+(function(){
+  try{
+    if (window.claude && typeof window.claude.use === 'function'){
+      window.claude.use('sample').then(function(fn){ if(fn){ sampleFn = fn; setStatus('Ready. Type a school, company, city, team or fandom and make today\'s game.'); } }).catch(function(){});
+    }
+  }catch(_){}
+})();
+</script>
+</body></html>

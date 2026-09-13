@@ -11,8 +11,9 @@ Workspace for a new startup, researched and built with Claude Code.
 - `docs/plan/05-asterisk-recommendation.md` — Asterisk, the fine-print shield with agreement memory and cancel/dispute execution
 - `docs/plan/06-campus-channel-comparison.md` — Asterisk campus-first features and the Rocket Money comparison
 - `docs/plan/07-presence-vs-asterisk.md` — Presence, a campus events app (superseded: too event-specific)
-- `docs/plan/08-facedown-vs-asterisk.md` — current comparison: Facedown, the phone-down network that spreads inside communities, vs Asterisk
+- `docs/plan/08-facedown-vs-asterisk.md` — Facedown vs Asterisk (both passed over)
+- `docs/plan/09-lore.md` — current idea: Lore, the daily game generated about your own community; playable prototype in `site/lore/`
 
 ## Status
 
-Research complete. Awaiting a decision between Facedown and Asterisk (see docs/plan/08).
+Research complete. Current candidate: Lore (docs/plan/09), playable prototype in site/lore.
