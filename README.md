@@ -14,7 +14,7 @@ Workspace for a new startup, researched and built with Claude Code.
 - `docs/plan/08-facedown-vs-asterisk.md` — Facedown vs Asterisk (both passed over)
 - `docs/plan/09-lore.md` — Lore, a daily community game (passed over: not innovative or sellable enough); prototype in `site/lore/`
 - `docs/plan/10-bloc.md` — Bloc, the collective-leverage engine (passed over: industry-bound); system brief in `site/bloc/`
-- `docs/plan/11-unmute.md` — current idea: Unmute, voice-AI practice for the conversations people dread, plus what YC user-growth winners share
+- `docs/plan/11-unmute.md` — current idea: Unmute, voice-AI practice for the conversations people dread, plus what YC user-growth winners share; launch page preview in `site/unmute/`
 
 ## Status
 

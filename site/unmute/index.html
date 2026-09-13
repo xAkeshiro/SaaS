@@ -1,0 +1,537 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font:14px system-ui;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Unmute</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0F1115; --surface:#171A21; --surface2:#1F232C; --ink:#F2F3F5; --muted:#9BA1AD; --line:#2A2F3A; --line-strong:#3E4452;
+  --accent:#FFB454; --accent-ink:#1A1000; --accent-soft:#3A2A0F;
+  --you:#2B3340; --them:#3A2A0F; --them-ink:#F2F3F5;
+  --ok:#5FBFA0; --bad:#F07A6E; --warn:#E3C25A;
+  --shadow:0 20px 50px rgba(0,0,0,.5);
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --ui:"IBM Plex Sans","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F4F5F7; --surface:#FFFFFF; --surface2:#EEF0F3; --ink:#141519; --muted:#646A76; --line:#D8DBE1; --line-strong:#B4B9C4;
+    --accent:#B86E00; --accent-ink:#FFFFFF; --accent-soft:#FBEBD1;
+    --you:#E8EBF0; --them:#FBEBD1; --them-ink:#141519;
+    --ok:#1E6B52; --bad:#C43D2F; --warn:#8A6A00;
+    --shadow:0 20px 50px rgba(20,21,25,.12);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F4F5F7; --surface:#FFFFFF; --surface2:#EEF0F3; --ink:#141519; --muted:#646A76; --line:#D8DBE1; --line-strong:#B4B9C4;
+  --accent:#B86E00; --accent-ink:#FFFFFF; --accent-soft:#FBEBD1;
+  --you:#E8EBF0; --them:#FBEBD1; --them-ink:#141519;
+  --ok:#1E6B52; --bad:#C43D2F; --warn:#8A6A00;
+  --shadow:0 20px 50px rgba(20,21,25,.12);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:17px;line-height:1.6;padding-inline:20px;padding-block:0 48px}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.015em;text-wrap:balance;margin:0}
+h2{font-weight:800;font-size:clamp(28px,3.6vw,42px);line-height:1.08;margin-bottom:14px}
+h3{font-weight:700;font-size:19px;margin-bottom:6px}
+p{margin:0 0 14px}
+.lead{font-size:19px;line-height:1.55;max-width:58ch}
+.small{font-size:14px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+/* nav */
+.nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.brand{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.02em;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:8px}
+.brand i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.navlinks{display:flex;gap:22px;font-family:var(--display);font-size:14.5px;font-weight:500}
+.navlinks a{text-decoration:none;color:var(--muted)}
+.navlinks a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-weight:700;font-size:15px;padding:11px 18px;border-radius:999px;text-decoration:none;white-space:nowrap}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+.btn.ghost:hover{border-color:var(--ink);filter:none}
+.btn:disabled{opacity:.55;cursor:default;filter:none}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:center;padding-block:64px 48px}
+.hero h1{font-weight:800;font-size:clamp(40px,6.4vw,84px);line-height:.98}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lead{margin-top:22px}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;max-width:560px}
+.cta input{flex:1 1 220px;min-width:0;font:inherit;font-size:16px;padding:11px 16px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--ink)}
+.cta .note{flex-basis:100%;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:2px}
+.cta .done{flex-basis:100%;background:var(--accent-soft);color:var(--ink);font-family:var(--display);font-weight:600;padding:10px 14px;border-radius:12px}
+/* phone mock */
+.phone{width:min(100%,380px);margin-left:auto;background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:18px 16px 16px;box-shadow:var(--shadow)}
+.phone .top{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.phone .top b{color:var(--accent);display:inline-flex;align-items:center;gap:6px}
+.phone .top b i{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.phone .who{font-family:var(--display);font-weight:800;font-size:20px;margin:12px 0 2px}
+.phone .mode{font-size:13px;color:var(--muted);margin-bottom:12px}
+.wave{display:flex;align-items:end;gap:3px;height:34px;margin:6px 0 12px}
+.wave i{display:block;width:4px;background:var(--accent);border-radius:2px;opacity:.9}
+.bubbles{display:grid;gap:8px}
+.b{max-width:88%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.4}
+.b.them{background:var(--them);color:var(--them-ink);border-bottom-left-radius:4px}
+.b.you{background:var(--you);color:var(--ink);margin-left:auto;border-bottom-right-radius:4px}
+.b .tag{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.phone .debrief{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;font-size:13px}
+.phone .debrief b{font-family:var(--display);font-size:13px}
+.phone .debrief .row{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.phone .debrief .row span:last-child{font-family:var(--mono);font-size:12px}
+.up{color:var(--ok)} .down{color:var(--bad)}
+/* proof */
+.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding-block:36px 8px}
+.proof div{border-top:2px solid var(--ink);padding-top:12px}
+.proof .n{font-family:var(--display);font-weight:800;font-size:clamp(30px,4vw,44px);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.proof .n sup{font-size:.45em;color:var(--accent);vertical-align:top;margin-left:2px}
+.proof p{margin:8px 0 0;font-size:15px;max-width:30ch}
+section{padding-block:56px 20px}
+section.tight{padding-block:36px 8px}
+/* how */
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px}
+.step .k{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.step p{font-size:15px;margin:0;color:var(--muted)}
+.step h3{color:var(--ink)}
+/* scenarios */
+.scen{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
+.sc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:14.5px;line-height:1.4}
+.sc b{font-family:var(--display);display:block;font-size:15px;margin-bottom:4px}
+.sc span{color:var(--muted);font-size:13.5px}
+/* demo */
+.demo{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;margin-top:20px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.panel label{font-family:var(--display);font-weight:700;font-size:14px;display:block;margin:10px 0 6px}
+.panel label:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-strong);background:transparent;color:var(--ink);font-size:13.5px;font-weight:500;padding:7px 11px;border-radius:999px}
+.chip[aria-pressed="true"],.chip:hover{border-color:var(--accent);color:var(--accent)}
+.panel textarea{width:100%;min-height:64px;font:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:12px;background:var(--bg);color:var(--ink);resize:vertical}
+.panel .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:8px;min-height:18px}
+.chat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;min-height:420px}
+.chat .hd{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-bottom:10px;border-bottom:1px solid var(--line)}
+.chat .hd span{min-width:0;overflow-wrap:anywhere}
+.demo>*{min-width:0}
+.chat .hd b{color:var(--accent)}
+.log{flex:1;display:grid;gap:8px;align-content:start;padding:12px 2px;overflow:auto;max-height:380px}
+.log .b{font-size:14.5px}
+.composer{display:flex;gap:8px;align-items:end;border-top:1px solid var(--line);padding-top:10px}
+.composer textarea{flex:1;min-height:44px;max-height:120px;font:inherit;font-size:14.5px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:12px;background:var(--bg);color:var(--ink);resize:none}
+.iconbtn{border:1px solid var(--line-strong);background:transparent;color:var(--ink);border-radius:12px;width:44px;height:44px;display:grid;place-items:center;font-size:18px}
+.iconbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.debriefcard{margin-top:12px;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:14.5px}
+.debriefcard .hd2{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.debriefcard .hd2 b{font-family:var(--display);font-size:15px}
+.score{font-family:var(--mono);font-size:12px;letter-spacing:.04em;background:var(--accent);color:var(--accent-ink);padding:3px 9px;border-radius:999px;white-space:nowrap}
+.debriefcard h4{font-family:var(--display);font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.debriefcard ul{margin:0;padding-left:18px}
+.debriefcard li{margin-bottom:4px}
+.debriefcard .say{background:var(--surface);border-left:3px solid var(--accent);padding:8px 10px;border-radius:0 8px 8px 0;margin:4px 0;font-style:italic}
+/* stance */
+.stance{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:28px 30px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-top:20px}
+.stance ul{margin:0;padding-left:20px}
+.stance li{margin-bottom:8px}
+/* pricing */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.tier{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.tier.pick{border-color:var(--accent);box-shadow:var(--shadow)}
+.tier .name{font-family:var(--display);font-weight:800;font-size:18px}
+.tier .price{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-.02em;margin:8px 0 2px}
+.tier .per{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tier ul{padding-left:18px;margin:14px 0 0;font-size:14.5px}
+.tier li{margin-bottom:6px}
+/* final */
+.final{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:44px 36px;margin-top:20px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:28px;align-items:center}
+.final h2{color:var(--accent-ink)}
+.final .lead{color:var(--accent-ink);opacity:.9}
+.final .cta input{background:rgba(255,255,255,.92);color:#141519;border-color:transparent}
+.final .cta .note{color:var(--accent-ink);opacity:.8}
+.final .btn{background:#141519;border-color:#141519;color:#fff}
+footer{margin-top:40px;border-top:1px solid var(--line);padding-top:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.fine{font-size:12.5px;line-height:1.5;color:var(--muted)}
+.fine sup{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){.phone .top b i{animation:none}html{scroll-behavior:auto}}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:40px;padding-block:44px 36px}
+  .phone{margin-left:0}
+  .proof,.how,.scen,.tiers{grid-template-columns:1fr 1fr}
+  .demo,.stance,.final,footer{grid-template-columns:1fr}
+  .navlinks{display:none}
+}
+@media (max-width:560px){
+  .proof,.how,.scen,.tiers{grid-template-columns:1fr}
+  .stance{padding:20px}
+  .final{padding:30px 22px}
+}
+</style>
+
+<nav class="nav" aria-label="Site">
+  <div class="wrap">
+    <a class="brand" href="#top"><i></i>Unmute</a>
+    <div class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#demo">Rehearse one</a>
+      <a href="#scenarios">Conversations</a>
+      <a href="#stance">Not a companion</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <a class="btn" href="#join">Get early access</a>
+  </div>
+</nav>
+
+<main class="wrap" id="top">
+<section class="hero">
+  <div>
+    <p class="eyebrow">Voice practice for real life · launch preview</p>
+    <h1>Talk to an AI so you can <em>talk to people.</em></h1>
+    <p class="lead">Rehearse the conversation you are dreading, out loud, with an AI that plays the other person and pushes back. Then get told exactly what to do differently. Three minutes a day. Not a companion. A coach that wants you to need it less.</p>
+    <form class="cta" id="join" onsubmit="return joinList(event)">
+      <label for="email" style="position:absolute;left:-9999px">Email</label>
+      <input id="email" type="email" placeholder="you@anywhere.com" required autocomplete="email">
+      <button class="btn" type="submit">Get early access</button>
+      <span class="note">Your rehearsals are yours. Never used for training. Never shared.</span>
+    </form>
+  </div>
+  <div class="phone" aria-label="Example rehearsal">
+    <div class="top"><span>Rehearsal · 02:41</span><b><i></i>Hard mode</b></div>
+    <div class="who">Your landlord</div>
+    <div class="mode">Scenario: get the $1,200 deposit back · busy, defensive</div>
+    <div class="wave" aria-hidden="true"><i style="height:8px"></i><i style="height:18px"></i><i style="height:30px"></i><i style="height:14px"></i><i style="height:26px"></i><i style="height:10px"></i><i style="height:22px"></i><i style="height:32px"></i><i style="height:12px"></i><i style="height:20px"></i><i style="height:8px"></i><i style="height:16px"></i><i style="height:28px"></i><i style="height:10px"></i></div>
+    <div class="bubbles">
+      <div class="b them"><span class="tag">Landlord</span>Look, I've got three showings today. The walls needed painting. That's on you.</div>
+      <div class="b you"><span class="tag">You</span>I get that you're busy. Normal wear isn't a deduction under state law, and I have move-in photos. I'd like the full $1,200 back within 14 days.</div>
+      <div class="b them"><span class="tag">Landlord</span>...Send me the photos.</div>
+    </div>
+    <div class="debrief">
+      <b>Debrief</b>
+      <div class="row"><span>Got to the ask</span><span class="up">0:38, down from 1:50</span></div>
+      <div class="row"><span>Apologies before the ask</span><span class="up">0, down from 3</span></div>
+      <div class="row"><span>Filler words</span><span class="down">7 "like"</span></div>
+      <div class="row"><span>Held the number</span><span class="up">yes</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="proof" aria-label="Why it matters">
+  <div><div class="n">65%<sup>1</sup></div><p>of Gen Z say calling a stranger makes them uncomfortable. Only a third are comfortable making calls at all.</p></div>
+  <div><div class="n">37%<sup>2</sup></div><p>of adults 18–25 report significant anxiety, the highest of any adult age group.</p></div>
+  <div><div class="n">$100M<sup>3</sup></div><p>a year: what a daily "say it out loud" habit is worth when Speak applied it to languages. Unmute applies it to the conversations people actually fear.</p></div>
+</div>
+
+<section id="how">
+  <p class="eyebrow">How it works</p>
+  <h2>Rehearse. Debrief. Repeat. Then do it for real.</h2>
+  <div class="how">
+    <div class="step"><div class="k">1 · Rehearse</div><h3>The other person talks back.</h3><p>Pick the conversation or describe your own. The AI plays the other side with a voice, a mood and a personality. It interrupts, sighs, goes quiet, pushes back. Kind, neutral or hostile.</p></div>
+    <div class="step"><div class="k">2 · Debrief</div><h3>Exactly what to change.</h3><p>What worked, where you folded, how long you took to get to the ask, filler words, and the two sentences to try next time. It remembers your patterns: "you apologize before every ask."</p></div>
+    <div class="step"><div class="k">3 · Daily rep</div><h3>Three minutes, every day.</h3><p>A streak and a scenario picked from what you have coming up. Connect your calendar and "interview Thursday" becomes Tuesday's rep.</p></div>
+    <div class="step"><div class="k">4 · Real mode</div><h3>Warm up, then make the call.</h3><p>A 60-second warmup and a cue card before the real thing, a debrief after. Unmute never listens to real calls. Phones do not allow it, and you would not want it to.</p></div>
+  </div>
+</section>
+
+<section id="demo">
+  <p class="eyebrow">Rehearse one</p>
+  <h2>Try a rehearsal right now.</h2>
+  <p class="lead">Pick a conversation and a mood. The AI plays the other person. Say what you would actually say, then end the rehearsal for your debrief. The full app is voice-first; this preview lets you type, and reads the other person's lines aloud where your browser allows it.</p>
+  <div class="demo">
+    <div class="panel">
+      <label>Conversation</label>
+      <div class="chips" id="scenChips"></div>
+      <label for="custom">Or describe your own</label>
+      <textarea id="custom" placeholder="e.g. Asking my manager to move my shift because of class…"></textarea>
+      <label>Mood of the other person</label>
+      <div class="chips" id="moodChips">
+        <button class="chip" type="button" data-mood="kind" onclick="setMood('kind',this)">Kind</button>
+        <button class="chip" type="button" data-mood="neutral" aria-pressed="true" onclick="setMood('neutral',this)">Neutral</button>
+        <button class="chip" type="button" data-mood="hostile" onclick="setMood('hostile',this)">Hostile</button>
+      </div>
+      <div class="row">
+        <button class="btn" type="button" id="startBtn" onclick="startRehearsal()">Start rehearsal</button>
+        <button class="btn ghost" type="button" id="voiceBtn" onclick="toggleVoice()" aria-pressed="true">Read lines aloud: on</button>
+      </div>
+      <div class="status" id="status">Pick a conversation to begin.</div>
+    </div>
+    <div>
+      <div class="chat" aria-live="polite">
+        <div class="hd"><span id="chatTitle">No rehearsal yet</span><b id="chatMode"></b></div>
+        <div class="log" id="log"><div class="small">Your rehearsal appears here.</div></div>
+        <div class="composer">
+          <label for="say" style="position:absolute;left:-9999px">What you say</label>
+          <textarea id="say" placeholder="Say what you would actually say…" disabled></textarea>
+          <button class="iconbtn" type="button" id="micBtn" onclick="toggleMic()" title="Speak instead of typing" aria-label="Speak instead of typing" disabled>🎤</button>
+          <button class="btn" type="button" id="sendBtn" onclick="sendLine()" disabled>Say it</button>
+        </div>
+        <div class="row" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost" type="button" id="endBtn" onclick="endRehearsal()" disabled>End and debrief</button>
+          <span class="status" id="chatStatus"></span>
+        </div>
+      </div>
+      <div class="debriefcard" id="debrief" hidden></div>
+    </div>
+  </div>
+</section>
+
+<section id="scenarios">
+  <p class="eyebrow">Conversations</p>
+  <h2>The ones people rehearse in the shower.</h2>
+  <div class="scen">
+    <div class="sc"><b>The call you keep postponing</b><span>Doctor's office, insurance, the bank, customer service. Getting to the point without the apology spiral.</span></div>
+    <div class="sc"><b>The ask</b><span>A raise, a deadline extension, a shift change, a favor. Say the number and then stop talking.</span></div>
+    <div class="sc"><b>The roommate talk</b><span>Dishes, noise, a guest who never leaves. Firm without a fight.</span></div>
+    <div class="sc"><b>The interview</b><span>"Tell me about yourself," the salary question, the awkward silence. Panels too.</span></div>
+    <div class="sc"><b>The first date</b><span>Small talk that goes somewhere. Ending it kindly if it doesn't.</span></div>
+    <div class="sc"><b>The deposit, the fee, the refund</b><span>A landlord, a gym, an airline. Holding your ground when they get busy or rude.</span></div>
+    <div class="sc"><b>Saying no</b><span>To a friend, a parent, a boss. Once, clearly, without a paragraph of reasons.</span></div>
+    <div class="sc"><b>The hard one</b><span>A breakup, an apology, telling someone the truth. Practiced before it has to be perfect.</span></div>
+  </div>
+</section>
+
+<section id="stance">
+  <p class="eyebrow">Not a companion</p>
+  <h2>It exists to make you need it less.</h2>
+  <div class="stance">
+    <div>
+      <p class="lead" style="margin-bottom:0">AI companions are built to keep you talking to them. Unmute is built to get you talking to people. Every rehearsal ends with a real conversation to go have. Every persona is clearly synthetic. No romantic roleplay, no endless chat, no "I missed you."</p>
+    </div>
+    <ul>
+      <li><strong>A coach, not therapy.</strong> Crisis language routes to real resources, every time.</li>
+      <li><strong>Practice rooms.</strong> A friend plays the recruiter while the AI coaches. The AI plays the panel while your friends rate you.</li>
+      <li><strong>Dares.</strong> "Call the pizza place and negotiate a discount." Shareable clips, voice-changed if you want.</li>
+      <li><strong>The before-and-after.</strong> Your first call next to your tenth. That clip is the whole pitch.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="pricing">
+  <p class="eyebrow">Pricing</p>
+  <h2>One rep a day is free. The habit costs less than the coffee before the interview.</h2>
+  <div class="tiers">
+    <div class="tier">
+      <div class="name">Free</div>
+      <div class="price">$0</div>
+      <div class="per">forever</div>
+      <ul><li>One rehearsal a day, any scenario</li><li>The debrief</li><li>Streaks</li></ul>
+    </div>
+    <div class="tier pick">
+      <div class="name">Plus</div>
+      <div class="price">$14.99</div>
+      <div class="per">a month, or $99 a year</div>
+      <ul><li>Unlimited rehearsals and custom scenarios</li><li>Hard mode, real mode, calendar reps</li><li>Your patterns and trends over time</li><li>Practice rooms and dares</li></ul>
+    </div>
+    <div class="tier">
+      <div class="name">Teams</div>
+      <div class="price">Let's talk</div>
+      <div class="per">career centers, companies, clinicians</div>
+      <ul><li>Interview season for a whole campus</li><li>Customer-facing and manager practice</li><li>Structured practice programs with clinicians</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="tight">
+  <div class="final">
+    <div>
+      <h2>Say it here first.</h2>
+      <p class="lead">Early access opens campus by campus this interview season. Get on the list and we will tell you the day it reaches yours.</p>
+    </div>
+    <form class="cta" onsubmit="return joinList(event)">
+      <label for="email2" style="position:absolute;left:-9999px">Email</label>
+      <input id="email2" type="email" placeholder="you@anywhere.com" required autocomplete="email">
+      <button class="btn" type="submit">Get early access</button>
+      <span class="note">One email when it launches. Nothing else.</span>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <a class="brand" href="#top"><i></i>Unmute</a>
+    <p class="small" style="margin-top:8px">A working name; the company and the product are in preview.</p>
+  </div>
+  <div class="fine">
+    <p><sup>1</sup> YouGov, phone habits by generation: 65% of Gen Z uncomfortable calling a stranger; 33% of Gen Z comfortable making calls versus 49% of Millennials and 67% of Boomers. <sup>2</sup> Young adult mental health statistics compiled by Compass Health Center, 2026. <sup>3</sup> Y Combinator on Speak: 15M downloads, $100M+ annualized revenue, users practice speaking 5–10x more than on other apps.</p>
+    <p>Our fine print: Unmute is practice, not therapy or medical care. Rehearsals are private to you, never used to train models, and deleted when you say so. The preview rehearsal on this page runs through Claude when you open it signed in, and shows a sample otherwise.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+var SCENARIOS = [
+  {id:'deposit', label:'Get my deposit back', who:'Your former landlord', setup:'The user moved out two weeks ago and wants their full $1,200 security deposit returned. The landlord is claiming deductions for painting and cleaning that are arguably normal wear.'},
+  {id:'raise', label:'Ask for a raise', who:'Your manager', setup:'The user has been in the role 14 months, took on extra responsibilities, and wants a raise to $62,000 from $55,000. The manager is under budget pressure.'},
+  {id:'doctor', label:'Call the doctor\'s office', who:'Receptionist at a busy clinic', setup:'The user needs to get an appointment moved up and a referral sent to a specialist; the office has been slow and the receptionist is rushed.'},
+  {id:'roommate', label:'The roommate talk', who:'Your roommate', setup:'The user\'s roommate leaves dishes for days and has a partner staying over five nights a week without asking. The user wants it to change without blowing up the friendship.'},
+  {id:'interview', label:'Job interview', who:'A hiring manager', setup:'A 30-minute first-round interview for an entry-level role. The interviewer asks real questions, including salary expectations, and probes vague answers.'},
+  {id:'extension', label:'Ask a professor for an extension', who:'Your professor', setup:'The user needs a three-day extension on a paper due Friday because of a family situation; the professor has a strict late policy.'},
+  {id:'date', label:'First date small talk', who:'Your date', setup:'A first coffee date. The other person is friendly but a little reserved; the user wants the conversation to go somewhere real.'},
+  {id:'no', label:'Say no to a friend', who:'A close friend', setup:'A close friend keeps asking the user to cover shifts and lend money. The user wants to say no clearly this time without a paragraph of reasons.'}
+];
+var CANNED = {
+  scenario: 'deposit',
+  lines: ["Look, I've got three showings today. The walls needed painting and the place wasn't clean. That's on you.", "Normal wear, sure, but I still had to hire someone. I'm keeping four hundred for that.", "...Fine. Send me the move-in photos and I'll look at it tonight."],
+  debrief: {score: 7, worked: ["You named the number and the deadline in one sentence.", "You acknowledged they were busy without apologizing for calling."], folded: ["You said 'sorry to bother you' before the ask; it signals the ask is optional.", "You explained your side three times; once was enough."], next: ["Normal wear is not a deduction. I have move-in photos. I'd like the full $1,200 back within 14 days.", "I'll send the photos tonight. What's the best email?"], pattern: "You tend to explain again when the other person goes quiet. Silence is theirs to fill."}
+};
+
+var sampleFn = null, ctl = null;
+var state = null; // {scenario, who, setup, mood, turns:[{role,content}], log:[{speaker,text}], started, ended}
+var voiceOn = true, micOn = false, recog = null;
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function setStatus(t){ document.getElementById('status').textContent = t || ''; }
+function setChatStatus(t){ document.getElementById('chatStatus').textContent = t || ''; }
+
+(function buildChips(){
+  var c = document.getElementById('scenChips');
+  SCENARIOS.forEach(function(s, i){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = s.label; b.setAttribute('data-id', s.id); b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    b.onclick = function(){ pickScenario(s.id, b); };
+    c.appendChild(b);
+  });
+})();
+var chosen = 'deposit', mood = 'neutral';
+function pickScenario(id, btn){ chosen = id; var chips = document.querySelectorAll('#scenChips .chip'); for (var i=0;i<chips.length;i++) chips[i].setAttribute('aria-pressed', chips[i] === btn ? 'true' : 'false'); document.getElementById('custom').value = ''; }
+function setMood(m, btn){ mood = m; var chips = document.querySelectorAll('#moodChips .chip'); for (var i=0;i<chips.length;i++) chips[i].setAttribute('aria-pressed', chips[i] === btn ? 'true' : 'false'); }
+function toggleVoice(){ voiceOn = !voiceOn; var b = document.getElementById('voiceBtn'); b.setAttribute('aria-pressed', voiceOn ? 'true' : 'false'); b.textContent = 'Read lines aloud: ' + (voiceOn ? 'on' : 'off'); if(!voiceOn && window.speechSynthesis) window.speechSynthesis.cancel(); }
+function speak(text){
+  if(!voiceOn || !window.speechSynthesis) return;
+  try{ window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.rate = 1.02; u.pitch = 1; window.speechSynthesis.speak(u); }catch(_){}
+}
+function addBubble(speaker, text, who){
+  var log = document.getElementById('log');
+  if (log.querySelector('.small')) log.innerHTML = '';
+  var d = document.createElement('div'); d.className = 'b ' + (speaker === 'you' ? 'you' : 'them');
+  d.innerHTML = '<span class="tag">' + esc(speaker === 'you' ? 'You' : who) + '</span>' + esc(text);
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+function setComposer(on){ ['say','micBtn','sendBtn','endBtn'].forEach(function(id){ document.getElementById(id).disabled = !on; }); }
+
+function personaPrompt(){
+  var moodText = {kind: 'warm, patient and reasonable, but you still have your own interests', neutral: 'businesslike, a little distracted, not hostile but not doing the user any favors', hostile: 'impatient, defensive and dismissive; you interrupt, deflect and try to end the conversation early, though you can be moved by a calm, specific, well-evidenced ask'}[mood];
+  return "You are roleplaying ONE person in a practice conversation so the user can rehearse a real conversation they are dreading. You play: " + state.who + ". Situation: " + state.setup + " Your mood: " + moodText + ".\n\nRules: Stay in character as this person only. Reply with what this person would actually say next, 1 to 3 short sentences, natural spoken language, no narration, no stage directions, no coaching, no quotation marks, no labels. React realistically to what the user says: reward clear, specific, calm asks with movement; punish rambling, apologizing and vagueness with resistance. Never break character unless the user types END. Keep it safe: no slurs, no sexual content, no threats.";
+}
+async function startRehearsal(){
+  var custom = (document.getElementById('custom').value || '').trim();
+  var s = SCENARIOS.filter(function(x){ return x.id === chosen; })[0];
+  state = {scenario: custom ? 'custom' : s.id, who: custom ? 'The other person' : s.who, setup: custom ? ('The user describes the conversation as: ' + custom) : s.setup, mood: mood, turns: [], log: [], ended: false};
+  document.getElementById('log').innerHTML = '<div class="small">Your rehearsal appears here.</div>';
+  document.getElementById('debrief').hidden = true;
+  document.getElementById('chatTitle').textContent = (custom ? 'Custom rehearsal' : s.label) + ' · ' + state.who;
+  document.getElementById('chatMode').textContent = mood + ' mode';
+  if(!sampleFn){
+    state.canned = true; state.cannedIdx = 0;
+    if (custom || chosen !== 'deposit') setStatus('Live rehearsals run when this page is opened inside Claude, signed in. Showing the sample landlord rehearsal instead.');
+    else setStatus('Sample rehearsal. Live ones run when this page is opened inside Claude, signed in.');
+    state.who = 'Your former landlord'; state.scenario = 'deposit';
+    document.getElementById('chatTitle').textContent = 'Get my deposit back · Your former landlord (sample)';
+    var first = CANNED.lines[0]; addBubble('them', first, state.who); speak(first); state.log.push({speaker: state.who, text: first}); state.cannedIdx = 1;
+    setComposer(true); document.getElementById('say').focus(); return;
+  }
+  setStatus('Starting…'); document.getElementById('startBtn').disabled = true;
+  setChatStatus('The other person is picking up…');
+  ctl = new AbortController();
+  try{
+    state.turns = [{role: 'user', content: personaPrompt() + "\n\nThe user is about to start the conversation. Open with the first thing " + state.who + " would say when the user approaches or calls (a greeting or an opening line in character)."}];
+    var r = await sampleFn(state.turns, {modelTier: 'quick', cache: false, signal: ctl.signal});
+    var line = (r.text || '').trim();
+    state.turns.push({role: 'assistant', content: line});
+    addBubble('them', line, state.who); speak(line); state.log.push({speaker: state.who, text: line});
+    setStatus('Live. Say what you would actually say. Type END or press "End and debrief" when done.'); setChatStatus('');
+    setComposer(true); document.getElementById('say').focus();
+  }catch(e){ handleErr(e); }
+  finally{ document.getElementById('startBtn').disabled = false; ctl = null; }
+}
+function handleErr(e){
+  var code = e && e.code;
+  if(code === 'not_granted'){ sampleFn = null; setStatus('Live rehearsal was not allowed in this view. Showing the sample instead.'); state = null; startRehearsal(); }
+  else if(code === 'rate_limited'){ setChatStatus('Too many turns in a row. Wait a moment.'); }
+  else if(code === 'cancelled'){ setChatStatus('Stopped.'); }
+  else if(code === 'invalid_json'){ setChatStatus('The debrief could not be read. Try ending again.'); }
+  else { setChatStatus('The other person dropped the call. Try again.'); }
+}
+async function sendLine(){
+  if(!state || state.ended) return;
+  var box = document.getElementById('say'); var text = (box.value || '').trim(); if(!text) return;
+  box.value = '';
+  if (/^end$/i.test(text)) { endRehearsal(); return; }
+  addBubble('you', text, ''); state.log.push({speaker: 'You', text: text});
+  if(state.canned){
+    var line = CANNED.lines[Math.min(state.cannedIdx, CANNED.lines.length - 1)]; state.cannedIdx += 1;
+    setTimeout(function(){ addBubble('them', line, state.who); speak(line); state.log.push({speaker: state.who, text: line}); if (state.cannedIdx >= CANNED.lines.length) setChatStatus('End the rehearsal for your debrief.'); }, 500);
+    return;
+  }
+  setComposer(false); setChatStatus('…');
+  ctl = new AbortController();
+  try{
+    state.turns.push({role: 'user', content: text});
+    var r = await sampleFn(state.turns, {modelTier: 'quick', cache: false, signal: ctl.signal});
+    var line = (r.text || '').trim();
+    state.turns.push({role: 'assistant', content: line});
+    addBubble('them', line, state.who); speak(line); state.log.push({speaker: state.who, text: line});
+    setChatStatus('');
+  }catch(e){ state.turns.pop(); handleErr(e); }
+  finally{ if(state && !state.ended){ setComposer(true); document.getElementById('say').focus(); } ctl = null; }
+}
+document.getElementById('say').addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendLine(); } });
+
+function renderDebrief(d){
+  var el = document.getElementById('debrief'); el.hidden = false;
+  var score = Math.max(0, Math.min(10, Number(d.score) || 0));
+  var worked = Array.isArray(d.worked) ? d.worked.slice(0,3) : [];
+  var folded = Array.isArray(d.folded) ? d.folded.slice(0,3) : [];
+  var next = Array.isArray(d.next) ? d.next.slice(0,2) : [];
+  var html = '<div class="hd2"><b>Debrief</b><span class="score">' + score + ' / 10</span></div>';
+  if (worked.length){ html += '<h4>What worked</h4><ul>' + worked.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; }
+  if (folded.length){ html += '<h4>Where you folded</h4><ul>' + folded.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; }
+  if (next.length){ html += '<h4>Say this next time</h4>' + next.map(function(x){ return '<div class="say">' + esc(x) + '</div>'; }).join(''); }
+  if (d.pattern){ html += '<h4>Your pattern</h4><p style="margin:0">' + esc(d.pattern) + '</p>'; }
+  el.innerHTML = html; el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+async function endRehearsal(){
+  if(!state || state.ended) return;
+  state.ended = true; setComposer(false);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if(state.canned){ renderDebrief(CANNED.debrief); setChatStatus('Sample debrief. Live debriefs analyze exactly what you said.'); return; }
+  setChatStatus('Writing your debrief…');
+  var transcript = state.log.map(function(l){ return l.speaker + ': ' + l.text; }).join('\n').slice(0, 8000);
+  var prompt = "You are a blunt, kind communication coach. The user just rehearsed this conversation. They played 'You'; the AI played " + state.who + " (" + state.mood + " mood). Situation: " + state.setup + "\n\nTRANSCRIPT:\n" + transcript + "\n\nWrite a debrief of what the user (You) did. Judge only the user's lines. Be specific and quote their words. Reply with only JSON: {\"score\": integer 0-10 for how effective the user was at getting what they wanted while staying calm and clear, \"worked\": [up to 3 short specific things the user did well, quoting them], \"folded\": [up to 3 short specific moments the user apologized, rambled, hedged, gave ground, or buried the ask, quoting them; empty if none], \"next\": [exactly 2 short sentences the user should say next time, written in first person, ready to say out loud], \"pattern\": one sentence naming a habit visible in their lines}";
+  ctl = new AbortController();
+  try{
+    var d = await sampleFn.json(prompt, {modelTier: 'quick', cache: false, signal: ctl.signal});
+    renderDebrief(d); setChatStatus('Debrief ready. Start another rehearsal any time.');
+  }catch(e){ handleErr(e); }
+  finally{ ctl = null; }
+}
+function toggleMic(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ setChatStatus('Speech input is not available in this browser here. Type instead.'); return; }
+  if (micOn && recog){ try{ recog.stop(); }catch(_){} micOn = false; document.getElementById('micBtn').setAttribute('aria-pressed','false'); return; }
+  try{
+    recog = new SR(); recog.lang = 'en-US'; recog.interimResults = true; recog.continuous = false;
+    var box = document.getElementById('say');
+    recog.onresult = function(ev){ var t = ''; for (var i=0;i<ev.results.length;i++) t += ev.results[i][0].transcript; box.value = t; };
+    recog.onend = function(){ micOn = false; document.getElementById('micBtn').setAttribute('aria-pressed','false'); if ((box.value||'').trim()) sendLine(); };
+    recog.onerror = function(){ micOn = false; document.getElementById('micBtn').setAttribute('aria-pressed','false'); setChatStatus('The microphone was not available here. Type instead.'); };
+    recog.start(); micOn = true; document.getElementById('micBtn').setAttribute('aria-pressed','true'); setChatStatus('Listening… speak, then pause.');
+  }catch(_){ setChatStatus('The microphone was not available here. Type instead.'); }
+}
+function joinList(e){
+  e.preventDefault();
+  var form = e.target; var input = form.querySelector('input[type=email]'); var email = (input.value || '').trim(); if(!email) return false;
+  try { localStorage.setItem('unmute_waitlist', JSON.stringify({email: email, at: Date.now()})); } catch(_) {}
+  var done = document.createElement('div'); done.className = 'done';
+  done.textContent = "You're on the list, " + email + ". This preview keeps it on your device; the live site sends one email at launch.";
+  form.innerHTML = ''; form.appendChild(done); return false;
+}
+(function(){
+  try{
+    if (window.claude && typeof window.claude.use === 'function'){
+      window.claude.use('sample').then(function(fn){ if(fn){ sampleFn = fn; setStatus('Ready. Pick a conversation and a mood, then start.'); } }).catch(function(){});
+    }
+  }catch(_){}
+})();
+</script>
+</body></html>
