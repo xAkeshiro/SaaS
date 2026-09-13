@@ -12,8 +12,9 @@ Workspace for a new startup, researched and built with Claude Code.
 - `docs/plan/06-campus-channel-comparison.md` — Asterisk campus-first features and the Rocket Money comparison
 - `docs/plan/07-presence-vs-asterisk.md` — Presence, a campus events app (superseded: too event-specific)
 - `docs/plan/08-facedown-vs-asterisk.md` — Facedown vs Asterisk (both passed over)
-- `docs/plan/09-lore.md` — current idea: Lore, the daily game generated about your own community; playable prototype in `site/lore/`
+- `docs/plan/09-lore.md` — Lore, a daily community game (passed over: not innovative or sellable enough); prototype in `site/lore/`
+- `docs/plan/10-bloc.md` — current idea: Bloc, the collective-leverage engine (AI organizes people with the same grievance and executes the remedy ladder); system brief in `site/bloc/`
 
 ## Status
 
-Research complete. Current candidate: Lore (docs/plan/09), playable prototype in site/lore.
+Research complete. Current candidate: Bloc (docs/plan/10).
