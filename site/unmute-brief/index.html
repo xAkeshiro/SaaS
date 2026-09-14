@@ -1,0 +1,313 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font:14px system-ui;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Unmute Startup Brief</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F4F5F7; --surface:#FFFFFF; --ink:#141519; --muted:#646A76; --line:#D8DBE1; --line-strong:#B4B9C4;
+  --accent:#B86E00; --accent-ink:#FFFFFF; --accent-soft:#FBEBD1;
+  --signal:#B3402E; --signal-soft:#F7E3DE; --ok:#1E6B52; --ok-soft:#DDEEE6;
+  --score:#B86E00; --score-track:#E8EAEE;
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1115; --surface:#171A21; --ink:#F2F3F5; --muted:#9BA1AD; --line:#2A2F3A; --line-strong:#3E4452;
+    --accent:#FFB454; --accent-ink:#1A1000; --accent-soft:#3A2A0F;
+    --signal:#F08A76; --signal-soft:#3A221D; --ok:#5FBFA0; --ok-soft:#1E3A30;
+    --score:#FFB454; --score-track:#2A2F3A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1115; --surface:#171A21; --ink:#F2F3F5; --muted:#9BA1AD; --line:#2A2F3A; --line-strong:#3E4452;
+  --accent:#FFB454; --accent-ink:#1A1000; --accent-soft:#3A2A0F;
+  --signal:#F08A76; --signal-soft:#3A221D; --ok:#5FBFA0; --ok-soft:#1E3A30;
+  --score:#FFB454; --score-track:#2A2F3A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;padding-inline:20px;padding-block:0 64px}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+a:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.mast{max-width:1120px;margin:0 auto;padding-block:36px 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px 32px;align-items:end;justify-content:space-between}
+.mast h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,5vw,58px);line-height:1;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.mast h1 i{display:inline-block;width:.32em;height:.32em;border-radius:50%;background:var(--accent);margin-right:.18em;vertical-align:.12em}
+.mast .sub{font-family:var(--display);font-weight:500;color:var(--muted);font-size:17px;margin:10px 0 0;max-width:60ch;text-wrap:balance}
+.meta{font-family:var(--mono);font-size:12.5px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;display:grid;gap:4px;text-align:right}
+.wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;padding-top:28px}
+nav.toc{position:sticky;top:20px;align-self:start;font-family:var(--display);font-size:14px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:8px;border-left:2px solid var(--line)}
+nav.toc a{display:block;padding:2px 0 2px 12px;color:var(--muted);text-decoration:none;margin-left:-2px;border-left:2px solid transparent}
+nav.toc a:hover{color:var(--ink);border-left-color:var(--accent)}
+main{max-width:74ch;min-width:0}
+section{padding-block:8px 36px}
+section+section{border-top:1px solid var(--line);padding-top:32px}
+h2{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.12;margin:0 0 14px;letter-spacing:-.015em;text-wrap:balance}
+h3{font-family:var(--display);font-weight:700;font-size:19px;margin:24px 0 8px;text-wrap:balance}
+p{margin:0 0 14px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.verdict{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);padding:22px 24px;margin:0 0 22px}
+.verdict p:first-of-type{font-family:var(--display);font-weight:700;font-size:21px;line-height:1.35;margin-bottom:10px;text-wrap:balance}
+.verdict p:last-child{margin-bottom:0}
+ul,ol{padding-left:22px;margin:0 0 14px}
+li{margin-bottom:8px}
+li strong{font-family:var(--display);font-weight:700}
+.tablewrap{overflow-x:auto;margin:14px 0 18px;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.45;min-width:600px}
+th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.02em;color:var(--muted);background:var(--bg);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.c{font-family:var(--display);font-weight:700;min-width:130px}
+td.ok{color:var(--ok);font-family:var(--display);font-weight:700}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.callout{background:var(--accent-soft);border-left:4px solid var(--accent);padding:14px 18px;margin:16px 0 18px;font-size:16px}
+.callout p:last-child{margin:0}
+.warn{background:var(--signal-soft);border-left:4px solid var(--signal)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0 18px}
+.kv div{background:var(--surface);border:1px solid var(--line);padding:14px 16px}
+.kv .k{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.kv .v{font-family:var(--display);font-weight:800;font-size:22px;line-height:1.15;margin:0;letter-spacing:-.01em}
+.kv .n{font-size:14px;color:var(--muted);margin:6px 0 0;line-height:1.45}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0 0 14px;display:grid;gap:12px}
+.steps li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:start;margin:0}
+.steps li::before{counter-increment:s;content:counter(s);font-family:var(--mono);font-size:13px;color:var(--accent-ink);background:var(--accent);width:28px;height:28px;display:grid;place-items:center;border-radius:2px;margin-top:2px}
+.small{font-size:14.5px;color:var(--muted)}
+.sources{font-size:14px}
+.sources li{margin-bottom:6px;overflow-wrap:anywhere}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr;gap:20px}
+  nav.toc{position:static}
+  nav.toc ol{display:flex;flex-wrap:wrap;gap:6px 14px;border-left:0}
+  nav.toc a{border-left:0;padding:0;margin:0}
+  .meta{text-align:left}
+}
+</style>
+
+<header class="mast">
+  <div>
+    <p class="eyebrow">Startup brief · launch edition</p>
+    <h1><i></i>Unmute</h1>
+    <p class="sub">Talk to an AI so you can talk to people. Voice practice for the conversations people dread, three minutes a day. Not a companion: a coach that exists to make you need it less.</p>
+  </div>
+  <div class="meta">
+    <span>14 September 2026</span>
+    <span>Working name, check trademarks</span>
+    <span>Built on four research passes</span>
+  </div>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sections">
+  <ol>
+    <li><a href="#verdict">Verdict</a></li>
+    <li><a href="#pattern">The YC pattern</a></li>
+    <li><a href="#why">Why now</a></li>
+    <li><a href="#taken">What is taken</a></li>
+    <li><a href="#product">The product</a></li>
+    <li><a href="#tests">The five tests</a></li>
+    <li><a href="#model">Business model</a></li>
+    <li><a href="#launch">Launch plan</a></li>
+    <li><a href="#build">Build plan</a></li>
+    <li><a href="#days">90 days</a></li>
+    <li><a href="#risks">Risks</a></li>
+    <li><a href="#you">What you do</a></li>
+    <li><a href="#sources">Sources</a></li>
+  </ol>
+</nav>
+
+<main>
+<section id="verdict">
+  <div class="verdict">
+    <p>Unmute is the daily "say it out loud" habit that made Speak a $1B company, pointed at a bigger market than language learning: the conversations people are actually afraid of.</p>
+    <p>The demand is loudly documented (65% of Gen Z are uncomfortable calling a stranger), the technology arrived this year (full-duplex voice that interrupts and pushes back), the enterprise side of the category is already funded (Second Nature $22M, Hyperbound $15M, Big Interview in 700+ universities), and no consumer brand owns it. The one review of the space that exists says it in one sentence: "the hard talk with your mother, your partner, or your shut-down teenager falls in the gap" between workplace trainers and open-ended chatbots.</p>
+  </div>
+  <div class="kv">
+    <div><p class="k">The comparable</p><p class="v">Speak: $1B, $100M+ ARR</p><p class="n">15M downloads, doubled every year for five years, one billion sentences spoken in 2024</p></div>
+    <div><p class="k">The demand</p><p class="v">65% of Gen Z</p><p class="n">uncomfortable calling a stranger; only 33% comfortable making calls at all, versus 67% of Boomers</p></div>
+    <div><p class="k">The institutional buyer</p><p class="v">700+ universities</p><p class="n">already license Big Interview for mock interviews; 2M+ users</p></div>
+    <div><p class="k">The cost to serve</p><p class="v">$0.06–0.33 per rep</p><p class="n">a three-minute rehearsal on 2026 realtime voice pricing, falling</p></div>
+  </div>
+</section>
+
+<section id="pattern">
+  <h2>What the YC companies with the most users share</h2>
+  <p>Looked at the YC companies that reached the largest user bases (Replit 50M users, Supabase 10M developers, Speak 15M downloads, Whatnot, Kalshi) and at YC's own guidance. Eight things recur, and Unmute is designed against all eight.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Pattern</th><th>Evidence</th><th>Unmute</th></tr></thead>
+    <tbody>
+      <tr><td class="c">A daily or weekly job with value in five minutes</td><td>Speak gets you speaking in the first session; Supabase gives you a database in one click</td><td>Your first rehearsal ends with a debrief that names the exact sentence to say next time</td></tr>
+      <tr><td class="c">Free to start, self-serve</td><td>Every one of them grew bottom-up</td><td>One rep a day free, paywall after the first debrief</td></tr>
+      <tr><td class="c">A platform wave</td><td>Supabase went 1M to 4.5M developers in under a year on the AI coding wave</td><td>Full-duplex realtime voice crossed the line in 2025–26</td></tr>
+      <tr><td class="c">Distribution inside the product</td><td>Creators bring audiences to Whatnot; open source brings developers to Supabase</td><td>Practice rooms need a friend; dares and before-and-after clips travel on their own</td></tr>
+      <tr><td class="c">Retention as the compass</td><td>Series reports 82% day-30 retention on 750 campuses</td><td>Streaks, the calendar hook, and a real conversation to prepare for</td></tr>
+      <tr><td class="c">Founders build what they want</td><td>Paul Graham's three tests for the best ideas</td><td>Every founder under 30 has a call they are avoiding this week</td></tr>
+      <tr><td class="c">Narrow wedge, huge market</td><td>Speak began with Korean learners of English</td><td>Campus interview season first, everyone's dreaded conversation after</td></tr>
+      <tr><td class="c">A thesis the press repeats</td><td>Cluely proved the loud thesis works even with a thin product</td><td>"Gen Z can't talk to people. This fixes it." and "The anti-companion."</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="why">
+  <h2>Why now</h2>
+  <ul>
+    <li><strong>The problem is universal and measured.</strong> 65% of Gen Z say calling a stranger makes them uncomfortable; 75% feel anxious about phone calls; comfort with calls falls from 67% of Boomers to 49% of Millennials to 33% of Gen Z. 37% of adults 18–25 report significant anxiety, the highest of any adult group. 57% of college students report loneliness. "Gen Z can't talk to people" is a recurring press genre.</li>
+    <li><strong>The technology arrived this year.</strong> Sesame's Maya and Miles showed full-duplex, interruptible, emotionally responsive voice; OpenAI's realtime models and ElevenLabs Agents made it an API at $0.02–0.11 a minute; average response latency is now under 400 ms. Practicing with a stiff chatbot was pointless. Practicing with something that sighs, interrupts, and warms up when you do is not.</li>
+    <li><strong>The mechanic is proven at scale.</strong> Speak's thesis is "get people to speak out loud as much as possible," rewarded daily; users practice 5–10x more than on other apps. Duolingo, with 100M+ users, has narrowed its paid tier to exactly two features: Roleplay and Video Call.</li>
+    <li><strong>The category is funded on the enterprise side and empty on the consumer side.</strong> Second Nature raised a $22M Series B (Oct 2025, Zoom participating); Hyperbound raised a $15M Series A (Sep 2025, YC and Peak XV); Yoodli sells interview and communication practice to companies; Big Interview is licensed by 700+ universities. Nobody has built the consumer habit for the conversations that are not a job interview.</li>
+    <li><strong>The anti-companion moment.</strong> Character.ai is under state regulation and wrongful-death settlements; Friend is a punchline; the AI companion market is projected at $1.8B and is the thing regulators and parents are worried about. A coach whose stated goal is to make you need it less is the voice-AI story journalists want to write right now.</li>
+  </ul>
+</section>
+
+<section id="taken">
+  <h2>Which loud theses are already taken</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Thesis</th><th>Who has it</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td class="c">"Your AI talks to their AI"</td><td>Series, $5.1M pre-seed (Apr 2026), 750+ campuses, 82% day-30 retention</td><td>Taken</td></tr>
+      <tr><td class="c">"Send your AI to the meeting"</td><td>Zoom shipped photorealistic avatars (Mar 2026); Otter's CEO bot</td><td>Owned by platforms</td></tr>
+      <tr><td class="c">"Find the money you're owed"</td><td>Owed launched 29 Aug 2026; Sparrow, Settlemate, Collect, Claims</td><td>Crowded this summer</td></tr>
+      <tr><td class="c">"An AI that fights companies for you"</td><td>Pine ($25M), Meta Muse (8 Sep 2026), Rocket Money's Rowan</td><td>Contested</td></tr>
+      <tr><td class="c">"AI roleplay for sales reps"</td><td>Second Nature, Hyperbound, Quantified</td><td>Enterprise, taken</td></tr>
+      <tr><td class="c">"Talk to an AI so you can talk to people"</td><td>Yoodli (enterprise, interviews), ChatGPT Voice (unstructured), Sesame (companions)</td><td class="ok">Open as a consumer product</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="product">
+  <h2>The product</h2>
+  <ol class="steps">
+    <li><span><strong>Rehearse.</strong> Pick a scenario from the library or describe your own ("my landlord won't return my deposit"). The AI plays the other side with a consistent personality, a voice, a mood and a difficulty from kind to hostile. Full-duplex: it interrupts, sighs, goes quiet, pushes back, and moves when you make a calm, specific ask.</span></li>
+    <li><span><strong>Debrief.</strong> Instantly after: what worked, where you folded, how long you took to get to the ask, filler words, pace, a replay with highlights, and the two sentences to say next time. A confidence trend over weeks. The AI remembers your patterns: "you apologize before every ask."</span></li>
+    <li><span><strong>The daily rep.</strong> Three minutes, streaks, a scenario picked from what you have coming up. Connect your calendar and "interview Thursday" becomes Tuesday's rep.</span></li>
+    <li><span><strong>Real mode.</strong> Before a real call: a 60-second warmup and a cue card. After: a debrief from your own notes. Unmute never listens to real calls; phones do not allow it and nobody would trust it if they did.</span></li>
+    <li><span><strong>Together.</strong> Practice rooms where a friend plays the recruiter while the AI coaches, or the AI plays the panel while friends rate you. Dares with shareable clips. The before-and-after clip of your first call next to your tenth, which is the whole pitch in fifteen seconds.</span></li>
+    <li><span><strong>Guardrails.</strong> A coach, not therapy: crisis language routes to real resources; no romantic roleplay; every persona is clearly synthetic; rehearsals are private and never used for training.</span></li>
+  </ol>
+  <div class="callout"><p>The voice is not the product. The structure, the scoring, the memory of your patterns and the habit are the product. That is how Speak survived ChatGPT, and it is the answer to "what if OpenAI adds a practice mode."</p></div>
+</section>
+
+<section id="tests">
+  <h2>The five tests</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Test</th><th>Unmute</th></tr></thead>
+    <tbody>
+      <tr><td class="c">Innovative</td><td>Full-duplex voice practice for real-life conversations did not work until this year; no consumer brand owns it</td></tr>
+      <tr><td class="c">Sellable</td><td>Speak's price band and $100M ARR; Big Interview in 700+ universities; Second Nature and Hyperbound funded on the enterprise side; education apps have the best renewal of any app category</td></tr>
+      <tr><td class="c">Smart and intricate</td><td>Realtime voice, a persona engine with consistent personalities and difficulty, speech analytics, a memory of your patterns, an adaptive scenario curriculum, multi-party rooms</td></tr>
+      <tr><td class="c">Universal</td><td>Everyone has a conversation they are dreading this week</td></tr>
+      <tr><td class="c">Spreads by community</td><td>Practice rooms, dares, campus interview season, before-and-after clips</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="model">
+  <h2>Business model and unit economics</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Tier</th><th>Price</th><th>Includes</th><th>Comparable</th></tr></thead>
+    <tbody>
+      <tr><td class="c">Free</td><td class="num">$0</td><td>One rehearsal a day, the debrief, streaks</td><td>Speak and Duolingo free tiers</td></tr>
+      <tr><td class="c">Plus</td><td class="num">$14.99/mo · $99/yr</td><td>Unlimited rehearsals, custom scenarios, hard and real mode, calendar reps, patterns and trends, practice rooms and dares</td><td>Speak ~$20/mo, $99/yr; Duolingo Max $168/yr; Big Interview $39/mo</td></tr>
+      <tr><td class="c">Teams</td><td class="num">$3–8 per seat per month</td><td>Career centers (interview season for a campus), companies (customer-facing and manager practice), clinicians running structured practice</td><td>Big Interview institutional licenses; Yoodli, Second Nature enterprise</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Cost line</th><th>2026 price</th><th>Per 3-minute rep</th></tr></thead>
+    <tbody>
+      <tr><td class="c">OpenAI gpt-realtime-2.1</td><td>$0.06–0.11 per minute with caching</td><td class="num">$0.18–0.33</td></tr>
+      <tr><td class="c">OpenAI realtime mini</td><td>$0.02–0.05 per minute</td><td class="num">$0.06–0.15</td></tr>
+      <tr><td class="c">ElevenLabs Agents</td><td>$0.08–0.10 per minute, plus the language model</td><td class="num">$0.24–0.30 plus model</td></tr>
+      <tr><td class="c">Debrief (text model)</td><td>a few thousand tokens</td><td class="num">under $0.02</td></tr>
+    </tbody>
+  </table></div>
+  <p>A free user who reps every day costs $2–10 a month on today's prices, which is why the free tier is one rep and the hard paywall sits after the first debrief, where consumer AI apps convert best (10.7% versus 2.1% for soft paywalls). Plus at $99 a year against roughly $25–40 a year of inference for a heavy user is a healthy margin, and voice prices have fallen about 50% in the last twelve months.</p>
+  <p>Scale check: 20 million US college students plus everyone with an interview, a landlord or a manager. One million paying users at the annual price is $99M ARR, Speak's scale, before the Teams tier.</p>
+</section>
+
+<section id="launch">
+  <h2>Launch plan</h2>
+  <ol class="steps">
+    <li><span><strong>Interview season is the wedge.</strong> Campus recruiting runs September through November. The first campaign is "rehearse your interview tonight," seeded through the communities you can reach, with career centers offered the Teams tier free for the season in exchange for a case study. Big Interview proves they buy this; Unmute is the one students will actually open.</span></li>
+    <li><span><strong>The before-and-after clip.</strong> Every user can export their first rehearsal next to their tenth, voice-changed if they want. That clip is the content engine. Seed it with 20–50 creators on the "phone anxiety" and "Gen Z can't make calls" formats, paid per view, the Rizz and Cal AI playbook.</span></li>
+    <li><span><strong>Dares.</strong> Weekly public dares ("call the pizza place and negotiate a discount," "ask for the manager's name and use it") with a leaderboard of completed clips. Low stakes, high shareability, and every dare ends in a real conversation.</span></li>
+    <li><span><strong>The anti-companion press story.</strong> Launch with a stated position: no romantic roleplay, no endless chat, sessions end with a real conversation to go have. Pitch it as the answer to the companion backlash, with the retention data to back it.</span></li>
+    <li><span><strong>Practice rooms bring the second user.</strong> Every room needs a friend; every friend gets their own daily rep. Referral credit is a free month of Plus for both.</span></li>
+    <li><span><strong>YC.</strong> Apply with week-4 retention, paid conversion, the clip that traveled, and one career center on Teams. The thesis, the comparable and the timing are already YC-shaped; the numbers are what is missing.</span></li>
+  </ol>
+</section>
+
+<section id="build">
+  <h2>Build plan</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Layer</th><th>Choice</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="c">Mobile app</td><td>Expo (React Native), iOS and Android</td><td>Voice-first; push for the daily rep; widgets for the streak</td></tr>
+      <tr><td class="c">Realtime voice</td><td>A provider abstraction over OpenAI realtime (default) and ElevenLabs Agents, WebRTC to the device</td><td>Swap providers by price and quality without touching the product; the mini model for free-tier reps</td></tr>
+      <tr><td class="c">Persona engine</td><td>Scenario templates with personality, goals, mood, difficulty and "movement rules" (what makes this person concede)</td><td>Consistency across turns; hostile mode that can still be won by a calm, specific ask</td></tr>
+      <tr><td class="c">Debrief pipeline</td><td>Transcript plus speech analytics (fillers, pace, pauses, time-to-ask) into a structured coaching model with the user's pattern memory</td><td>The product's core; the same pipeline powers trends and the before-and-after</td></tr>
+      <tr><td class="c">Web</td><td>Next.js: landing, waitlist, rooms, Teams admin, career-center dashboards</td><td>Vercel Pro or Railway</td></tr>
+      <tr><td class="c">Data, auth, billing</td><td>Supabase Postgres with row-level security; Clerk; Stripe plus Apple and Google in-app purchase</td><td>Rehearsals encrypted, deletable, never trained on</td></tr>
+      <tr><td class="c">Analytics, email, jobs, errors</td><td>PostHog, Resend and Loops, Trigger.dev, Sentry</td><td>Standard 2026 stack</td></tr>
+      <tr><td class="c">Safety</td><td>Crisis-language detection routing to resources; content rules per persona; clinical advisor review of scenario families</td><td>A coach, not therapy, in code and in copy</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="days">
+  <h2>The first 90 days</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Weeks</th><th>Milestone</th><th>Success measure</th></tr></thead>
+    <tbody>
+      <tr><td class="c">1–3</td><td>Mobile app with realtime voice, 20 scenarios across calls, asks, conflict, interviews and dates; the debrief with speech analytics; streaks</td><td>Ten friends complete five reps each; 8 of 10 say the debrief changed what they would say</td></tr>
+      <tr><td class="c">3–6</td><td>Custom scenarios from a sentence; persona difficulty; pattern memory; hard paywall after the first debrief; the before-and-after clip export</td><td>500 users from your communities; 30% week-4 retention; 4% paid</td></tr>
+      <tr><td class="c">6–10</td><td>Practice rooms and dares; calendar hook; the interview-season campaign with one career center on Teams; creator bounties live</td><td>5,000 users; one career center running it; the first clip that travels</td></tr>
+      <tr><td class="c">10–13</td><td>Teams tier billing and admin; Android widgets; YC application with retention, paid conversion and the anti-companion story</td><td>Week-4 retention above 35% and a clear paid curve, or stop and reassess</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Metrics that matter: reps per user per week, debrief-to-next-rep rate, week-4 retention, paid conversion after first debrief, room creation rate, clip export and share rate, and the one that matters most: users who report having the real conversation.</p>
+</section>
+
+<section id="risks">
+  <h2>Risks and mitigations</h2>
+  <ul>
+    <li><strong>ChatGPT adds a practice mode.</strong> Speak survived ChatGPT by being structured, scored and habitual. The debrief, the pattern memory, the curriculum and the rooms are the product, not the voice.</li>
+    <li><strong>Voice cost.</strong> Falling fast and already fine at the paid tier; the free tier is capped at one rep, and the mini model serves it.</li>
+    <li><strong>Cringe.</strong> Talking to your phone out loud in a dorm is awkward. Speak's 15M downloads say people do it; headphones, a text-first on-ramp and private rooms lower the bar.</li>
+    <li><strong>Safety.</strong> Vulnerable users will bring real fear to it. Clinical advisors, crisis routing, no romantic scenarios, clear synthetic disclosure, and a hard line in the copy: practice, not therapy.</li>
+    <li><strong>Retention.</strong> Skill apps retain when there is a next real conversation to prepare for; the calendar hook and the daily rep exist for that reason, and week-4 retention is the kill-or-scale number.</li>
+    <li><strong>Trademark.</strong> "Unmute" is a common word in software; clear it in the app-software class before the launch, with "Say It" and "Out Loud" as fallbacks.</li>
+  </ul>
+</section>
+
+<section id="you">
+  <h2>What you do, what I build</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>You</th><th>Claude</th></tr></thead>
+    <tbody>
+      <tr><td>An OpenAI API key (realtime models) and, optionally, an ElevenLabs key</td><td>The provider abstraction, the persona engine, the debrief pipeline</td></tr>
+      <tr><td>Apple Developer ($99/yr) and Google Play ($25) accounts in your name; a real iPhone and Android phone for testing</td><td>The Expo app, store listings, privacy labels, review notes</td></tr>
+      <tr><td>A company entity and a Stripe account</td><td>Billing, in-app purchase, the Teams tier</td></tr>
+      <tr><td>Ten friends for week 3, your communities for week 6, one career-center introduction</td><td>The landing site, the waitlist backend, the clip export, the creator brief and dare calendar</td></tr>
+      <tr><td>The name decision and a trademark search</td><td>Everything else in the build plan</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="sources">
+  <h2>Sources</h2>
+  <p class="small">Figures come from search-result extracts of these pages; spot-check before putting them in a deck. Full citations are in the repository under docs/plan.</p>
+  <ul class="sources">
+    <li><a href="https://techcrunch.com/2024/12/10/openai-backed-speak-raises-78m-at-1b-valuation-to-help-users-learn-languages-by-talking-out-loud">TechCrunch: Speak raises $78M at a $1B valuation (Dec 2024)</a> and <a href="https://x.com/ycombinator/status/1988738481636675978">Y Combinator on Speak passing $100M annualized revenue</a></li>
+    <li><a href="https://yougov.com/en-gb/articles/54114-mythbusting-claims-about-gen-z-and-their-phone-habits">YouGov: Gen Z and phone calls</a> and <a href="https://compasshealthcenter.net/blog/young-adult-mental-health-statistics/">young adult mental health statistics (2026)</a></li>
+    <li><a href="https://www.g2.com/products/big-interview/reviews">Big Interview: 700+ universities, 2M+ users, pricing (2026)</a></li>
+    <li><a href="https://finance.yahoo.com/news/second-nature-secures-22m-series-120000783.html">Second Nature $22M Series B (Oct 2025)</a> and <a href="https://startupintros.com/orgs/hyperbound">Hyperbound $15M Series A (Sep 2025)</a></li>
+    <li><a href="https://www.vocalimage.app/en/articles/37-practice-difficult-conversations-ai-apps/">Vocal Image: apps to practice difficult conversations (2026)</a></li>
+    <li><a href="https://hackernoon.com/openai-realtime-api-pricing-in-2026-real-world-data-from-4000-measured-sessions">OpenAI realtime pricing, measured (2026)</a> and <a href="https://elevenlabs.io/blog/we-cut-our-pricing-for-conversational-ai">ElevenLabs Agents price cut</a></li>
+    <li><a href="https://beginnersinai.org/duolingo-max-explained/">Duolingo Max: Roleplay and Video Call (2026)</a></li>
+    <li><a href="https://techcrunch.com/2026/04/24/two-college-kids-raise-a-5-1-million-pre-seed-to-build-an-ai-social-network-in-imessage/">TechCrunch: Series raises $5.1M (Apr 2026)</a></li>
+    <li><a href="https://techcrunch.com/2026/03/10/ai-powered-apps-struggle-with-long-term-retention-new-report-shows">TechCrunch: RevenueCat 2026 retention and paywall data</a></li>
+    <li><a href="https://www.craftventures.com/articles/inside-supabase-breakout-growth">Craft Ventures on Supabase's growth</a> and <a href="https://www.cnbc.com/2026/05/19/replit-cnbc-disruptor-50-ranking.html">CNBC on Replit's 50M users (May 2026)</a></li>
+    <li><a href="https://techcrunch.com/2026/03/05/cluely-ceo-roy-lee-admits-to-publicly-lying-about-revenue-numbers-last-year/">TechCrunch: Cluely's revenue retraction (Mar 2026)</a></li>
+  </ul>
+</section>
+</main>
+</div>
+</body></html>

@@ -88,3 +88,24 @@ The batch data also says where not to look: consumer is 5% of YC W26, and the co
 ## 7. What was rejected on the way, briefly
 
 Bloc (industry-bound to law firms), Lore (content commodity), Facedown (crowded), Asterisk (occasional utility), Presence (events), Facedown (campus lock). Each is in `docs/plan`. Unmute is the first idea that passes the YC pattern, the five tests, and the "would I open it every day" test at once.
+
+---
+
+## Launch addendum (14 Sep 2026)
+
+Decision: Unmute is the company. Full launch. The startup brief is published as an artifact and committed under `site/unmute-brief/`.
+
+**New evidence gathered for the brief**
+
+- Speak: $78M Series C at a $1B valuation (Dec 2024, Accel, OpenAI Startup Fund, YC); one billion sentences spoken in 2024; 10M+ downloads then 15M; doubled every year for five years; $100M+ annualized revenue per YC; 312 employees (Aug 2026).
+- Universities already pay for practice: Big Interview is licensed by 700+ universities with 2M+ users; consumer pricing $39/month, $99 per quarter, $299 lifetime; institutional licenses at Yale and UC Santa Cruz among others.
+- Enterprise AI roleplay is funded: Second Nature $22M Series B (Oct 2025, Zoom participating); Hyperbound $15M Series A (Sep 2025, YC and Peak XV); Quantified in regulated verticals. Consumer side open.
+- The gap in one sentence, from the only 2026 review of the category: workplace trainers (Yoodli, VirtualSpeech, Coachello) cover interviews and reviews, open-ended chatbots roleplay anything without coaching, and "the hard talk with your mother, your partner, or your shut-down teenager falls in the gap between them." Average voice response latency is now under 400 ms.
+- Duolingo (100M+ users) has narrowed its paid tier to two features: Roleplay and Video Call.
+- Voice cost, 2026: OpenAI gpt-realtime-2.1 about $0.06–0.11 per minute with caching; the mini model $0.02–0.05; ElevenLabs Agents $0.08–0.10 per minute plus the model. A three-minute rep costs $0.06–0.33; a daily free user $2–10 a month, so the free tier is one rep and the paywall follows the first debrief.
+
+**Pricing set for launch:** Free (one rep a day), Plus $14.99 a month or $99 a year, Teams $3–8 per seat per month for career centers, companies and clinicians.
+
+**Launch sequence:** campus interview season (Sep–Nov) as the wedge with career centers on Teams free for the season; the before-and-after clip as the content engine with 20–50 creators on the phone-anxiety format; weekly dares; the anti-companion press story; practice rooms as the referral loop; YC application once week-4 retention, paid conversion and one career center are in hand.
+
+**Next build steps after the brief:** rebuild the marketing site to the user's design-library direction (they will specify libraries, UI and skills), then the Expo voice app with a provider abstraction over OpenAI realtime and ElevenLabs, the persona engine and the debrief pipeline.

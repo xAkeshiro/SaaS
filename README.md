@@ -18,4 +18,4 @@ Workspace for a new startup, researched and built with Claude Code.
 
 ## Status
 
-Research complete. Current candidate: Unmute (docs/plan/11).
+Decision made: Unmute. Full launch. Brief in `site/unmute-brief/`, landing page preview in `site/unmute/`, plan in `docs/plan/11-unmute.md`. Next: rebuild the marketing site to the chosen design libraries, then the Expo voice app.
