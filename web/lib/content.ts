@@ -29,7 +29,7 @@ export const nav = {
 } as const;
 
 export const hero = {
-  eyebrow: "Voice practice for real life",
+  eyebrow: "Conversation practice for real life",
   headline: "Talk to an AI so you can talk to people.",
   headlineEmphasis: "people",
   rotating: [
