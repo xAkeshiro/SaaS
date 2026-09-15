@@ -20,11 +20,11 @@ export function SectionHeading({ eyebrow, title, sub, align = "center", classNam
       )}
     >
       {eyebrow ? (
-        <span className={cn("text-eyebrow", inverted ? "text-amber" : "text-amber-ink")}>{eyebrow}</span>
+        <span className={cn("eyebrow", inverted ? "text-amber" : "text-amber-ink")}>{eyebrow}</span>
       ) : null}
-      <h2 className={cn("text-display-lg max-w-[20ch]", inverted ? "text-white" : "text-foreground")}>{title}</h2>
+      <h2 className={cn("display-lg max-w-[20ch]", inverted ? "text-white" : "text-foreground")}>{title}</h2>
       {sub ? (
-        <p className={cn("text-lede max-w-[58ch]", inverted && "text-white/70")}>{sub}</p>
+        <p className={cn("lede max-w-[58ch]", inverted && "text-white/70")}>{sub}</p>
       ) : null}
     </div>
   );

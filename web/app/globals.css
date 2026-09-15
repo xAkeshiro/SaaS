@@ -241,35 +241,35 @@
 @utility shadow-window {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 2px 6px rgba(11, 15, 26, 0.05), 0 40px 80px -30px rgba(29, 38, 84, 0.35);
 }
-@utility text-eyebrow {
+@utility eyebrow {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 500;
 }
-@utility text-display-xl {
+@utility display-xl {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(2.75rem, 7.2vw, 5.75rem);
   line-height: 0.98;
   letter-spacing: -0.035em;
 }
-@utility text-display-lg {
+@utility display-lg {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(2.125rem, 4.6vw, 3.5rem);
   line-height: 1.04;
   letter-spacing: -0.03em;
 }
-@utility text-display-md {
+@utility display-md {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(1.5rem, 2.6vw, 2rem);
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
-@utility text-lede {
+@utility lede {
   font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
   line-height: 1.6;
   color: var(--muted-foreground);

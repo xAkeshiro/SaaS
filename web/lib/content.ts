@@ -395,3 +395,260 @@ export const teams = {
     ],
   },
 } as const;
+
+/* ---------- Appended for the hero group (hero.tsx, rehearsal-window.tsx) ---------- */
+
+/** Extra hero strings. `hero` above is unchanged. */
+export const heroExtras = {
+  eyebrowSuffix: "early access",
+} as const;
+
+/** Self-playing app-window mock under the hero. Pure UI, no network. */
+export const rehearsalWindow = {
+  windowTitle: "Rehearsal · 02:41",
+  mode: "Hard mode",
+  persona: {
+    who: "Your landlord",
+    initial: "L",
+    tag: "AI",
+    scenario: "Scenario: get the $1,200 deposit back",
+    mood: "busy, defensive",
+  },
+  status: {
+    persona: "Landlord is talking",
+    user: "You are talking",
+    pause: "Landlord goes quiet",
+    idle: "Listening",
+  },
+  transcript: [
+    { role: "persona", speaker: "Landlord", text: "Look, I've got three showings today. The walls needed painting. That's on you." },
+    { role: "user", speaker: "You", text: "I get that you're busy. Normal wear isn't a deduction under state law, and I have move-in photos. I'd like the full $1,200 back within 14 days." },
+    { role: "persona", speaker: "Landlord", text: "...Send me the photos." },
+  ],
+  debrief: {
+    title: "Debrief",
+    meta: "Just now",
+    rows: [
+      { label: "Got to the ask", prefix: "0:", value: 38, note: "was 1:50", check: false },
+      { label: "Apologies before the ask", prefix: "", value: 0, note: "was 3", check: false },
+      { label: "Filler words", prefix: "", value: 7, note: "“like”", check: false },
+      { label: "Held the number", prefix: "", value: 1, note: "yes", check: true },
+    ],
+    nextLabel: "Next time, say:",
+    next: [
+      "Normal wear is not a deduction. I have move-in photos. I'd like the full $1,200 back within 14 days.",
+      "I'll send the photos tonight. What's the best email?",
+    ],
+  },
+} as const;
+
+/** Proof strip between the hero and the sticky showcase. */
+export const proof = {
+  eyebrow: "The problem is loud. The mechanic is proven.",
+} as const;
+
+/** Sticky "How it works" showcase: heading plus the strings inside the four hand-built UI mocks. */
+export const howItWorks = {
+  eyebrow: "How it works",
+  title: "Rehearse. Debrief. Repeat. Then do it for real.",
+  mocks: {
+    rehearse: {
+      status: "01:12",
+      speaking: "Manager is talking",
+      moodLabel: "Mood",
+    },
+    debrief: {
+      title: "Debrief",
+      subtitle: "Ask for a raise · 3:04",
+      score: 7,
+      scoreOf: "/ 10",
+      rows: [
+        { label: "Got to the ask", value: "0:52", was: "was 2:10", before: 100, now: 40 },
+        { label: "Apologies before the ask", value: "1", was: "was 4", before: 100, now: 25 },
+        { label: "Filler words", value: "5", was: "“like”, “just”", before: 85, now: 45 },
+      ],
+      held: { label: "Held the number", value: "$62,000" },
+      patternLabel: "Pattern",
+      pattern: "You apologize before every ask.",
+    },
+    daily: {
+      streak: 12,
+      streakUnit: "days",
+      streakLabel: "Streak",
+      weekLabel: "Last 7 days",
+      days: ["W", "T", "F", "S", "S", "M", "T"],
+      todayIndex: 6,
+      rep: { title: "Tuesday’s rep: interview", meta: "From your calendar · interview Thursday" },
+      trend: { label: "Confidence", value: "Up 18% this month" },
+    },
+    real: {
+      title: "Real mode",
+      phase: "Warmup",
+      ring: { seconds: 45, total: 60, caption: "left" },
+      cueTitle: "Cue card",
+      cues: ["Say the number: $62,000.", "Then stop talking.", "If they stall: “What would it take?”"],
+      cta: "Make the call",
+      note: "Unmute never listens to real calls.",
+    },
+  },
+} as const;
+
+/* ---------- Appended for the scenarios / together / anti-companion group ---------- */
+
+/** Heading and footer link for the scenario grid. `scenarioCards` above is unchanged. */
+export const scenariosHeading = {
+  eyebrow: "Conversations",
+  title: "The ones people rehearse in the shower.",
+  sub: "Eight to start. Describe your own in a sentence and the AI plays the other side.",
+  cta: { label: "Or describe your own", href: "/#try" },
+} as const;
+
+/** Extra strings for the Together section. `together` above is unchanged. */
+export const togetherExtras = {
+  daresTitle: "Today’s dares",
+  daresMeta: "New every morning",
+} as const;
+
+/** Extra strings for the anti-companion band. `principles` above is unchanged. */
+export const principlesExtras = {
+  secondaryCta: { label: "See pricing", href: "/pricing" },
+} as const;
+
+/* ---------- Appended for the live demo group (live-demo.tsx, /api/rehearse) ---------- */
+
+/** Interactive rehearsal section. Persona and coach prompts live in `lib/rehearse.ts`. */
+export const liveDemo = {
+  eyebrow: "Try it",
+  title: "Try a rehearsal right now.",
+  sub: "Pick a conversation and a mood. The AI plays the other person. Say what you would actually say, then end the rehearsal for your debrief. The full app is voice-first; this preview lets you type, and reads the other person's lines aloud where your browser allows it.",
+  labels: {
+    conversation: "Conversation",
+    custom: "Or describe your own",
+    customPlaceholder: "e.g. My manager. I need to move my Tuesday shift because of class and she hates schedule changes.",
+    customLabel: "Custom rehearsal",
+    customWho: "The other person",
+    /** Prefix sent with a custom setup so "I" and "my" read as the user in the prompts. */
+    customSetup: "In the user's own words:",
+    mood: "Mood of the other person",
+    voice: "Read lines aloud",
+    voiceUnavailable: "Not available in this browser",
+    start: "Start rehearsal",
+    restart: "Restart rehearsal",
+    starting: "Starting…",
+    inputLabel: "What you say",
+    inputPlaceholder: "Say what you would actually say…",
+    inputHint: "Enter sends. The other person answers in a moment.",
+    send: "Say it",
+    end: "End and debrief",
+    ending: "Writing your debrief…",
+    again: "Rehearse again",
+    you: "You",
+    idleTitle: "No rehearsal yet",
+    idleBody: "Pick a conversation, choose a mood and press Start. The other person speaks first.",
+    waiting: "The other person is picking up…",
+    replying: "The other person is thinking…",
+  },
+  badges: { sample: "Sample", live: "Live" },
+  sampleNote: "Running a scripted sample. Add an API key to go live.",
+  debrief: {
+    title: "Debrief",
+    scoreOf: "/ 10",
+    worked: "What worked",
+    folded: "Where you folded",
+    none: "Nothing. You held the line.",
+    next: "Say this next time",
+    pattern: "Your pattern",
+  },
+  errors: {
+    start: "The other person did not pick up. Try again.",
+    reply: "The other person dropped the call. Try again.",
+    debrief: "The debrief could not be written. Try ending again.",
+    network: "Network hiccup. Try again.",
+  },
+} as const;
+
+/* ---------- Appended for the pricing group (pricing.tsx, pricing-tiers.tsx, faq.tsx, /pricing) ---------- */
+
+/** Extra strings for the pricing tiers, the comparison table and the pricing page. `pricing` above is unchanged. */
+export const pricingExtras = {
+  billing: {
+    label: "Billing period",
+    monthly: "Monthly",
+    yearly: "Yearly",
+  },
+  /** One short line under each price. Plus differs by billing period. */
+  meta: {
+    free: "No card needed.",
+    plus: {
+      monthly: "Billed monthly. Cancel any time.",
+      yearly: "That’s $8.25 a month, billed once a year.",
+    },
+    teams: "Seats from $3 to $8. Free for career centers this interview season.",
+  },
+  comparison: {
+    eyebrow: "Compare plans",
+    title: "Everything in each plan.",
+    sub: "Start free. Upgrade for the season you actually have to get good.",
+    featureColumn: "Feature",
+    included: "Included",
+    notIncluded: "Not included",
+  },
+} as const;
+
+/** Heading for the FAQ section. `faq` above is unchanged. */
+export const faqHeading = {
+  eyebrow: "FAQ",
+  title: "Questions people ask before they say yes.",
+} as const;
+
+/* ---------- Appended for the manifesto / teams group (app/manifesto, app/teams, pilot-form.tsx, /api/waitlist) ---------- */
+
+/** Extra strings for the manifesto page. `manifesto` above is unchanged. */
+export const manifestoExtras = {
+  eyebrow: "Manifesto",
+  /** Rendered as a pull-quote instead of a paragraph. Must match a paragraph in `manifesto.sections` exactly. */
+  pullQuote: "If it works, you will use Unmute less over time. That is the point.",
+  signOff: "— the Unmute team, September 2026",
+} as const;
+
+/** Extra strings for the teams page and the pilot form. `teams` above is unchanged. */
+export const teamsExtras = {
+  audiencesHeading: {
+    eyebrow: "Who it is for",
+    title: "Built for the people who run practice.",
+    sub: "Same rehearsal, same debrief. You set the scenarios and see the results.",
+  },
+  offer: {
+    eyebrow: "Interview season",
+  },
+  pilot: {
+    eyebrow: "Campus pilot",
+    title: "Tell us about your campus or team.",
+    sub: "A few lines is enough. A human reads every request.",
+    stepsTitle: "What happens next",
+    steps: [
+      "We reply within two business days.",
+      "You pick the scenarios. We set up the cohort.",
+      "Your people rehearse the same week.",
+    ],
+  },
+  form: {
+    notes: {
+      id: "notes",
+      label: "Anything we should know",
+      placeholder: "Hiring timeline, the scenarios you want, how many counselors…",
+    },
+    submit: "Request a pilot",
+    submitting: "Sending…",
+    note: "No card, no contract. One reply from a human.",
+    success: {
+      title: "Request received.",
+      body: "We will reply within two business days with a plan for your cohort.",
+      emailLabel: "We will write to",
+    },
+    errors: {
+      generic: "Something went wrong. Try again.",
+      network: "Network hiccup. Try again.",
+    },
+  },
+} as const;
