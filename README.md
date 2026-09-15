@@ -15,7 +15,8 @@ Workspace for a new startup, researched and built with Claude Code.
 - `docs/plan/09-lore.md` — Lore, a daily community game (passed over: not innovative or sellable enough); prototype in `site/lore/`
 - `docs/plan/10-bloc.md` — Bloc, the collective-leverage engine (passed over: industry-bound); system brief in `site/bloc/`
 - `docs/plan/11-unmute.md` — current idea: Unmute, voice-AI practice for the conversations people dread, plus what YC user-growth winners share; launch page preview in `site/unmute/`
+- `web/` — the Unmute marketing site (Next.js 16, Tailwind v4, motion, shadcn/ui, Magic UI); design spec in `web/DESIGN.md`, run notes in `web/README.md`
 
 ## Status
 
-Decision made: Unmute. Full launch. Brief in `site/unmute-brief/`, landing page preview in `site/unmute/`, plan in `docs/plan/11-unmute.md`. Next: rebuild the marketing site to the chosen design libraries, then the Expo voice app.
+Decision made: Unmute. Full launch. Brief in `site/unmute-brief/`, plan in `docs/plan/11-unmute.md`. The marketing site is built in `web/` (landing with a live rehearsal demo, pricing, manifesto, teams) and deploys from this branch on Vercel with root directory `web`. Next: the Expo voice app.

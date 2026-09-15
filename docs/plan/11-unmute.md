@@ -109,3 +109,9 @@ Decision: Unmute is the company. Full launch. The startup brief is published as 
 **Launch sequence:** campus interview season (Sep–Nov) as the wedge with career centers on Teams free for the season; the before-and-after clip as the content engine with 20–50 creators on the phone-anxiety format; weekly dares; the anti-companion press story; practice rooms as the referral loop; YC application once week-4 retention, paid conversion and one career center are in hand.
 
 **Next build steps after the brief:** rebuild the marketing site to the user's design-library direction (they will specify libraries, UI and skills), then the Expo voice app with a provider abstraction over OpenAI realtime and ElevenLabs, the persona engine and the debrief pipeline.
+
+## Site rebuild (15 Sep 2026)
+
+The marketing site now lives in `web/` as a Next.js 16 app: Tailwind v4 tokens, `motion` (Framer Motion's successor) for page-load, scroll and hover animation, shadcn/ui primitives, Magic UI components (the open-source library 21st.dev aggregates), lucide icons, self-hosted Outfit / Inter / JetBrains Mono. Cluely was the layout reference: floating pill nav, one huge headline, the product mock under it, a sticky how-it-works showcase, flat hairline cards, one dark gradient band, compact footer. The UI/UX Pro Max skill produced the design-system brief and the pre-delivery checklist recorded in `web/DESIGN.md`.
+
+Pages: `/` (hero, proof, how it works, live rehearsal demo, scenarios, together, not-a-companion, pricing, FAQ, final CTA), `/pricing`, `/manifesto`, `/teams`. APIs: `/api/rehearse` (Claude plays the other person and writes the debrief; a scripted sample runs when no key is set) and `/api/waitlist` (optional webhook forwarding). Verified with `next build`, ESLint, and Playwright screenshots at 375 / 768 / 1024 / 1440.
