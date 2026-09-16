@@ -405,39 +405,39 @@ export const heroExtras = {
 
 /** Self-playing app-window mock under the hero. Pure UI, no network. */
 export const rehearsalWindow = {
-  windowTitle: "Rehearsal · 02:41",
+  windowTitle: "Rehearsal · 01:58",
   mode: "Hard mode",
   persona: {
-    who: "Your landlord",
-    initial: "L",
+    who: "Your roommate",
+    initial: "R",
     tag: "AI",
-    scenario: "Scenario: get the $1,200 deposit back",
-    mood: "busy, defensive",
+    scenario: "Scenario: the dishes and the guest who never leaves",
+    mood: "tired, defensive",
   },
   status: {
-    persona: "Landlord is talking",
+    persona: "Roommate is talking",
     user: "You are talking",
-    pause: "Landlord goes quiet",
+    pause: "Roommate goes quiet",
     idle: "Listening",
   },
   transcript: [
-    { role: "persona", speaker: "Landlord", text: "Look, I've got three showings today. The walls needed painting. That's on you." },
-    { role: "user", speaker: "You", text: "I get that you're busy. Normal wear isn't a deduction under state law, and I have move-in photos. I'd like the full $1,200 back within 14 days." },
-    { role: "persona", speaker: "Landlord", text: "...Send me the photos." },
+    { role: "persona", speaker: "Roommate", text: "Are we really doing this right now? I've been slammed all week." },
+    { role: "user", speaker: "You", text: "I know this week was rough. I need dishes done the same day, and a text before Jordan stays over. That's the whole list." },
+    { role: "persona", speaker: "Roommate", text: "...Fine. Same day. And I'll text you." },
   ],
   debrief: {
     title: "Debrief",
     meta: "Just now",
     rows: [
-      { label: "Got to the ask", prefix: "0:", value: 38, note: "was 1:50", check: false },
-      { label: "Apologies before the ask", prefix: "", value: 0, note: "was 3", check: false },
-      { label: "Filler words", prefix: "", value: 7, note: "“like”", check: false },
-      { label: "Held the number", prefix: "", value: 1, note: "yes", check: true },
+      { label: "Got to the ask", prefix: "0:", value: 22, note: "was 2:10", check: false },
+      { label: "Apologies before the ask", prefix: "", value: 0, note: "was 4", check: false },
+      { label: "Filler words", prefix: "", value: 5, note: "“just”", check: false },
+      { label: "Held the boundary", prefix: "", value: 1, note: "yes", check: true },
     ],
     nextLabel: "Next time, say:",
     next: [
-      "Normal wear is not a deduction. I have move-in photos. I'd like the full $1,200 back within 14 days.",
-      "I'll send the photos tonight. What's the best email?",
+      "Dishes the same day, and a text before Jordan stays over. That's the whole list.",
+      "I'm not upset. I need this to change this week.",
     ],
   },
 } as const;
