@@ -11,7 +11,7 @@ export function FinalCta() {
           <span className="eyebrow text-amber">Early access</span>
           <h2 className="display-lg text-white">{finalCta.title}</h2>
           <p className="lede text-white/70">{finalCta.sub}</p>
-          <EmailCapture source="footer-cta" inverted note={finalCta.note} className="mt-2 items-center" />
+          <EmailCapture source="footer-cta" inverted note={finalCta.note} className="mt-2 text-center" />
         </Reveal>
       </Container>
     </section>

@@ -24,7 +24,7 @@ export function PricingComparison() {
         </Reveal>
 
         <Reveal className="mt-12 md:mt-14">
-          <div className="overflow-x-auto rounded-3xl border border-border bg-card">
+          <div className="relative overflow-x-auto rounded-3xl border border-border bg-card">
             <table className="w-full min-w-[640px] border-collapse text-sm">
               {/* caption must be the table's first child */}
               <caption className="sr-only">{copy.title}</caption>

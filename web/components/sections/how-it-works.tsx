@@ -31,7 +31,7 @@ export function HowItWorks() {
         </Reveal>
 
         <div className="mt-14 grid gap-14 lg:mt-16 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-          <ol className="flex flex-col gap-14 lg:gap-0">
+          <ol className="flex min-w-0 flex-col gap-14 lg:gap-0">
             {steps.map((step) => (
               <StepBlock key={step.id} step={step} active={active === step.id} onActivate={setActive} />
             ))}
