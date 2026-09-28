@@ -15,7 +15,8 @@ Workspace for a new startup, researched and built with Claude Code.
 - `docs/plan/09-lore.md` — Lore, a daily community game (passed over: not innovative or sellable enough); prototype in `site/lore/`
 - `docs/plan/10-bloc.md` — Bloc, the collective-leverage engine (passed over: industry-bound); system brief in `site/bloc/`
 - `docs/plan/11-unmute.md` — current idea: Unmute, voice-AI practice for the conversations people dread, plus what YC user-growth winners share; launch page preview in `site/unmute/`
-- `web/` — the Unmute marketing site (Next.js 16, Tailwind v4, motion, shadcn/ui, Magic UI); design spec in `web/DESIGN.md`, run notes in `web/README.md`
+- `web/` — the Unmute marketing site (Next.js 16, Tailwind v4, motion, a canvas fog engine); product record in `web/PRODUCT.md`, design system in `web/DESIGN.md`, run notes in `web/README.md`
+- `.claude/skills/` — design skills used for the September 2026 redesign: Impeccable, Emil Kowalski's design engineering skills and the Taste skills (installed with `npx skills add`)
 
 ## Status
 

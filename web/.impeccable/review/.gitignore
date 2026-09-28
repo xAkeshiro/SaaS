@@ -1,0 +1,2 @@
+# Full-resolution captures stay local; compressed .jpg copies are committed instead.
+*.png

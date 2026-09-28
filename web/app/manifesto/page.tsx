@@ -2,76 +2,80 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/site/nav";
 import { Footer } from "@/components/site/footer";
 import { Container } from "@/components/site/container";
-import { LogoMark } from "@/components/site/logo";
-import { Reveal } from "@/components/site/reveal";
+import { PostIt } from "@/components/world/post-it";
 import { FinalCta } from "@/components/sections/final-cta";
 import { manifesto, manifestoExtras } from "@/lib/content";
 
-export const metadata: Metadata = { title: "Manifesto" };
+export const metadata: Metadata = { title: "Manifesto", description: manifesto.sub };
 
 export default function ManifestoPage() {
   return (
     <>
       <Nav />
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-hero-mesh pt-36 pb-12 md:pt-44 md:pb-16">
+      <main id="main" className="flex-1">
+        <section aria-labelledby="manifesto-title" className="relative pt-[120px] pb-14 sm:pt-[144px] sm:pb-20">
           <Container>
-            <Reveal className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-              <span className="eyebrow text-amber-ink">{manifestoExtras.eyebrow}</span>
-              <h1 className="display-lg max-w-[20ch] text-foreground">{manifesto.title}</h1>
-              <p className="lede max-w-[58ch]">{manifesto.sub}</p>
-            </Reveal>
+            <h1 id="manifesto-title" className="display-1 on-tile max-w-[15ch] text-wall-ink">
+              {manifesto.title}
+            </h1>
+            <p className="lede on-tile mt-6 max-w-[44ch] text-wall-muted">{manifesto.sub}</p>
           </Container>
         </section>
 
-        {/* Prose */}
-        <article className="pb-24 md:pb-32">
-          <Container>
-            {/* 68ch of prose plus the index column at md and up. */}
-            <div className="mx-auto max-w-[68ch] md:max-w-[calc(68ch_+_5rem)]">
-              {manifesto.sections.map((section, i) => (
-                <Reveal key={section.id} className="border-t border-border first:border-t-0">
-                  <section id={section.id} className="scroll-mt-28 py-12 md:grid md:grid-cols-[3.5rem_1fr] md:gap-6 md:py-14">
-                    <span
-                      aria-hidden="true"
-                      className="mb-4 block font-mono text-sm font-medium text-amber-ink md:mb-0 md:pt-2"
+        <div className="relative pb-24 sm:pb-32">
+          <Container className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+            {/* The index stays in view beside the sheet on wide screens; the footer carries the same anchors. */}
+            <nav aria-label={manifestoExtras.indexLabel} className="hidden lg:col-span-3 lg:block">
+              <ul className="sticky top-28 flex flex-col gap-1.5">
+                {manifesto.sections.map((section) => (
+                  <li key={section.id}>
+                    <a
+                      href={`#${section.id}`}
+                      className="on-tile block rounded-md py-1.5 text-[0.9375rem] leading-snug text-wall-muted transition-colors duration-150 hover:text-wall-ink"
                     >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div className="min-w-0">
-                      <h2 className="display-md max-w-[24ch] text-foreground break-words">{section.heading}</h2>
-                      <div className="mt-6 flex flex-col gap-5">
-                        {section.paragraphs.map((paragraph) =>
-                          paragraph === manifestoExtras.pullQuote ? (
-                            <blockquote
-                              key={paragraph}
-                              className="my-2 border-l-4 border-amber pl-6 font-display text-2xl leading-snug font-semibold tracking-tight text-foreground md:text-[1.75rem]"
-                            >
-                              {paragraph}
-                            </blockquote>
-                          ) : (
-                            <p key={paragraph} className="text-[1.0625rem] leading-[1.75] text-foreground/85">
-                              {paragraph}
-                            </p>
-                          ),
-                        )}
-                      </div>
+                      {section.heading}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* One sheet of glass: the prose reads on it at a comfortable measure. */}
+            <article className="glass-panel px-6 py-10 sm:px-12 sm:py-14 lg:col-span-9 lg:px-16 lg:py-16">
+              <div className="flex flex-col gap-14">
+                {manifesto.sections.map((section) => (
+                  <section key={section.id} id={section.id} aria-labelledby={`${section.id}-title`} className="scroll-mt-28">
+                    <h2
+                      id={`${section.id}-title`}
+                      className="max-w-[26ch] text-[clamp(1.5rem,2.3vw,2rem)] leading-[1.12] font-[740] tracking-[-0.018em] text-ink [font-stretch:92%]"
+                    >
+                      {section.heading}
+                    </h2>
+                    <div className="mt-5 flex max-w-[66ch] flex-col gap-5">
+                      {section.paragraphs.map((paragraph) =>
+                        paragraph === manifestoExtras.pullQuote ? (
+                          <PostIt
+                            key={paragraph}
+                            as="blockquote"
+                            tilt={-1.5}
+                            className="my-4 max-w-[28rem] self-start px-7 pt-5 pb-6 text-[1.65rem] leading-[1.3] font-bold"
+                          >
+                            <p>{paragraph}</p>
+                          </PostIt>
+                        ) : (
+                          <p key={paragraph} className="text-[1.0625rem] leading-[1.75] text-ink">
+                            {paragraph}
+                          </p>
+                        ),
+                      )}
                     </div>
                   </section>
-                </Reveal>
-              ))}
-
-              {/* Sign-off */}
-              <Reveal className="border-t border-border pt-10 md:pt-12">
-                <p className="flex items-center gap-3 font-display text-lg font-semibold text-foreground md:pl-20">
-                  <LogoMark className="size-8 shrink-0" />
-                  <span className="min-w-0 break-words">{manifestoExtras.signOff}</span>
-                </p>
-              </Reveal>
-            </div>
+                ))}
+              </div>
+              <p className="mt-14 text-[1.0625rem] font-semibold text-ink">{manifestoExtras.signOff}</p>
+            </article>
           </Container>
-        </article>
+        </div>
 
         <FinalCta />
       </main>

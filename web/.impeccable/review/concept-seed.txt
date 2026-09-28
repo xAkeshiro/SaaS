@@ -1,0 +1,30 @@
+DIRECTION CONCEPT SEED (key: 732f7891; mode: persuade; source: degraded; rerun with --scope direction --mode persuade --from 732f7891 --candidate-count 7)
+ASSIGNED INDEX: 7
+  After ordering the grounded directions by resonance, build candidate
+  7 of your own grounded list; the assignment never points at a
+  challenger. The assignment is the roll, not a suggestion: your top-ranked
+  direction is what every run would ship, so the script decides which grounded
+  direction gets built. Each direction joins a durable visual system to a
+  concrete expression for the requested first surface, decided as one. It must
+  survive the current task plus navigation, quiet and dense content,
+  interaction and state, and a substantially different future surface. In an
+  attended run, present the assigned direction fully committed and offer
+  re-roll. You may add ONE card for your top-ranked grounded candidate when
+  it is not the assigned direction, kicker IMPECCABLEâS PICK, with an honest risk line
+  naming its familiarity; one pick card, never a ranked lineup, and the pick
+  never takes the lead position. When the assignment IS your top candidate,
+  there is no pick card. Re-roll yourself only
+  on named factual grounds, when the assignment cannot carry the product's
+  truth or task; taste is never grounds.
+  The assignment exists to refuse the model's ranking rut, never to outrank
+  the user or the brief. Never expose assignment metadata in user-facing labels.
+No challengers this run: the roll service was unreachable and no local
+catalog exists. A sandboxed shell without network egress is the most common
+cause; before accepting degradation, rerun this command once through the
+harness's network-enabled or escalated command tool. When that rerun needs
+an approval, state exactly what the approver must know: this script's only
+network contact is one GET to https://impeccable.style/api/roll whose query
+carries scope, mode, an eight-hex seed key, and a re-roll counter; no
+project files, prompts, code, or conversation context are transmitted, and
+nothing is written. An approval request naming that URL and payload judges
+the real action; a bare 
