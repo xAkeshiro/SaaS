@@ -1,26 +1,33 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
-import { CircleNotch } from "@phosphor-icons/react";
+import { useState, type FormEvent } from "react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CtaArrow } from "@/components/site/cta-arrow";
-import { PostIt } from "@/components/world/post-it";
-import { waitlist } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 type Props = {
   /** Where the signup came from, sent to the API for segmentation. */
   source: string;
   buttonLabel?: string;
+  placeholder?: string;
   note?: string;
+  /** Use on dark bands. */
+  inverted?: boolean;
   className?: string;
+  size?: "default" | "lg";
 };
 
 type State = { status: "idle" | "loading" | "done" | "error"; message?: string };
 
-/** The waitlist: a strip of clear glass for your address and the one amber switch. */
-export function EmailCapture({ source, buttonLabel = waitlist.button, note, className }: Props) {
-  const id = useId();
+export function EmailCapture({
+  source,
+  buttonLabel = "Get early access",
+  placeholder = "you@school.edu",
+  note,
+  inverted = false,
+  className,
+  size = "lg",
+}: Props) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
 
@@ -36,67 +43,79 @@ export function EmailCapture({ source, buttonLabel = waitlist.button, note, clas
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {
-        setState({ status: "error", message: data.error ?? waitlist.errors.generic });
+        setState({ status: "error", message: data.error ?? "Something went wrong. Try again." });
         return;
       }
-      setState({ status: "done" });
+      setState({ status: "done", message: "You’re on the list. One email when it launches." });
     } catch {
-      setState({ status: "error", message: waitlist.errors.network });
+      setState({ status: "error", message: "Network hiccup. Try again." });
     }
   }
 
   if (state.status === "done") {
     return (
-      <div role="status" className={cn("pt-2", className)}>
-        <PostIt play delay={0} tilt={-2.5} className="inline-block max-w-[19rem] px-5 pt-4 pb-5">
-          <p className="text-[1.35rem] leading-tight font-bold">{waitlist.done.title}</p>
-          <p className="mt-1 text-[1.05rem] leading-snug">{waitlist.done.body}</p>
-        </PostIt>
+      <div
+        role="status"
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-medium",
+          inverted ? "border-white/15 bg-white/10 text-white" : "border-border bg-card text-foreground",
+          className,
+        )}
+      >
+        <span className="inline-flex size-5 items-center justify-center rounded-full bg-amber text-ink">
+          <Check className="size-3.5" strokeWidth={3} />
+        </span>
+        {state.message}
       </div>
     );
   }
 
-  const describedBy = state.status === "error" ? `${id}-error` : note ? `${id}-note` : undefined;
+  const h = size === "lg" ? "h-12" : "h-10";
 
   return (
-    <form onSubmit={onSubmit} noValidate className={cn("w-full max-w-[30rem]", className)}>
-      {/* One glass strip holding the field and the switch; on narrow phones they stack. */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1.5 sm:rounded-full sm:bg-glass sm:p-1.5 sm:pl-5 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_30px_-16px_rgba(2,24,18,0.85)] sm:focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_0_0_3px_rgba(255,180,84,0.9),0_14px_30px_-16px_rgba(2,24,18,0.85)]">
-        <label htmlFor={`${id}-email`} className="sr-only">
-          {waitlist.label}
+    <form onSubmit={onSubmit} className={cn("flex w-full max-w-md flex-col gap-2", className)}>
+      <div
+        className={cn(
+          "flex items-center gap-1 rounded-full border p-1 pl-4 transition-[box-shadow,border-color] duration-200 focus-within:ring-[3px] focus-within:ring-ring/40",
+          inverted ? "border-white/15 bg-white/10" : "border-border bg-card shadow-soft",
+        )}
+      >
+        <label htmlFor={`email-${source}`} className="sr-only">
+          Email address
         </label>
         <input
-          id={`${id}-email`}
+          id={`email-${source}`}
           type="email"
           required
           autoComplete="email"
           inputMode="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder={waitlist.placeholder}
-          aria-invalid={state.status === "error" ? true : undefined}
-          aria-describedby={describedBy}
-          className="h-13 w-full min-w-0 rounded-full bg-glass px-5 text-base text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_12px_26px_-16px_rgba(2,24,18,0.85)] outline-none [--focus:var(--wall)] placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber sm:h-11 sm:flex-1 sm:rounded-none sm:bg-transparent sm:px-0 sm:shadow-none sm:focus-visible:outline-none"
-        />
-        <Button type="submit" size="md" className="h-13 justify-between pr-1.5 pl-5 sm:h-11 sm:justify-center" disabled={state.status === "loading"}>
-          <span>{buttonLabel}</span>
-          {state.status === "loading" ? (
-            <span aria-hidden="true" className="grid size-8 place-items-center">
-              <CircleNotch weight="bold" className="size-4 animate-spin" />
-            </span>
-          ) : (
-            <CtaArrow />
+          placeholder={placeholder}
+          className={cn(
+            "min-w-0 flex-1 bg-transparent text-[0.95rem] outline-none",
+            h,
+            inverted ? "text-white placeholder:text-white/50" : "text-foreground placeholder:text-muted-foreground",
           )}
+        />
+        <Button
+          type="submit"
+          size={size === "lg" ? "default" : "sm"}
+          variant={inverted ? "accent" : "default"}
+          className={cn(size === "lg" && "h-10 px-4")}
+          disabled={state.status === "loading"}
+        >
+          {state.status === "loading" ? <Loader2 className="size-4 animate-spin" /> : null}
+          <span>{buttonLabel}</span>
+          {state.status !== "loading" ? <ArrowRight className="size-4" /> : null}
         </Button>
       </div>
       {state.status === "error" ? (
-        <p id={`${id}-error`} role="alert" className="mt-2.5 px-5 text-sm font-medium text-danger-on-wall">
+        <p role="alert" className={cn("px-4 text-xs", inverted ? "text-amber" : "text-destructive")}>
           {state.message}
         </p>
       ) : note ? (
-        <p id={`${id}-note`} className="mt-2.5 px-5 text-sm text-wall-muted">
-          {note}
-        </p>
+        <p className={cn("px-4 text-xs", inverted ? "text-white/60" : "text-muted-foreground")}>{note}</p>
       ) : null}
     </form>
   );

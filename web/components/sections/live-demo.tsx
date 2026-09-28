@@ -1,15 +1,32 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowCounterClockwise, ArrowUp, CircleNotch, Play, SpeakerHigh, SpeakerSlash, Stop } from "@phosphor-icons/react";
+import {
+  ArrowUp,
+  Check,
+  Info,
+  Loader2,
+  Minus,
+  Mic,
+  Play,
+  RotateCcw,
+  Sparkles,
+  Square,
+  UserRound,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { Container } from "@/components/site/container";
+import { Reveal } from "@/components/site/reveal";
+import { SectionHeading } from "@/components/site/section-heading";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mirror } from "@/components/world/mirror";
-import { SteamText } from "@/components/world/steam-text";
-import { PostIt } from "@/components/world/post-it";
-import { WipeClean } from "@/components/world/wipe-clean";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { demoScenarios, liveDemo, moods, type MoodId } from "@/lib/content";
+import { ease } from "@/lib/motion";
 import type { Debrief, RehearseMode } from "@/lib/rehearse";
 import { cn } from "@/lib/utils";
 
@@ -23,19 +40,14 @@ type Phase = "idle" | "starting" | "live" | "replying" | "debriefing" | "debrief
 type Scenario = { id: string; label: string; who: string; setup: string; opener?: string };
 type Session = { scenario: Scenario; mood: MoodId };
 
-/** Event other sections dispatch to load a scenario here (the scenario index does). */
-export const REHEARSE_EVENT = "unmute:rehearse";
-export type RehearseEventDetail = { id?: string | null; custom?: string };
-
 const ENDPOINT = "/api/rehearse";
 const MAX_MESSAGES = 24;
 const MAX_TEXT = 800;
-/** Lines kept on the glass; older ones fog back over. The full log stays available to screen readers. */
-const ON_GLASS = 4;
 const L = liveDemo.labels;
+const BAR_HEIGHTS = [10, 18, 26, 32, 26, 18, 10];
 
 /* ------------------------------------------------------------------ */
-/* Helpers                                                             */
+/* Small helpers                                                       */
 /* ------------------------------------------------------------------ */
 
 const subscribeNoop = () => () => {};
@@ -86,17 +98,20 @@ function isDebrief(x: unknown): x is Debrief {
   );
 }
 
-async function readAll(res: Response): Promise<string> {
-  if (!res.body) return res.text();
+async function readStream(res: Response, onChunk: (text: string) => void) {
+  if (!res.body) {
+    onChunk(await res.text());
+    return;
+  }
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-  let out = "";
   for (;;) {
     const { value, done } = await reader.read();
     if (done) break;
-    out += decoder.decode(value, { stream: true });
+    onChunk(decoder.decode(value, { stream: true }));
   }
-  return out + decoder.decode();
+  const tail = decoder.decode();
+  if (tail) onChunk(tail);
 }
 
 function toWire(messages: Msg[]) {
@@ -132,9 +147,9 @@ export function LiveDemo() {
   const idRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
   const voiceRef = useRef(voiceOn);
-  const stageRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const startRef = useRef<HTMLButtonElement>(null);
   const focusRef = useRef(false);
 
   useEffect(() => {
@@ -149,33 +164,25 @@ export function LiveDemo() {
     };
   }, []);
 
-  // The scenario index elsewhere on the page loads a conversation here.
-  useEffect(() => {
-    function onPick(e: Event) {
-      const d = (e as CustomEvent<RehearseEventDetail>).detail;
-      if (d?.id) {
-        setScenarioId(d.id);
-        setCustom("");
-      } else if (d?.custom) {
-        setCustom(d.custom);
-      }
-      document.getElementById("try")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-      window.setTimeout(() => startRef.current?.focus({ preventScroll: true }), reduce ? 0 : 650);
-    }
-    window.addEventListener(REHEARSE_EVENT, onPick);
-    return () => window.removeEventListener(REHEARSE_EVENT, onPick);
-  }, [reduce]);
-
-  // After Start: side by side, hand focus to the composer; stacked, bring the mirror into view first.
+  // After Start: side by side, hand focus to the composer; stacked (the panel
+  // sits below the controls), bring the panel into view instead of opening a
+  // keyboard over something the user cannot see.
   useEffect(() => {
     if (phase !== "live" || !focusRef.current) return;
     focusRef.current = false;
     if (window.matchMedia("(min-width: 1024px)").matches) {
       inputRef.current?.focus({ preventScroll: true });
     } else {
-      stageRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+      panelRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
     }
   }, [phase, session, reduce]);
+
+  // Keep the newest line in view.
+  useEffect(() => {
+    const el = logRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: reduce ? "auto" : "smooth" });
+  }, [messages, phase, reduce]);
 
   // The prefix keeps the whole setup inside the API's 800-char cap.
   const customText = custom.trim().slice(0, MAX_TEXT - L.customSetup.length - 1);
@@ -187,7 +194,8 @@ export function LiveDemo() {
   const busy = phase === "starting" || phase === "replying" || phase === "debriefing";
   const canType = phase === "live" || phase === "replying";
   const hasExchange = messages.some((m) => m.role === "user");
-  const thinking = phase === "starting" || phase === "replying";
+  const waiting =
+    (phase === "starting" || phase === "replying") && messages[messages.length - 1]?.role !== "persona";
 
   function nextId() {
     idRef.current += 1;
@@ -212,7 +220,7 @@ export function LiveDemo() {
     cancelSpeech();
   }
 
-  /** Waits for the other person's whole line, then puts it on the glass to be read at speaking pace. */
+  /** Streams the persona's next line into a new bubble and returns the full text. */
   async function requestReply(history: Msg[], ctx: Session, signal: AbortSignal): Promise<string> {
     const res = await fetch(ENDPOINT, {
       method: "POST",
@@ -228,9 +236,28 @@ export function LiveDemo() {
     const m = readMode(res);
     if (m) setMode(m);
     if (!res.ok) throw new Error(await responseError(res, liveDemo.errors.reply));
-    const text = (await readAll(res)).trim();
-    if (!text) throw new Error(liveDemo.errors.reply);
-    setMessages((prev) => [...prev, { id: nextId(), role: "persona", text }]);
+
+    const id = nextId();
+    let full = "";
+    let shown = false;
+    await readStream(res, (chunk) => {
+      full += chunk;
+      const piece = shown ? chunk : chunk.trimStart();
+      if (!piece) return;
+      if (!shown) {
+        shown = true;
+        setMessages((prev) => [...prev, { id, role: "persona", text: piece }]);
+      } else {
+        setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, text: msg.text + piece } : msg)));
+      }
+    });
+
+    const text = full.trim();
+    if (!text) {
+      setMessages((prev) => prev.filter((msg) => msg.id !== id));
+      throw new Error(liveDemo.errors.reply);
+    }
+    setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, text } : msg)));
     setAnnounce(`${ctx.scenario.who}: ${text}`);
     return text;
   }
@@ -251,15 +278,14 @@ export function LiveDemo() {
     if (ctx.scenario.opener) {
       const opener = ctx.scenario.opener;
       setMessages([{ id: nextId(), role: "persona", text: opener }]);
-      setAnnounce(`${ctx.scenario.who}: ${opener}`);
       focusRef.current = true;
       setPhase("live");
       speak(opener);
       // Learn the mode without spending a turn.
       fetch(ENDPOINT, { cache: "no-store", signal: controller.signal })
         .then((res) => {
-          const mm = readMode(res);
-          if (mm) setMode(mm);
+          const m = readMode(res);
+          if (m) setMode(m);
         })
         .catch(() => {});
       return;
@@ -347,263 +373,336 @@ export function LiveDemo() {
     if (!next) cancelSpeech();
   }
 
+  function pickScenario(id: string) {
+    setScenarioId(id);
+    setCustom("");
+  }
+
   const header = session ?? { scenario: selected, mood };
-  const onGlass = messages.slice(-ON_GLASS);
-  const moodLabel = moods.find((m) => m.id === header.mood)?.label.toLowerCase() ?? header.mood;
 
   return (
-    <section id="try" aria-labelledby="try-title" className="relative scroll-mt-20 py-24 sm:py-32">
+    <section id="try" className="scroll-mt-28 py-24 md:py-32">
       <Container>
-        <div className="max-w-[40rem]">
-          <h2 id="try-title" className="display-2 on-tile text-wall-ink">
-            {liveDemo.title}
-          </h2>
-          <p className="lede on-tile mt-5 max-w-[40ch] text-wall-muted">{liveDemo.sub}</p>
-        </div>
+        <Reveal>
+          <SectionHeading eyebrow={liveDemo.eyebrow} title={liveDemo.title} sub={liveDemo.sub} />
+        </Reveal>
 
-        <div className="mt-12 grid gap-8 lg:mt-16 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-10">
-          {/* ---------------- Controls on a glass panel ---------------- */}
-          <div className="glass-panel flex min-w-0 flex-col gap-7 p-5 sm:p-7">
-            <fieldset className="min-w-0">
-              <legend className="mb-3 p-0 text-[0.9375rem] font-semibold text-ink">{L.conversation}</legend>
-              <div className="flex flex-wrap gap-2">
-                {demoScenarios.map((s) => {
-                  const active = !customText && s.id === scenarioId;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => {
-                        setScenarioId(s.id);
-                        setCustom("");
-                      }}
-                      className={cn(
-                        "press rounded-full px-3.5 py-2 text-[0.9375rem] leading-tight font-medium",
-                        active ? "bg-ink text-glass" : "bg-ink/[0.07] text-ink hover:bg-ink/[0.12]",
-                      )}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
+        <Reveal delay={0.1} className="mt-14">
+          <div className="rounded-3xl border border-border bg-card p-4 shadow-soft md:p-6">
+            <div className="grid gap-6 lg:grid-cols-[360px_1fr] lg:gap-8">
+              {/* ---------------- Controls ---------------- */}
+              <div className="flex min-w-0 flex-col gap-6">
+                <fieldset className="min-w-0">
+                  <legend className="eyebrow mb-3 p-0 text-muted-foreground">{L.conversation}</legend>
+                  <div className="flex flex-wrap gap-2">
+                    {demoScenarios.map((s) => {
+                      const active = !customText && s.id === scenarioId;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => pickScenario(s.id)}
+                          className={cn(
+                            "rounded-full px-3.5 py-1.5 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out active:translate-y-px",
+                            active
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-foreground hover:bg-lavender",
+                          )}
+                        >
+                          {s.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
 
-            <div className="min-w-0">
-              <label htmlFor={customId} className="mb-2 block text-[0.9375rem] font-semibold text-ink">
-                {L.custom}
-              </label>
-              <textarea
-                id={customId}
-                rows={3}
-                maxLength={MAX_TEXT}
-                value={custom}
-                onChange={(e) => setCustom(e.target.value)}
-                placeholder={L.customPlaceholder}
-                className="block w-full resize-none rounded-2xl bg-white/70 px-4 py-3 text-[0.9375rem] leading-relaxed text-ink shadow-[inset_0_0_0_1.5px_rgba(15,42,35,0.16)] transition-shadow duration-150 outline-none placeholder:text-ink-muted focus-visible:shadow-[inset_0_0_0_2px_var(--wall)]"
-              />
-            </div>
-
-            <MoodPicker value={mood} onChange={setMood} />
-
-            <button
-              type="button"
-              role="switch"
-              aria-checked={voiceOn}
-              disabled={!speechSupported}
-              onClick={toggleVoice}
-              className="press flex w-full items-center justify-between gap-3 rounded-2xl px-1 py-1 text-left disabled:opacity-60"
-            >
-              <span className="flex min-w-0 items-center gap-2.5">
-                {voiceOn ? (
-                  <SpeakerHigh weight="bold" className="size-5 shrink-0 text-wall" aria-hidden="true" />
-                ) : (
-                  <SpeakerSlash weight="bold" className="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
-                )}
-                <span className="min-w-0">
-                  <span className="block text-[0.9375rem] font-semibold text-ink">{L.voice}</span>
-                  {!speechSupported ? <span className="block text-sm text-ink-muted">{L.voiceUnavailable}</span> : null}
-                </span>
-              </span>
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ease-out",
-                  voiceOn ? "bg-wall" : "bg-ink/45",
-                )}
-              >
-                <span
-                  className={cn(
-                    "absolute top-1 left-1 size-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-out",
-                    voiceOn && "translate-x-5",
-                  )}
-                />
-              </span>
-            </button>
-
-            <div className="flex flex-col gap-2">
-              <Button
-                ref={startRef}
-                type="button"
-                size="lg"
-                className="w-full"
-                onClick={start}
-                disabled={phase === "starting" || phase === "debriefing"}
-              >
-                {phase === "starting" ? (
-                  <CircleNotch weight="bold" className="animate-spin" aria-hidden="true" />
-                ) : (
-                  <Play weight="fill" aria-hidden="true" />
-                )}
-                {phase === "starting" ? L.starting : phase === "live" || phase === "replying" ? L.restart : L.start}
-              </Button>
-              {error && phase === "idle" ? (
-                <p role="alert" className="text-sm font-medium text-danger">
-                  {error}
-                </p>
-              ) : null}
-              <p className="text-sm text-ink-muted">{liveDemo.voiceNote}</p>
-            </div>
-          </div>
-
-          {/* ---------------- The mirror and the shelf under it ---------------- */}
-          <div ref={stageRef} className="flex min-w-0 scroll-mt-24 flex-col">
-            <Mirror shape="rect" seed={0x3c7e} className="aspect-[4/4.2] w-full sm:aspect-[4/3.3]">
-              <div className="relative flex h-full flex-col">
-                <div className="flex items-start justify-between gap-3 px-[6%] pt-[5%]">
-                  <p className="min-w-0 text-[0.875rem] font-semibold text-ink-muted">
-                    {header.scenario.who} · {moodLabel}
-                  </p>
-                  {mode ? (
-                    <span className="shrink-0 rounded-full bg-ink/[0.08] px-2.5 py-1 text-[0.8125rem] font-semibold text-ink">
-                      {mode === "live" ? liveDemo.badges.live : liveDemo.badges.sample}
-                    </span>
-                  ) : null}
+                <div className="min-w-0">
+                  <label htmlFor={customId} className="eyebrow mb-3 block text-muted-foreground">
+                    {L.custom}
+                  </label>
+                  <Textarea
+                    id={customId}
+                    rows={2}
+                    maxLength={MAX_TEXT}
+                    value={custom}
+                    onChange={(e) => setCustom(e.target.value)}
+                    placeholder={L.customPlaceholder}
+                    className="max-h-40 min-h-[4.5rem] resize-none rounded-xl bg-background/60 text-sm leading-relaxed"
+                  />
                 </div>
 
-                {phase === "debrief" && debrief ? (
-                  <>
-                    <WipeClean />
-                    <DebriefView debrief={debrief} onAgain={start} />
-                  </>
-                ) : (
-                  <div className="relative flex min-h-0 flex-1 flex-col justify-end gap-5 overflow-hidden px-[6%] pt-4 pb-[6%]">
-                    {messages.length === 0 && !thinking ? (
-                      <div className="m-auto max-w-[26ch] text-center">
-                        <SteamText
-                          text={L.idleTitle}
-                          className="text-[clamp(1.2rem,2vw,1.6rem)] leading-tight font-[680] text-ink [font-stretch:94%]"
-                        />
-                        <p className="mt-3 text-[0.9375rem] font-medium text-ink-muted">{L.idleBody}</p>
-                      </div>
-                    ) : null}
+                <Tabs value={mood} onValueChange={(v) => setMood(v as MoodId)} className="min-w-0 gap-2">
+                  <p className="eyebrow mb-1 text-muted-foreground">{L.mood}</p>
+                  {/* `h-11!`: the component's own orientation variant (h-9) outranks a plain utility. */}
+                  <TabsList aria-label={L.mood} className="grid h-11! w-full grid-cols-3 rounded-full bg-muted p-1">
+                    {moods.map((m) => (
+                      <TabsTrigger
+                        key={m.id}
+                        value={m.id}
+                        className="h-full rounded-full text-sm transition-[background-color,color,box-shadow] duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+                      >
+                        {m.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {moods.map((m) => (
+                    <TabsContent key={m.id} value={m.id} className="text-xs text-muted-foreground">
+                      {m.hint}
+                    </TabsContent>
+                  ))}
+                </Tabs>
 
-                    <AnimatePresence initial={false}>
-                      {onGlass.map((m) => (
-                        <motion.div
-                          key={m.id}
-                          exit={{ opacity: 0, filter: "blur(4px)", transition: { duration: 0.3 } }}
-                          className={cn("flex flex-col gap-1", m.role === "user" ? "items-end text-right" : "items-start")}
-                        >
-                          <span className="text-[0.8125rem] font-semibold text-ink-muted">
-                            {m.role === "user" ? L.you : header.scenario.who}
-                          </span>
-                          <SteamText
-                            text={m.text}
-                            play
-                            perWord={m.role === "user" ? 26 : 105}
-                            layoutKey={messages.length}
-                            className="max-w-[92%] text-[clamp(1rem,1.3vw,1.125rem)] leading-[1.42] font-[560] break-words text-ink [font-stretch:96%]"
-                          />
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-
-                    {thinking || phase === "debriefing" ? (
-                      <p className="flex items-center gap-2 text-[0.9375rem] font-semibold text-ink-muted">
-                        <span className="steam-dots" aria-hidden="true">
-                          <span />
-                          <span />
-                          <span />
-                        </span>
-                        {phase === "starting" ? L.waiting : phase === "replying" ? L.replying : L.ending}
-                      </p>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            </Mirror>
-
-            {/* The vanity shelf: where you say your line. */}
-            {phase !== "debrief" ? (
-              <div className="glass-panel mt-5 rounded-[26px] p-2 sm:p-2.5">
-                <form onSubmit={send} className="flex items-center gap-2">
-                  <label htmlFor={inputId} className="sr-only">
-                    {L.inputLabel}
-                  </label>
-                  <input
-                    ref={inputRef}
-                    id={inputId}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder={L.inputPlaceholder}
-                    disabled={!canType}
-                    maxLength={MAX_TEXT}
-                    autoComplete="off"
-                    enterKeyHint="send"
-                    className="h-12 min-w-0 flex-1 rounded-full bg-transparent px-4 text-base text-ink outline-none placeholder:text-ink-muted disabled:cursor-not-allowed"
-                  />
-                  <Button
-                    type="submit"
-                    variant="ink"
-                    className="shrink-0 px-4"
-                    disabled={phase !== "live" || !input.trim()}
-                    aria-label={L.send}
+                <button
+                  type="button"
+                  aria-pressed={voiceOn}
+                  disabled={!speechSupported}
+                  onClick={toggleVoice}
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-background/60 px-3.5 py-2.5 text-left transition-[border-color,background-color] duration-200 hover:border-foreground/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-foreground">
+                      {voiceOn ? (
+                        <Volume2 className="size-4" aria-hidden="true" />
+                      ) : (
+                        <VolumeX className="size-4" aria-hidden="true" />
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-foreground">{L.voice}</span>
+                      {!speechSupported ? (
+                        <span className="block text-xs text-muted-foreground">{L.voiceUnavailable}</span>
+                      ) : null}
+                    </span>
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "relative h-6 w-10 shrink-0 rounded-full transition-colors duration-200",
+                      voiceOn ? "bg-primary" : "bg-border",
+                    )}
                   >
-                    <span className="hidden sm:inline">{L.send}</span>
-                    <ArrowUp weight="bold" aria-hidden="true" />
+                    <span
+                      className={cn(
+                        "absolute top-0.5 left-0.5 size-5 rounded-full bg-card shadow-sm transition-transform duration-200 ease-out",
+                        voiceOn && "translate-x-4",
+                      )}
+                    />
+                  </span>
+                </button>
+
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="w-full"
+                    onClick={start}
+                    disabled={phase === "starting" || phase === "debriefing"}
+                  >
+                    {phase === "starting" ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Play className="size-4" aria-hidden="true" />
+                    )}
+                    {phase === "starting" ? L.starting : phase === "live" || phase === "replying" ? L.restart : L.start}
                   </Button>
-                </form>
-                {error && phase !== "idle" ? (
-                  <p role="alert" className="px-4 pt-2 pb-1 text-sm font-medium text-danger">
-                    {error}
-                  </p>
-                ) : null}
-                {hasExchange || phase === "live" ? (
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-2 pt-2 pb-0.5">
-                    <p className="px-2 text-sm text-ink-muted">{phase === "live" ? L.inputHint : " "}</p>
-                    {hasExchange ? (
-                      <Button type="button" variant="outlineInk" size="sm" onClick={end} disabled={busy}>
-                        {phase === "debriefing" ? (
-                          <CircleNotch weight="bold" className="animate-spin" aria-hidden="true" />
-                        ) : (
-                          <Stop weight="fill" aria-hidden="true" />
-                        )}
-                        {L.end}
-                      </Button>
+                  {error && phase === "idle" ? (
+                    <p role="alert" className="text-xs text-destructive">
+                      {error}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* ---------------- Transcript / debrief ---------------- */}
+              {/* On lg the panel fills the row the controls set, so a long transcript scrolls inside it instead of stretching the page. */}
+              <div ref={panelRef} className="relative min-h-[380px] min-w-0 scroll-mt-24 lg:min-h-[600px]">
+                <div className="flex min-h-[380px] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background/60 lg:absolute lg:inset-0 lg:min-h-0">
+                  {/* Persona header */}
+                  <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-lavender-deep/60 text-foreground">
+                      <UserRound className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <p className="truncate font-display text-[1.05rem] leading-tight font-semibold text-foreground">
+                          {header.scenario.who}
+                        </p>
+                        <span className="rounded-full bg-muted px-2.5 py-0.5 font-mono text-[11px] text-foreground/80">
+                          {moods.find((m) => m.id === header.mood)?.label.toLowerCase() ?? header.mood}
+                        </span>
+                      </div>
+                      <p className="truncate text-xs text-muted-foreground">{header.scenario.label}</p>
+                    </div>
+                    {mode ? (
+                      <Badge
+                        variant={mode === "live" ? "default" : "secondary"}
+                        className="shrink-0 gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wide uppercase"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={cn("size-1.5 rounded-full", mode === "live" ? "bg-amber" : "bg-foreground/40")}
+                        />
+                        {mode === "live" ? liveDemo.badges.live : liveDemo.badges.sample}
+                      </Badge>
                     ) : null}
                   </div>
-                ) : null}
+
+                  <AnimatePresence mode="wait" initial={false}>
+                    {phase === "debrief" && debrief ? (
+                      <motion.div
+                        key="debrief"
+                        className="flex min-h-0 flex-1 flex-col"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8, transition: { duration: 0.2, ease } }}
+                        transition={{ duration: 0.4, ease }}
+                      >
+                        <DebriefView debrief={debrief} mode={mode} onAgain={start} />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="transcript"
+                        className="flex min-h-0 flex-1 flex-col"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, transition: { duration: 0.2, ease } }}
+                        transition={{ duration: 0.3, ease }}
+                      >
+                        {mode === "sample" ? (
+                          <p className="flex items-center gap-1.5 border-b border-border bg-muted/50 px-4 py-2 text-xs text-muted-foreground">
+                            <Info className="size-3.5 shrink-0" aria-hidden="true" />
+                            <span className="min-w-0">{liveDemo.sampleNote}</span>
+                          </p>
+                        ) : null}
+
+                        {/* Log */}
+                        <div
+                          ref={logRef}
+                          className="flex max-h-[60vh] min-h-0 flex-1 flex-col overflow-y-auto p-4 lg:max-h-none"
+                        >
+                          {messages.length === 0 && !waiting ? (
+                            <IdleState />
+                          ) : (
+                            <ul className="flex flex-col gap-2.5">
+                              <AnimatePresence initial={false}>
+                                {messages.map((m) => (
+                                  <motion.li
+                                    key={m.id}
+                                    className={bubbleClass(m.role)}
+                                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                                    transition={{ duration: 0.35, ease }}
+                                  >
+                                    <span className={tagClass(m.role)}>
+                                      {m.role === "user" ? L.you : header.scenario.who}
+                                    </span>
+                                    {m.text}
+                                  </motion.li>
+                                ))}
+                                {waiting ? (
+                                  <motion.li
+                                    key="typing"
+                                    aria-hidden="true"
+                                    className="flex items-center gap-1 self-start rounded-2xl rounded-bl-md bg-muted px-3.5 py-3"
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                                    transition={{ duration: 0.3, ease }}
+                                  >
+                                    {[0, 1, 2].map((d) => (
+                                      <motion.span
+                                        key={d}
+                                        className="size-1.5 rounded-full bg-foreground/50"
+                                        animate={{ opacity: [0.3, 1, 0.3] }}
+                                        transition={{ duration: 0.9, repeat: Infinity, delay: d * 0.15, ease: "easeInOut" }}
+                                      />
+                                    ))}
+                                  </motion.li>
+                                ) : null}
+                              </AnimatePresence>
+                            </ul>
+                          )}
+                        </div>
+
+                        {/* Composer */}
+                        <div className="border-t border-border p-3 sm:p-4">
+                          {error && phase !== "idle" ? (
+                            <p role="alert" className="mb-2 text-xs text-destructive">
+                              {error}
+                            </p>
+                          ) : null}
+                          <form onSubmit={send} className="flex items-center gap-2">
+                            <label htmlFor={inputId} className="sr-only">
+                              {L.inputLabel}
+                            </label>
+                            <Input
+                              ref={inputRef}
+                              id={inputId}
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              placeholder={L.inputPlaceholder}
+                              disabled={!canType}
+                              maxLength={MAX_TEXT}
+                              autoComplete="off"
+                              enterKeyHint="send"
+                              className="h-11 min-w-0 flex-1 rounded-full bg-card px-4"
+                            />
+                            <Button
+                              type="submit"
+                              size="default"
+                              className="h-11 shrink-0 px-4"
+                              disabled={phase !== "live" || !input.trim()}
+                              aria-label={L.send}
+                            >
+                              <span className="hidden sm:inline">{L.send}</span>
+                              <ArrowUp className="size-4" aria-hidden="true" />
+                            </Button>
+                          </form>
+                          <div className="mt-2 flex min-h-8 flex-wrap items-center justify-between gap-2">
+                            <p className="text-xs text-muted-foreground">
+                              {phase === "starting"
+                                ? L.waiting
+                                : phase === "replying"
+                                  ? L.replying
+                                  : phase === "debriefing"
+                                    ? L.ending
+                                    : phase === "live"
+                                      ? L.inputHint
+                                      : ""}
+                            </p>
+                            {hasExchange ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={end}
+                                disabled={busy}
+                                className="shrink-0"
+                              >
+                                {phase === "debriefing" ? (
+                                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                                ) : (
+                                  <Square className="size-3.5" aria-hidden="true" />
+                                )}
+                                {L.end}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-            ) : null}
+            </div>
+          </div>
+        </Reveal>
 
-            {mode === "sample" ? <p className="on-tile mt-4 text-sm text-wall-muted">{liveDemo.sampleNote}</p> : null}
-          </div>
-        </div>
-
-        {/* The whole conversation for screen readers; the glass only keeps the latest lines. */}
-        <div className="sr-only">
-          <div role="log" aria-label="Rehearsal transcript">
-            {messages.map((m) => (
-              <p key={m.id}>
-                {m.role === "user" ? L.you : header.scenario.who}: {m.text}
-              </p>
-            ))}
-          </div>
-          <div role="status" aria-live="polite">
-            {announce}
-          </div>
+        {/* Completed persona lines are announced once, not on every streamed chunk. */}
+        <div role="status" aria-live="polite" className="sr-only">
+          {announce}
         </div>
       </Container>
     </section>
@@ -614,132 +713,153 @@ export function LiveDemo() {
 /* Pieces                                                              */
 /* ------------------------------------------------------------------ */
 
-function MoodPicker({ value, onChange }: { value: MoodId; onChange: (m: MoodId) => void }) {
-  const labelId = useId();
-  const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const index = moods.findIndex((m) => m.id === value);
-
-  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    const delta = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-    if (!delta) return;
-    e.preventDefault();
-    const next = (index + delta + moods.length) % moods.length;
-    onChange(moods[next].id);
-    refs.current[next]?.focus();
-  }
-
+function IdleState() {
   return (
-    <div className="min-w-0">
-      <p id={labelId} className="mb-2 text-[0.9375rem] font-semibold text-ink">
-        {L.mood}
-      </p>
-      <div
-        role="radiogroup"
-        aria-labelledby={labelId}
-        onKeyDown={onKeyDown}
-        className="grid grid-cols-3 gap-1 rounded-full bg-ink/[0.07] p-1"
-      >
-        {moods.map((m, i) => {
-          const checked = m.id === value;
-          return (
-            <button
-              key={m.id}
-              ref={(el) => {
-                refs.current[i] = el;
-              }}
-              type="button"
-              role="radio"
-              aria-checked={checked}
-              tabIndex={checked ? 0 : -1}
-              onClick={() => onChange(m.id)}
-              className={cn(
-                "relative h-10 rounded-full text-[0.9375rem] font-semibold transition-colors duration-150",
-                checked ? "text-glass" : "text-ink hover:bg-ink/[0.06]",
-              )}
-            >
-              {checked ? (
-                <motion.span
-                  layoutId="mood-pill"
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-full bg-ink"
-                  transition={{ type: "spring", duration: 0.35, bounce: 0.12 }}
-                />
-              ) : null}
-              <span className="relative">{m.label}</span>
-            </button>
-          );
-        })}
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10 text-center">
+      <div className="flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2.5">
+        <span className="grid size-7 place-items-center rounded-full bg-muted text-muted-foreground">
+          <Mic className="size-3.5" aria-hidden="true" />
+        </span>
+        <span aria-hidden="true" className="flex h-8 items-center gap-1">
+          {BAR_HEIGHTS.map((h, i) => (
+            <span key={i} className="w-1 rounded-full bg-foreground/15" style={{ height: h }} />
+          ))}
+        </span>
       </div>
-      <p className="mt-2 text-sm text-ink-muted">{moods[index]?.hint}</p>
+      <div>
+        <p className="font-display text-base font-semibold text-foreground">{L.idleTitle}</p>
+        <p className="mx-auto mt-1 max-w-[34ch] text-sm text-muted-foreground">{L.idleBody}</p>
+      </div>
     </div>
   );
 }
 
-function DebriefView({ debrief, onAgain }: { debrief: Debrief; onAgain: () => void }) {
+function DebriefView({
+  debrief,
+  mode,
+  onAgain,
+}: {
+  debrief: Debrief;
+  mode: RehearseMode | null;
+  onAgain: () => void;
+}) {
   const d = liveDemo.debrief;
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  // The transcript this replaces held focus; hand it to the debrief so keyboard and screen reader users land on it.
-  useEffect(() => {
-    headingRef.current?.focus({ preventScroll: true });
-  }, []);
   return (
-    <div className="absolute inset-0 overflow-y-auto overscroll-contain px-[6%] pt-[13%] pb-[6%] sm:pt-[9%]">
-      <div className="grid gap-x-8 gap-y-6 md:grid-cols-[auto_1fr]">
-        <PostIt play delay={380} tilt={-4} className="h-fit w-fit px-5 pt-3 pb-4 text-center">
-          <h3 ref={headingRef} tabIndex={-1} className="text-[0.95rem] font-bold focus:outline-none">
-            {d.title}
-          </h3>
-          <p className="tnum text-[3.4rem] leading-none font-bold">
-            {debrief.score}
-            <span className="text-[1.3rem]"> {d.scoreOf}</span>
-          </p>
-        </PostIt>
-
-        <div className="grid min-w-0 gap-6 sm:grid-cols-2">
-          <DebriefList title={d.worked} items={debrief.worked} empty={null} />
-          <DebriefList title={d.folded} items={debrief.folded} empty={d.none} />
+    <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:p-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <span className="flex size-6 items-center justify-center rounded-md bg-amber text-ink">
+            <Sparkles className="size-3.5" aria-hidden="true" />
+          </span>
+          <h3 className="font-display text-base font-semibold text-foreground">{d.title}</h3>
+          {mode === "sample" ? (
+            <span className="font-mono text-[11px] text-muted-foreground">({liveDemo.badges.sample.toLowerCase()})</span>
+          ) : null}
         </div>
+        <p className="flex items-baseline gap-1.5 font-mono">
+          <motion.span
+            className="text-6xl leading-none font-semibold text-foreground tabular-nums"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease, delay: 0.1 }}
+          >
+            {debrief.score}
+          </motion.span>
+          <span className="text-sm text-muted-foreground">{d.scoreOf}</span>
+        </p>
       </div>
 
-      <PostIt play delay={620} tilt={1.5} className="mt-7 px-5 pt-4 pb-5">
-        <p className="text-[1.15rem] font-bold">{d.next}</p>
-        <ul className="mt-1.5 flex flex-col gap-1.5 text-[1.1rem] leading-snug">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <DebriefList
+          title={d.worked}
+          items={debrief.worked}
+          empty={null}
+          icon={<Check className="size-3 text-amber-ink" strokeWidth={2.5} aria-hidden="true" />}
+          iconClass="bg-amber/25"
+        />
+        <DebriefList
+          title={d.folded}
+          items={debrief.folded}
+          empty={d.none}
+          icon={<Minus className="size-3 text-muted-foreground" strokeWidth={2.5} aria-hidden="true" />}
+          iconClass="bg-muted"
+        />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-3.5">
+        <p className="eyebrow text-amber-ink">{d.next}</p>
+        <ul className="mt-2.5 flex flex-col gap-2.5">
           {debrief.next.map((line, i) => (
-            <li key={i}>&ldquo;{line}&rdquo;</li>
+            <li key={i} className="border-l-2 border-amber pl-3 text-sm leading-relaxed break-words text-foreground">
+              {line}
+            </li>
           ))}
         </ul>
-      </PostIt>
+      </div>
 
       {debrief.pattern ? (
-        <p className="mt-6 max-w-[48ch] text-[1.0625rem] leading-snug font-[600] text-ink">
-          <span className="text-ink-muted">{d.pattern}: </span>
-          {debrief.pattern}
-        </p>
+        <div className="rounded-xl bg-muted p-3.5">
+          <p className="eyebrow text-muted-foreground">{d.pattern}</p>
+          <p className="mt-1.5 text-sm leading-relaxed break-words text-foreground">{debrief.pattern}</p>
+        </div>
       ) : null}
 
-      <Button type="button" variant="ink" className="mt-6" onClick={onAgain}>
-        <ArrowCounterClockwise weight="bold" aria-hidden="true" />
-        {L.again}
-      </Button>
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+        <Button type="button" onClick={onAgain}>
+          <RotateCcw className="size-4" aria-hidden="true" />
+          {L.again}
+        </Button>
+      </div>
     </div>
   );
 }
 
-function DebriefList({ title, items, empty }: { title: string; items: readonly string[]; empty: string | null }) {
+function DebriefList({
+  title,
+  items,
+  empty,
+  icon,
+  iconClass,
+}: {
+  title: string;
+  items: readonly string[];
+  empty: string | null;
+  icon: React.ReactNode;
+  iconClass: string;
+}) {
   return (
-    <div className="min-w-0">
-      <p className="text-[0.9375rem] font-bold text-ink">{title}</p>
+    <div className="min-w-0 rounded-xl border border-border bg-card p-3.5">
+      <p className="eyebrow text-muted-foreground">{title}</p>
       {items.length === 0 ? (
-        <p className="mt-2 text-[0.9375rem] text-ink-muted">{empty}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{empty}</p>
       ) : (
-        <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5 text-[0.9375rem] leading-snug text-ink marker:text-ink-muted">
+        <ul className="mt-2.5 flex flex-col gap-2">
           {items.map((item, i) => (
-            <li key={i} className="break-words">
-              {item}
+            <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-foreground">
+              <span className={cn("mt-0.5 grid size-5 shrink-0 place-items-center rounded-full", iconClass)}>
+                {icon}
+              </span>
+              <span className="min-w-0 break-words">{item}</span>
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+function bubbleClass(role: Role) {
+  return cn(
+    "max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[0.9rem] leading-snug break-words whitespace-pre-wrap",
+    role === "user"
+      ? "self-end rounded-br-md bg-primary text-primary-foreground"
+      : "self-start rounded-bl-md bg-muted text-foreground",
+  );
+}
+
+function tagClass(role: Role) {
+  return cn(
+    "mb-0.5 block font-mono text-[10px] tracking-[0.12em] uppercase",
+    role === "user" ? "text-white/60" : "text-muted-foreground",
   );
 }

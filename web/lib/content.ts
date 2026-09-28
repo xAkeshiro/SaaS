@@ -8,7 +8,7 @@ export const site = {
   tagline: "Talk to an AI so you can talk to people",
   description:
     "Rehearse the conversation you are dreading, out loud, with an AI that plays the other person and pushes back. Then get told exactly what to do differently. Three minutes a day. Not a companion.",
-  status: "Early access opens campus by campus this interview season.",
+  status: "Early access · interview season 2026",
   contactEmail: "hello@unmute.app",
   social: {
     x: "https://x.com",
@@ -29,21 +29,59 @@ export const nav = {
 } as const;
 
 export const hero = {
+  eyebrow: "Conversation practice for real life",
   headline: "Talk to an AI so you can talk to people.",
-  sub: "Rehearse the conversation you dread. The AI plays the other person, pushes back, and tells you exactly what to change.",
+  headlineEmphasis: "people",
+  rotating: [
+    "the raise",
+    "the interview",
+    "the roommate talk",
+    "the deposit call",
+    "saying no",
+    "the first date",
+    "the breakup",
+  ],
+  sub: "Rehearse the conversation you are dreading, out loud, with an AI that plays the other person and pushes back. Then get told exactly what to do differently. Three minutes a day.",
+  stance: "Not a companion. A coach that wants you to need it less.",
+  ctaPrimary: "Get early access",
   ctaSecondary: "Try a rehearsal",
+  trust: "Your rehearsals are yours. Never used for training. Never shared.",
 } as const;
+
+export const stats = [
+  {
+    value: 65,
+    suffix: "%",
+    label: "of Gen Z say calling a stranger makes them uncomfortable. Only a third are comfortable making calls at all.",
+    footnote: 1,
+  },
+  {
+    value: 37,
+    suffix: "%",
+    label: "of adults 18–25 report significant anxiety, the highest of any adult age group.",
+    footnote: 2,
+  },
+  {
+    value: 100,
+    prefix: "$",
+    suffix: "M",
+    label: "a year: what a daily “say it out loud” habit is worth when Speak applied it to languages. Unmute applies it to the conversations people actually fear.",
+    footnote: 3,
+  },
+] as const;
 
 export const steps = [
   {
     id: "rehearse",
+    index: "01",
     name: "Rehearse",
     title: "The other person talks back.",
     body: "Pick the conversation or describe your own. The AI plays the other side with a voice, a mood and a personality. It interrupts, sighs, goes quiet, pushes back. Kind, neutral or hostile.",
-    bullets: ["Voice-first, full-duplex", "Kind, neutral or hostile", "Describe any situation"],
+    bullets: ["Voice-first, full-duplex", "Kind → neutral → hostile", "Describe any situation"],
   },
   {
     id: "debrief",
+    index: "02",
     name: "Debrief",
     title: "Exactly what to change.",
     body: "What worked, where you folded, how long you took to get to the ask, filler words, and the two sentences to try next time. It remembers your patterns: “you apologize before every ask.”",
@@ -51,6 +89,7 @@ export const steps = [
   },
   {
     id: "daily",
+    index: "03",
     name: "Daily rep",
     title: "Three minutes, every day.",
     body: "A streak and a scenario picked from what you have coming up. Connect your calendar and “interview Thursday” becomes Tuesday’s rep.",
@@ -58,6 +97,7 @@ export const steps = [
   },
   {
     id: "real",
+    index: "04",
     name: "Real mode",
     title: "Warm up, then make the call.",
     body: "A 60-second warmup and a cue card before the real thing, a debrief after. Unmute never listens to real calls. Phones do not allow it, and you would not want it to.",
@@ -87,35 +127,37 @@ export const demoScenarios = [
 export type DemoScenario = (typeof demoScenarios)[number];
 
 export const scenarioCards = [
-  { title: "The call you keep postponing", body: "Doctor’s office, insurance, the bank, customer service. Getting to the point without the apology spiral." },
-  { title: "The ask", body: "A raise, a deadline extension, a shift change, a favor. Say the number and then stop talking." },
-  { title: "The roommate talk", body: "Dishes, noise, a guest who never leaves. Firm without a fight." },
-  { title: "The interview", body: "“Tell me about yourself,” the salary question, the awkward silence. Panels too." },
-  { title: "The first date", body: "Small talk that goes somewhere. Ending it kindly if it doesn’t." },
-  { title: "The deposit, the fee, the refund", body: "A landlord, a gym, an airline. Holding your ground when they get busy or rude." },
-  { title: "Saying no", body: "To a friend, a parent, a boss. Once, clearly, without a paragraph of reasons." },
-  { title: "The hard one", body: "A breakup, an apology, telling someone the truth. Practiced before it has to be perfect." },
+  { icon: "PhoneCall", title: "The call you keep postponing", body: "Doctor’s office, insurance, the bank, customer service. Getting to the point without the apology spiral." },
+  { icon: "TrendingUp", title: "The ask", body: "A raise, a deadline extension, a shift change, a favor. Say the number and then stop talking." },
+  { icon: "Home", title: "The roommate talk", body: "Dishes, noise, a guest who never leaves. Firm without a fight." },
+  { icon: "Briefcase", title: "The interview", body: "“Tell me about yourself,” the salary question, the awkward silence. Panels too." },
+  { icon: "Coffee", title: "The first date", body: "Small talk that goes somewhere. Ending it kindly if it doesn’t." },
+  { icon: "Receipt", title: "The deposit, the fee, the refund", body: "A landlord, a gym, an airline. Holding your ground when they get busy or rude." },
+  { icon: "Hand", title: "Saying no", body: "To a friend, a parent, a boss. Once, clearly, without a paragraph of reasons." },
+  { icon: "HeartCrack", title: "The hard one", body: "A breakup, an apology, telling someone the truth. Practiced before it has to be perfect." },
 ] as const;
 
 export const together = {
+  eyebrow: "Together",
   title: "Practice with people, not just about them.",
   sub: "The fastest way to get better at talking to humans is other humans watching you try.",
   features: [
-    { title: "Practice rooms", body: "A friend plays the recruiter while the AI coaches. Or the AI plays the panel while your friends rate you." },
-    { title: "Dares", body: "“Call the pizza place and negotiate a discount.” Shareable clips, voice-changed if you want." },
-    { title: "The before-and-after", body: "Your first call next to your tenth. That clip is the whole pitch." },
+    { icon: "Users", title: "Practice rooms", body: "A friend plays the recruiter while the AI coaches. Or the AI plays the panel while your friends rate you." },
+    { icon: "Flame", title: "Dares", body: "“Call the pizza place and negotiate a discount.” Shareable clips, voice-changed if you want." },
+    { icon: "Clapperboard", title: "The before-and-after", body: "Your first call next to your tenth. That clip is the whole pitch." },
   ],
   dares: [
-    { title: "Negotiate a discount at the pizza place", tag: "Dare · 2 min" },
-    { title: "Ask a stranger for directions you already know", tag: "Dare · 1 min" },
-    { title: "Return the coffee that came out wrong", tag: "Dare · 90 sec" },
-    { title: "Call the gym and cancel the membership", tag: "Dare · 3 min" },
-    { title: "Tell the group chat you can’t make it", tag: "Dare · 30 sec" },
-    { title: "Ask the barista their name and use it", tag: "Dare · 1 min" },
+    { title: "Negotiate a discount at the pizza place", tag: "Dare · 2 min", tone: "amber" },
+    { title: "Ask a stranger for directions you already know", tag: "Dare · 1 min", tone: "lavender" },
+    { title: "Return the coffee that came out wrong", tag: "Dare · 90 sec", tone: "peach" },
+    { title: "Call the gym and cancel the membership", tag: "Dare · 3 min", tone: "amber" },
+    { title: "Tell the group chat you can’t make it", tag: "Dare · 30 sec", tone: "lavender" },
+    { title: "Ask the barista their name and use it", tag: "Dare · 1 min", tone: "peach" },
   ],
 } as const;
 
 export const principles = {
+  eyebrow: "Not a companion",
   title: "It exists to make you need it less.",
   intro:
     "AI companions are built to keep you talking to them. Unmute is built to get you talking to people. Every rehearsal ends with a real conversation to go have.",
@@ -129,6 +171,7 @@ export const principles = {
 } as const;
 
 export const pricing = {
+  eyebrow: "Pricing",
   title: "One rep a day is free.",
   sub: "The habit costs less than the coffee before the interview.",
   yearlyNote: "Save 45% with yearly",
@@ -156,7 +199,7 @@ export const pricing = {
         "Your patterns and trends over time",
         "Practice rooms and dares",
       ],
-      cta: { label: "Get early access", href: "/#early-access" },
+      cta: { label: "Start with Plus", href: "/#early-access" },
       highlight: true,
       badge: "Most popular",
     },
@@ -164,7 +207,7 @@ export const pricing = {
       id: "teams",
       name: "Teams",
       price: null,
-      priceLabel: "$3 to $8",
+      priceLabel: "Let’s talk",
       period: "per seat, per month",
       blurb: "Career centers, companies, clinicians.",
       features: [
@@ -173,7 +216,7 @@ export const pricing = {
         "Structured practice programs with clinicians",
         "Admin dashboard and cohort reports",
       ],
-      cta: { label: "Request a pilot", href: "/teams#pilot" },
+      cta: { label: "Talk to us", href: "/teams" },
       highlight: false,
     },
   ],
@@ -231,11 +274,11 @@ export const finalCta = {
 export const footnotes = [
   "YouGov, phone habits by generation: 65% of Gen Z uncomfortable calling a stranger; 33% of Gen Z comfortable making calls versus 49% of Millennials and 67% of Boomers.",
   "Young adult mental health statistics compiled by Compass Health Center, 2026.",
-  "Y Combinator on Speak: 15M downloads, $100M+ annualized revenue, users practice speaking 5 to 10 times more than on other apps.",
+  "Y Combinator on Speak: 15M downloads, $100M+ annualized revenue, users practice speaking 5–10x more than on other apps.",
 ] as const;
 
 export const footer = {
-  blurb: "Conversation practice for real life. A working name; the company and the product are in preview.",
+  blurb: "Voice practice for the conversations you are dreading. A working name; the company and the product are in preview.",
   columns: [
     {
       title: "Product",
@@ -315,20 +358,24 @@ export const manifesto = {
 } as const;
 
 export const teams = {
+  eyebrow: "Teams",
   title: "Interview season for a whole campus.",
   sub: "Career centers, companies and clinicians run structured practice on Unmute. Seats from $3 to $8 a month, free for career centers this interview season.",
   audiences: [
     {
+      icon: "GraduationCap",
       title: "Career centers",
       body: "Every student gets a mock interview a day from September to November, with a debrief the counselor can see. Cohort reports show who is ready and who is stuck on the salary question.",
       bullets: ["Campus-wide seats", "Interview and career-fair scenarios", "Counselor dashboard"],
     },
     {
+      icon: "Building2",
       title: "Companies",
       body: "Customer-facing teams and new managers rehearse the hard ones: the angry customer, the missed deadline, the performance conversation. Practice before it costs you a customer or a report.",
       bullets: ["Custom scenarios from your playbook", "Manager and support tracks", "SSO and procurement-ready"],
     },
     {
+      icon: "Stethoscope",
       title: "Clinicians",
       body: "Structured social-anxiety practice between sessions, with the clinician setting the ladder and reviewing the debriefs. Crisis language routes to real resources, every time.",
       bullets: ["Exposure ladders you define", "Clinician-visible debriefs", "Clear safety boundaries"],
@@ -336,8 +383,8 @@ export const teams = {
   ],
   offer: {
     title: "Career centers: free for interview season.",
-    body: "September to November 2026. Bring your students, we bring the interviewers. Tell us your campus and we will set up your cohort.",
-    cta: "Request a pilot",
+    body: "Sep–Nov 2026. Bring your students, we bring the interviewers. Tell us your campus and we will set up your cohort.",
+    cta: "Request a campus pilot",
   },
   form: {
     fields: [
@@ -349,9 +396,14 @@ export const teams = {
   },
 } as const;
 
-/* ---------- Hero mirror and how-it-works ---------- */
+/* ---------- Appended for the hero group (hero.tsx, rehearsal-window.tsx) ---------- */
 
-/** The example rehearsal that plays in the hero mirror. Pure UI, no network. */
+/** Extra hero strings. `hero` above is unchanged. */
+export const heroExtras = {
+  eyebrowSuffix: "early access",
+} as const;
+
+/** Self-playing app-window mock under the hero. Pure UI, no network. */
 export const rehearsalWindow = {
   windowTitle: "Rehearsal · 01:58",
   mode: "Hard mode",
@@ -390,57 +442,111 @@ export const rehearsalWindow = {
   },
 } as const;
 
-/** Heading for the how-it-works section. The step copy is `steps`; the mirror states are `howMirror`. */
-export const howItWorks = {
-  title: "Rehearse. Debrief. Repeat. Then do it for real.",
+/** Proof strip between the hero and the sticky showcase. */
+export const proof = {
+  eyebrow: "The problem is loud. The mechanic is proven.",
 } as const;
 
-/* ---------- Together and principles ---------- */
+/** Sticky "How it works" showcase: heading plus the strings inside the four hand-built UI mocks. */
+export const howItWorks = {
+  eyebrow: "How it works",
+  title: "Rehearse. Debrief. Repeat. Then do it for real.",
+  mocks: {
+    rehearse: {
+      status: "01:12",
+      speaking: "Manager is talking",
+      moodLabel: "Mood",
+    },
+    debrief: {
+      title: "Debrief",
+      subtitle: "Ask for a raise · 3:04",
+      score: 7,
+      scoreOf: "/ 10",
+      rows: [
+        { label: "Got to the ask", value: "0:52", was: "was 2:10", before: 100, now: 40 },
+        { label: "Apologies before the ask", value: "1", was: "was 4", before: 100, now: 25 },
+        { label: "Filler words", value: "5", was: "“like”, “just”", before: 85, now: 45 },
+      ],
+      held: { label: "Held the number", value: "$62,000" },
+      patternLabel: "Pattern",
+      pattern: "You apologize before every ask.",
+    },
+    daily: {
+      streak: 12,
+      streakUnit: "days",
+      streakLabel: "Streak",
+      weekLabel: "Last 7 days",
+      days: ["W", "T", "F", "S", "S", "M", "T"],
+      todayIndex: 6,
+      rep: { title: "Tuesday’s rep: interview", meta: "From your calendar · interview Thursday" },
+      trend: { label: "Confidence", value: "Up 18% this month" },
+    },
+    real: {
+      title: "Real mode",
+      phase: "Warmup",
+      ring: { seconds: 45, total: 60, caption: "left" },
+      cueTitle: "Cue card",
+      cues: ["Say the number: $62,000.", "Then stop talking.", "If they stall: “What would it take?”"],
+      cta: "Make the call",
+      note: "Unmute never listens to real calls.",
+    },
+  },
+} as const;
 
-/** Extra strings for the Together section. */
+/* ---------- Appended for the scenarios / together / anti-companion group ---------- */
+
+/** Heading and footer link for the scenario grid. `scenarioCards` above is unchanged. */
+export const scenariosHeading = {
+  eyebrow: "Conversations",
+  title: "The ones people rehearse in the shower.",
+  sub: "Eight to start. Describe your own in a sentence and the AI plays the other side.",
+  cta: { label: "Or describe your own", href: "/#try" },
+} as const;
+
+/** Extra strings for the Together section. `together` above is unchanged. */
 export const togetherExtras = {
   daresTitle: "Today’s dares",
   daresMeta: "New every morning",
 } as const;
 
-/** Extra strings for the principles section and the teams page. */
+/** Extra strings for the anti-companion band. `principles` above is unchanged. */
 export const principlesExtras = {
   secondaryCta: { label: "See pricing", href: "/pricing" },
 } as const;
 
-/* ---------- Live demo (live-demo.tsx, /api/rehearse) ---------- */
+/* ---------- Appended for the live demo group (live-demo.tsx, /api/rehearse) ---------- */
 
 /** Interactive rehearsal section. Persona and coach prompts live in `lib/rehearse.ts`. */
 export const liveDemo = {
+  eyebrow: "Try it",
   title: "Try a rehearsal right now.",
-  sub: "Pick who you\u2019re talking to and how hard they push. They speak first. End it whenever you like for your debrief.",
-  voiceNote: "The app is voice-first. This preview is typed, and can read their lines aloud.",
+  sub: "Pick a conversation and a mood. The AI plays the other person. Say what you would actually say, then end the rehearsal for your debrief. The full app is voice-first; this preview lets you type, and reads the other person's lines aloud where your browser allows it.",
   labels: {
-    conversation: "Who are you talking to?",
+    conversation: "Conversation",
     custom: "Or describe your own",
     customPlaceholder: "e.g. My manager. I need to move my Tuesday shift because of class and she hates schedule changes.",
     customLabel: "Custom rehearsal",
     customWho: "The other person",
     /** Prefix sent with a custom setup so "I" and "my" read as the user in the prompts. */
     customSetup: "In the user's own words:",
-    mood: "How hard do they push?",
+    mood: "Mood of the other person",
     voice: "Read lines aloud",
     voiceUnavailable: "Not available in this browser",
     start: "Start rehearsal",
     restart: "Restart rehearsal",
-    starting: "Starting",
+    starting: "Starting…",
     inputLabel: "What you say",
-    inputPlaceholder: "What do you say?",
+    inputPlaceholder: "Say what you would actually say…",
     inputHint: "Enter sends. The other person answers in a moment.",
     send: "Say it",
     end: "End and debrief",
-    ending: "Writing your debrief",
+    ending: "Writing your debrief…",
     again: "Rehearse again",
     you: "You",
-    idleTitle: "Nobody\u2019s here yet.",
-    idleBody: "Pick who you\u2019re talking to and press Start. They speak first.",
-    waiting: "They\u2019re picking up",
-    replying: "They\u2019re thinking",
+    idleTitle: "No rehearsal yet",
+    idleBody: "Pick a conversation, choose a mood and press Start. The other person speaks first.",
+    waiting: "The other person is picking up…",
+    replying: "The other person is thinking…",
   },
   badges: { sample: "Sample", live: "Live" },
   sampleNote: "Running a scripted sample. Add an API key to go live.",
@@ -461,9 +567,9 @@ export const liveDemo = {
   },
 } as const;
 
-/* ---------- Pricing and FAQ ---------- */
+/* ---------- Appended for the pricing group (pricing.tsx, pricing-tiers.tsx, faq.tsx, /pricing) ---------- */
 
-/** Extra strings for the pricing tiers, the comparison table and the pricing page. */
+/** Extra strings for the pricing tiers, the comparison table and the pricing page. `pricing` above is unchanged. */
 export const pricingExtras = {
   billing: {
     label: "Billing period",
@@ -477,9 +583,10 @@ export const pricingExtras = {
       monthly: "Billed monthly. Cancel any time.",
       yearly: "That’s $8.25 a month, billed once a year.",
     },
-    teams: "Free for career centers this interview season.",
+    teams: "Seats from $3 to $8. Free for career centers this interview season.",
   },
   comparison: {
+    eyebrow: "Compare plans",
     title: "Everything in each plan.",
     sub: "Start free. Upgrade for the season you actually have to get good.",
     featureColumn: "Feature",
@@ -488,28 +595,34 @@ export const pricingExtras = {
   },
 } as const;
 
-/** Heading for the FAQ section. */
+/** Heading for the FAQ section. `faq` above is unchanged. */
 export const faqHeading = {
+  eyebrow: "FAQ",
   title: "Questions people ask before they say yes.",
 } as const;
 
-/* ---------- Manifesto and teams ---------- */
+/* ---------- Appended for the manifesto / teams group (app/manifesto, app/teams, pilot-form.tsx, /api/waitlist) ---------- */
 
-/** Extra strings for the manifesto page. */
+/** Extra strings for the manifesto page. `manifesto` above is unchanged. */
 export const manifestoExtras = {
+  eyebrow: "Manifesto",
   /** Rendered as a pull-quote instead of a paragraph. Must match a paragraph in `manifesto.sections` exactly. */
   pullQuote: "If it works, you will use Unmute less over time. That is the point.",
-  signOff: "The Unmute team, September 2026",
-  indexLabel: "Manifesto sections",
+  signOff: "— the Unmute team, September 2026",
 } as const;
 
-/** Extra strings for the teams page and the pilot form. */
+/** Extra strings for the teams page and the pilot form. `teams` above is unchanged. */
 export const teamsExtras = {
   audiencesHeading: {
+    eyebrow: "Who it is for",
     title: "Built for the people who run practice.",
     sub: "Same rehearsal, same debrief. You set the scenarios and see the results.",
   },
+  offer: {
+    eyebrow: "Interview season",
+  },
   pilot: {
+    eyebrow: "Campus pilot",
     title: "Tell us about your campus or team.",
     sub: "A few lines is enough. A human reads every request.",
     stepsTitle: "What happens next",
@@ -526,7 +639,7 @@ export const teamsExtras = {
       placeholder: "Hiring timeline, the scenarios you want, how many counselors…",
     },
     submit: "Request a pilot",
-    submitting: "Sending",
+    submitting: "Sending…",
     note: "No card, no contract. One reply from a human.",
     success: {
       title: "Request received.",
@@ -538,102 +651,4 @@ export const teamsExtras = {
       network: "Network hiccup. Try again.",
     },
   },
-} as const;
-
-/* ---------- The mirror world (September 2026 redesign) ---------- */
-
-/** Waitlist form strings, shared by the hero, the final call and anywhere else the form appears. */
-export const waitlist = {
-  label: "Email address",
-  placeholder: "you@school.edu",
-  button: "Get early access",
-  done: {
-    title: "You\u2019re on the list.",
-    body: "One email, the day it reaches your campus.",
-  },
-  errors: {
-    generic: "That didn\u2019t go through. Try again.",
-    network: "Network hiccup. Try again.",
-  },
-} as const;
-
-/** The arched mirror in the first viewport. The rehearsal itself lives in `rehearsalWindow`. */
-export const heroMirror = {
-  label: "Example rehearsal",
-  hintPointer: "An example rehearsal. Move across the glass to wipe the steam.",
-  hintTouch: "An example rehearsal. Drag across the glass to wipe the steam.",
-  replay: "Play it again",
-  debriefNote: "Debrief",
-  debriefLines: ["Ask at 0:22 (was 2:10)", "Sorry count: 0 (was 4)", "\u201cjust\u201d \u00d7 5"],
-  heldLine: "Held the boundary",
-  nextNote: "Next time, say:",
-} as const;
-
-/** The problem, set as statements rather than a stat strip. Footnote numbers point at `footnotes`. */
-export const problem = {
-  lead: { value: "65%", text: "of Gen Z say calling a stranger makes them uncomfortable.", footnote: 1 },
-  second: { value: "37%", text: "of adults 18 to 25 report significant anxiety, the highest of any adult age group.", footnote: 2 },
-  third: {
-    text: "Speak made a daily say-it-out-loud habit worth $100M a year for languages.",
-    footnote: 3,
-    close: "Unmute points that habit at the conversations people actually fear.",
-  },
-} as const;
-
-/** How-it-works states shown in the sticky mirror. */
-export const howMirror = {
-  rehearse: {
-    who: "Your manager",
-    scenario: "Asking for a raise",
-    line: "Sure, I\u2019ve got a few minutes. What\u2019s on your mind?",
-    pushback: "Look, the budget is frozen until spring.",
-    moodLabel: "Mood",
-    mood: "hostile.",
-    moodNote: "It pushes back.",
-  },
-  debrief: {
-    who: "Asking for a raise",
-    notes: ["Got to the ask at 0:52", "(it was 2:10)", "Apologies before the ask: 1"],
-    held: "Held $62,000",
-    pattern: "Pattern: you apologize before every ask.",
-  },
-  daily: {
-    title: "Your week",
-    days: 7,
-    streak: "7 days in a row",
-    rep: "Tuesday\u2019s rep: the interview",
-    repWhy: "Your calendar says Thursday.",
-  },
-  real: {
-    title: "Cue card",
-    cues: ["Say the number: $62,000.", "Then stop talking.", "If they stall: \u201cWhat would it take?\u201d"],
-    warmup: "60-second warmup done",
-    note: "Unmute never listens to real calls.",
-  },
-} as const;
-
-/** The scenario index. Each line starts that rehearsal in the demo. */
-export const scenarioIndex = {
-  title: "The ones people rehearse in the shower.",
-  sub: "Eight to start. Or describe your own in a sentence and the AI plays the other side.",
-  action: "Rehearse this",
-  /** Which demo scenario each `scenarioCards` entry opens, in the same order. `null` opens the custom box. */
-  demoIds: ["doctor", "raise", "roommate", "interview", "date", "deposit", "no", null],
-  customPrefill: "I owe my best friend an apology for missing her birthday, and I keep putting it off.",
-} as const;
-
-/** The before-and-after pair in the Together section. Illustrative, and labelled as such on the page. */
-export const beforeAfter = {
-  caption: "An illustration, not a real user.",
-  dare: "Dare: negotiate a discount at the pizza place.",
-  first: { label: "Rep 1", line: "Um, hi, sorry, I was just wondering if maybe there\u2019s, like, any chance of a discount? It\u2019s fine if not." },
-  tenth: { label: "Rep 10", line: "Hi. I\u2019m picking up three large pizzas tonight. Can you do fifteen percent off?" },
-} as const;
-
-/** The 404 page. */
-export const notFound = {
-  title: "This page went quiet.",
-  body: "The link is wrong or the page moved. The conversation you are dreading is still waiting, though.",
-  mirror: "404",
-  cta: `Back to ${site.name}`,
 } as const;

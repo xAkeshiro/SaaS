@@ -1,22 +1,37 @@
 import { Container } from "@/components/site/container";
+import { Reveal } from "@/components/site/reveal";
+import { SectionHeading } from "@/components/site/section-heading";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { faq, faqHeading } from "@/lib/content";
 
-/** Six short answers, all open, side by side on glass. No accordion to open one at a time. */
 export function Faq() {
   return (
-    <section id="faq" aria-labelledby="faq-title" className="relative scroll-mt-20 py-24 sm:py-32">
-      <Container className="grid gap-12 lg:grid-cols-12 lg:gap-12">
-        <h2 id="faq-title" className="display-2 on-tile max-w-[14ch] text-wall-ink lg:col-span-4">
-          {faqHeading.title}
-        </h2>
-        <dl className="glass-panel grid gap-x-10 gap-y-9 p-7 sm:p-10 md:grid-cols-2 lg:col-span-8">
-          {faq.map((f) => (
-            <div key={f.q}>
-              <dt className="text-[1.0625rem] leading-snug font-bold text-ink">{f.q}</dt>
-              <dd className="mt-2 text-[0.9688rem] leading-relaxed text-ink-muted">{f.a}</dd>
-            </div>
-          ))}
-        </dl>
+    <section id="faq" className="scroll-mt-28 py-24 md:py-32">
+      <Container>
+        <div className="mx-auto max-w-3xl">
+          <Reveal>
+            <SectionHeading eyebrow={faqHeading.eyebrow} title={faqHeading.title} />
+          </Reveal>
+
+          <Reveal className="mt-12 md:mt-14">
+            <Accordion
+              type="single"
+              collapsible
+              className="rounded-3xl border border-border bg-card px-5 sm:px-6 md:px-8"
+            >
+              {faq.map((item, i) => (
+                <AccordionItem key={item.q} value={`faq-${i}`} className="border-border">
+                  <AccordionTrigger className="py-5 text-left text-base font-medium text-foreground hover:no-underline [&>svg]:mt-0.5 [&>svg]:size-[1.125rem] [&>svg]:transition-[transform,color] [&:hover>svg]:text-foreground">
+                    <span className="min-w-0 break-words pr-2">{item.q}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="max-w-[60ch] pb-6 text-[0.9375rem] leading-relaxed text-muted-foreground">
+                    {item.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </Reveal>
+        </div>
       </Container>
     </section>
   );

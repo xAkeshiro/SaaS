@@ -1,16 +1,18 @@
 import { Container } from "@/components/site/container";
 import { EmailCapture } from "@/components/site/email-capture";
-import { FinalMirror } from "@/components/sections/final-mirror";
+import { Reveal } from "@/components/site/reveal";
 import { finalCta } from "@/lib/content";
 
-/** The close: the last mirror on the wall, where you say it first. */
 export function FinalCta() {
   return (
-    <section id="early-access-bottom" aria-labelledby="final-title" className="relative scroll-mt-20 py-24 sm:py-32">
-      <Container className="flex flex-col items-center text-center">
-        <FinalMirror id="final-title" title={finalCta.title} />
-        <p className="lede on-tile mt-12 max-w-[44ch] text-wall-muted">{finalCta.sub}</p>
-        <EmailCapture source="footer-cta" note={finalCta.note} className="mx-auto mt-8 text-left" />
+    <section id="early-access-bottom" className="dark bg-band-ink text-foreground scroll-mt-28">
+      <Container className="py-24 md:py-32">
+        <Reveal className="mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
+          <span className="eyebrow text-amber">Early access</span>
+          <h2 className="display-lg text-white">{finalCta.title}</h2>
+          <p className="lede text-white/70">{finalCta.sub}</p>
+          <EmailCapture source="footer-cta" inverted note={finalCta.note} className="mt-2 text-center" />
+        </Reveal>
       </Container>
     </section>
   );

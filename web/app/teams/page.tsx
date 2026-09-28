@@ -1,104 +1,175 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Check } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowDown,
+  ArrowRight,
+  Building2,
+  Check,
+  GraduationCap,
+  Stethoscope,
+  type LucideIcon,
+} from "lucide-react";
+import { DotPattern } from "@/components/magicui/dot-pattern";
 import { Nav } from "@/components/site/nav";
 import { Footer } from "@/components/site/footer";
 import { Container } from "@/components/site/container";
-import { CtaArrow } from "@/components/site/cta-arrow";
+import { Reveal, RevealItem } from "@/components/site/reveal";
+import { SectionHeading } from "@/components/site/section-heading";
 import { Button } from "@/components/ui/button";
-import { PostIt } from "@/components/world/post-it";
 import { PilotForm } from "@/components/sections/pilot-form";
 import { principlesExtras, teams, teamsExtras } from "@/lib/content";
 
-export const metadata: Metadata = { title: "Teams", description: teams.sub };
+export const metadata: Metadata = { title: "Teams" };
+
+const icons: Record<(typeof teams.audiences)[number]["icon"], LucideIcon> = {
+  GraduationCap,
+  Building2,
+  Stethoscope,
+};
 
 export default function TeamsPage() {
   return (
     <>
       <Nav />
-      <main id="main" className="flex-1">
-        <section aria-labelledby="teams-title" className="relative pt-[120px] pb-20 sm:pt-[144px] lg:pb-28">
-          <Container className="grid items-center gap-y-14 lg:grid-cols-12 lg:gap-x-12">
-            <div className="lg:col-span-7">
-              <h1 id="teams-title" className="display-1 on-tile max-w-[14ch] text-wall-ink">
-                {teams.title}
-              </h1>
-              <p className="lede on-tile mt-6 max-w-[44ch] text-wall-muted">{teams.sub}</p>
-              <div className="mt-9 flex flex-wrap items-center gap-3">
-                <Button asChild size="lg" className="pr-2.5 pl-6">
+      <main className="flex-1">
+        {/* Hero */}
+        <section className="bg-hero-mesh pt-36 pb-16 md:pt-44 md:pb-20">
+          <Container>
+            <Reveal className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
+              <span className="eyebrow text-amber-ink">{teams.eyebrow}</span>
+              <h1 className="display-lg max-w-[20ch] text-foreground">{teams.title}</h1>
+              <p className="lede max-w-[58ch]">{teams.sub}</p>
+              <div className="mt-4 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:gap-4">
+                <Button asChild size="lg" className="group w-full sm:w-auto">
                   <a href="#pilot">
                     {teams.offer.cta}
-                    <CtaArrow />
+                    <ArrowDown
+                      aria-hidden="true"
+                      className="size-4 transition-transform duration-200 group-hover:translate-y-0.5"
+                    />
                   </a>
                 </Button>
-                <Link
-                  href={principlesExtras.secondaryCta.href}
-                  className="press group inline-flex h-11 items-center gap-2 rounded-full px-3 text-[0.9375rem] font-semibold text-wall-ink transition-colors duration-150 hover:bg-white/[0.08]"
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="lg"
+                  className="w-full text-muted-foreground hover:text-foreground sm:w-auto"
                 >
-                  {principlesExtras.secondaryCta.label}
-                  <ArrowRight weight="bold" className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
-                </Link>
+                  <Link href={principlesExtras.secondaryCta.href}>{principlesExtras.secondaryCta.label}</Link>
+                </Button>
               </div>
-            </div>
-
-            {/* The season offer, stuck to the wall where a counselor would leave it. */}
-            <div className="flex justify-center lg:col-span-5 lg:justify-end">
-              <PostIt tilt={-2.5} className="w-full max-w-[25rem] px-7 pt-6 pb-8">
-                <h2 className="text-[1.8rem] leading-[1.12] font-bold">{teams.offer.title}</h2>
-                <p className="mt-3 text-[1.2rem] leading-snug">{teams.offer.body}</p>
-              </PostIt>
-            </div>
+            </Reveal>
           </Container>
         </section>
 
-        <section aria-labelledby="audiences-title" className="relative py-20 sm:py-28">
+        {/* Audiences */}
+        <section className="pt-24 pb-16 md:pt-32 md:pb-24">
           <Container>
-            <div className="max-w-[40rem]">
-              <h2 id="audiences-title" className="display-2 on-tile text-wall-ink">
-                {teamsExtras.audiencesHeading.title}
-              </h2>
-              <p className="lede on-tile mt-5 text-wall-muted">{teamsExtras.audiencesHeading.sub}</p>
-            </div>
-            <ul className="mt-16 flex flex-col gap-14">
-              {teams.audiences.map((audience) => (
-                <li key={audience.title} className="grid gap-4 lg:grid-cols-12 lg:gap-12">
-                  <h3 className="display-3 on-tile text-wall-ink lg:col-span-4">{audience.title}</h3>
-                  <div className="lg:col-span-8">
-                    <p className="on-tile max-w-[62ch] text-[1.0625rem] leading-relaxed text-wall-muted">{audience.body}</p>
-                    <ul className="mt-5 flex flex-wrap gap-x-7 gap-y-2.5">
-                      {audience.bullets.map((bullet) => (
-                        <li key={bullet} className="on-tile flex items-center gap-2 text-[0.9688rem] font-semibold text-wall-ink">
-                          <Check weight="bold" aria-hidden="true" className="size-4 shrink-0 text-amber" />
-                          {bullet}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <Reveal>
+              <SectionHeading
+                eyebrow={teamsExtras.audiencesHeading.eyebrow}
+                title={teamsExtras.audiencesHeading.title}
+                sub={teamsExtras.audiencesHeading.sub}
+              />
+            </Reveal>
+
+            <Reveal group staggerBy={0.08} className="mt-12 grid gap-4 md:mt-14 lg:grid-cols-3 lg:gap-5">
+              {teams.audiences.map((audience) => {
+                const Icon = icons[audience.icon];
+                return (
+                  <RevealItem key={audience.title} className="h-full min-w-0">
+                    <article className="flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-6 transition-[transform,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/20 md:p-8">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
+                        <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="font-display text-xl leading-snug font-semibold text-foreground break-words md:text-2xl">
+                          {audience.title}
+                        </h3>
+                        <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">{audience.body}</p>
+                      </div>
+                      <ul className="mt-auto flex flex-col gap-2.5 border-t border-border pt-5">
+                        {audience.bullets.map((bullet) => (
+                          <li key={bullet} className="flex items-start gap-2.5 text-sm text-foreground">
+                            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber/20 text-amber-ink">
+                              <Check className="size-3" strokeWidth={3} aria-hidden="true" />
+                            </span>
+                            <span className="min-w-0 break-words">{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  </RevealItem>
+                );
+              })}
+            </Reveal>
           </Container>
         </section>
 
-        <section id="pilot" aria-labelledby="pilot-title" className="relative scroll-mt-20 py-20 sm:py-28">
-          <Container className="grid gap-12 lg:grid-cols-12 lg:gap-12">
-            <div className="lg:col-span-5">
-              <h2 id="pilot-title" className="display-2 on-tile text-wall-ink">
-                {teamsExtras.pilot.title}
-              </h2>
-              <p className="lede on-tile mt-5 max-w-[40ch] text-wall-muted">{teamsExtras.pilot.sub}</p>
-              <h3 className="on-tile mt-10 text-[1.0625rem] font-bold text-wall-ink">{teamsExtras.pilot.stepsTitle}</h3>
-              <ol className="mt-4 flex flex-col gap-3">
-                {teamsExtras.pilot.steps.map((step, i) => (
-                  <li key={step} className="on-tile flex gap-3 text-[1.0625rem] leading-relaxed text-wall-muted">
-                    <span className="tnum font-bold text-amber">{i + 1}.</span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <div className="lg:col-span-7">
-              <PilotForm />
+        {/* Offer band */}
+        <section className="pb-24 md:pb-32">
+          <Container>
+            <Reveal>
+              <div className="relative overflow-hidden rounded-3xl border border-border bg-band-lavender p-8 shadow-soft md:p-12">
+                {/* Dot grid fading in from the right edge. Purely decorative. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_60%_90%_at_90%_50%,#000_10%,transparent_100%)]"
+                >
+                  <DotPattern width={22} height={22} cr={1} className="text-ink/15" />
+                </div>
+                <div className="relative grid gap-8 md:grid-cols-[1fr_auto] md:items-center md:gap-12">
+                  <div className="min-w-0">
+                    <span className="eyebrow text-amber-ink">{teamsExtras.offer.eyebrow}</span>
+                    <h2 className="display-md mt-4 max-w-[22ch] text-foreground break-words">{teams.offer.title}</h2>
+                    <p className="mt-3 max-w-[52ch] text-[1.0625rem] leading-relaxed text-muted-foreground">
+                      {teams.offer.body}
+                    </p>
+                  </div>
+                  <Button asChild size="xl" className="group w-full md:w-auto">
+                    <a href="#pilot">
+                      {teams.offer.cta}
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                      />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </Reveal>
+          </Container>
+        </section>
+
+        {/* Pilot request */}
+        <section id="pilot" className="scroll-mt-28 border-t border-border py-24 md:py-32">
+          <Container>
+            <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:items-start lg:gap-16">
+              <Reveal className="flex min-w-0 flex-col gap-10 lg:sticky lg:top-28">
+                <SectionHeading
+                  align="left"
+                  eyebrow={teamsExtras.pilot.eyebrow}
+                  title={teamsExtras.pilot.title}
+                  sub={teamsExtras.pilot.sub}
+                />
+                <div>
+                  <p className="eyebrow text-muted-foreground">{teamsExtras.pilot.stepsTitle}</p>
+                  <ol className="mt-4 flex flex-col gap-3">
+                    {teamsExtras.pilot.steps.map((step, i) => (
+                      <li key={step} className="flex items-start gap-3 text-[0.9375rem] leading-relaxed text-foreground/85">
+                        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-xs font-medium text-foreground">
+                          {i + 1}
+                        </span>
+                        <span className="min-w-0 break-words">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </Reveal>
+
+              <Reveal delay={0.1} className="min-w-0">
+                <PilotForm />
+              </Reveal>
             </div>
           </Container>
         </section>

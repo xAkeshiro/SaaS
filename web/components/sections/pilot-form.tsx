@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { CircleNotch } from "@phosphor-icons/react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CtaArrow } from "@/components/site/cta-arrow";
-import { PostIt } from "@/components/world/post-it";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { teams, teamsExtras } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
@@ -28,15 +28,16 @@ const INPUT_MODE: Partial<Record<FieldId, "email" | "numeric">> = {
   seats: "numeric",
 };
 
-/** Fields are clear panes set into the glass: a lighter fill and a thin inset edge, never a box on a box. */
 const fieldClass =
-  "w-full min-w-0 rounded-xl bg-white/75 px-4 text-base text-ink shadow-[inset_0_0_0_1.5px_rgba(15,42,35,0.16)] outline-none transition-[box-shadow,background-color] duration-150 placeholder:text-ink-muted hover:shadow-[inset_0_0_0_1.5px_rgba(15,42,35,0.3)] focus-visible:bg-white focus-visible:shadow-[inset_0_0_0_2px_var(--wall)]";
+  "h-11 rounded-xl border-border bg-background/60 px-3.5 text-base shadow-none transition-[border-color,box-shadow,background-color] duration-200 hover:border-foreground/25 focus-visible:bg-card md:text-[0.95rem]";
+
+const cardClass = "rounded-3xl border border-border bg-card p-6 shadow-soft md:p-8";
 
 const { form } = teamsExtras;
 
 /**
- * Campus or team pilot request. Posts to `/api/waitlist` with `source: "teams"`
- * and follows the same loading, done and error pattern as `EmailCapture`.
+ * Campus / team pilot request. Posts to `/api/waitlist` with `source: "teams"`
+ * and follows the same loading / done / error pattern as `EmailCapture`.
  */
 export function PilotForm({ className }: { className?: string }) {
   const uid = useId();
@@ -84,37 +85,40 @@ export function PilotForm({ className }: { className?: string }) {
 
   if (state.status === "done") {
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" className={cn("pt-4 outline-none", className)}>
-        <PostIt play tilt={-2} className="max-w-[26rem] px-7 pt-6 pb-7">
-          <h3 className="text-[1.75rem] leading-tight font-bold">{form.success.title}</h3>
-          <p className="mt-2 text-[1.2rem] leading-snug">{form.success.body}</p>
-          <p className="mt-4 text-[1.05rem] leading-snug break-all">
-            {form.success.emailLabel} {state.message}
-          </p>
-        </PostIt>
+      <div
+        ref={doneRef}
+        tabIndex={-1}
+        role="status"
+        className={cn(cardClass, "flex flex-col items-start gap-6 outline-none animate-in fade-in zoom-in-95 duration-300", className)}
+      >
+        <span className="flex size-11 items-center justify-center rounded-full bg-amber text-ink">
+          <Check className="size-5" strokeWidth={3} aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-display text-2xl leading-snug font-semibold text-foreground">{form.success.title}</h3>
+          <p className="mt-2 max-w-[48ch] text-[0.9375rem] leading-relaxed text-muted-foreground">{form.success.body}</p>
+        </div>
+        <p className="flex min-w-0 max-w-full flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <span>{form.success.emailLabel}</span>
+          <span className="min-w-0 font-mono text-foreground break-all">{state.message}</span>
+        </p>
       </div>
     );
   }
 
   const loading = state.status === "loading";
-  const errorId = `${uid}-error`;
 
   return (
-    <form
-      onSubmit={onSubmit}
-      aria-busy={loading}
-      aria-describedby={state.status === "error" ? errorId : undefined}
-      className={cn("glass-panel p-6 sm:p-8", className)}
-    >
+    <form onSubmit={onSubmit} aria-busy={loading} className={cn(cardClass, className)}>
       <div className="grid gap-5 sm:grid-cols-2">
         {teams.form.fields.map((field) => {
           const id = `${uid}-${field.id}`;
           return (
             <div key={field.id} className="flex min-w-0 flex-col gap-2">
-              <label htmlFor={id} className="text-[0.9375rem] font-semibold text-ink">
+              <label htmlFor={id} className="text-sm font-medium text-foreground">
                 {field.label}
               </label>
-              <input
+              <Input
                 id={id}
                 name={field.id}
                 type={field.type}
@@ -125,17 +129,17 @@ export function PilotForm({ className }: { className?: string }) {
                 autoComplete={AUTOCOMPLETE[field.id]}
                 inputMode={INPUT_MODE[field.id]}
                 maxLength={500}
-                className={cn(fieldClass, "h-12")}
+                className={fieldClass}
               />
             </div>
           );
         })}
 
         <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
-          <label htmlFor={`${uid}-${form.notes.id}`} className="text-[0.9375rem] font-semibold text-ink">
+          <label htmlFor={`${uid}-${form.notes.id}`} className="text-sm font-medium text-foreground">
             {form.notes.label}
           </label>
-          <textarea
+          <Textarea
             id={`${uid}-${form.notes.id}`}
             name={form.notes.id}
             rows={4}
@@ -143,28 +147,28 @@ export function PilotForm({ className }: { className?: string }) {
             onChange={(e) => update("notes", e.target.value)}
             placeholder={form.notes.placeholder}
             maxLength={500}
-            className={cn(fieldClass, "min-h-28 resize-y py-3 leading-relaxed")}
+            className={cn(fieldClass, "h-auto min-h-28 py-3 leading-relaxed")}
           />
         </div>
       </div>
 
-      <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-        <Button type="submit" size="lg" disabled={loading} className="w-full justify-between pr-2.5 pl-6 sm:w-auto">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+        <Button type="submit" size="lg" disabled={loading} className="group w-full sm:w-auto">
+          {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
           <span>{loading ? form.submitting : form.submit}</span>
-          {loading ? (
-            <span aria-hidden="true" className="grid size-8 place-items-center">
-              <CircleNotch weight="bold" className="size-4 animate-spin" />
-            </span>
-          ) : (
-            <CtaArrow />
+          {loading ? null : (
+            <ArrowRight
+              aria-hidden="true"
+              className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
+            />
           )}
         </Button>
         {state.status === "error" ? (
-          <p id={errorId} role="alert" className="text-[0.9375rem] font-medium text-danger">
+          <p role="alert" className="text-sm text-destructive">
             {state.message}
           </p>
         ) : (
-          <p className="text-[0.9375rem] text-ink-muted">{form.note}</p>
+          <p className="text-xs text-muted-foreground">{form.note}</p>
         )}
       </div>
     </form>
