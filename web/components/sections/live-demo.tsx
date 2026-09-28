@@ -891,7 +891,7 @@ function bubbleClass(role: Role) {
 
 function tagClass(role: Role) {
   return cn(
-    "mb-0.5 block font-mono text-[10px] tracking-[0.12em] uppercase",
+    "mb-0.5 block font-mono text-[11px] tracking-[0.12em] uppercase",
     role === "user" ? "text-white/60" : "text-muted-foreground",
   );
 }

@@ -91,7 +91,7 @@ export function PricingComparison() {
                         key={col}
                         className={cn("px-4 py-5 text-center", i === plusIndex && "bg-lavender/30")}
                       >
-                        <Button asChild size="sm" variant={tier.highlight ? "default" : "outline"}>
+                        <Button asChild size="sm" variant={tier.highlight ? "accent" : "outline"}>
                           <Link href={tier.cta.href}>{tier.cta.label}</Link>
                         </Button>
                       </td>

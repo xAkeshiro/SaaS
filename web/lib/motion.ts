@@ -9,10 +9,10 @@ export const durations = {
   slow: 0.8,
 } as const;
 
-/** Reveal from below, clearing a light blur as it lands. Use with `initial="hidden" whileInView="show"`. */
+/** Reveal from below. Use with `initial="hidden" whileInView="show"`. No blur: these are often large blocks. */
 export const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 16, filter: "blur(6px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: durations.base, ease } },
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: durations.base, ease } },
 };
 
 export const fadeIn: Variants = {
@@ -20,10 +20,10 @@ export const fadeIn: Variants = {
   show: { opacity: 1, transition: { duration: durations.base, ease } },
 };
 
-/** The hero product window: rises and sharpens last. */
+/** The hero product window: rises in last. */
 export const scaleIn: Variants = {
-  hidden: { opacity: 0, scale: 0.97, y: 20, filter: "blur(8px)" },
-  show: { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", transition: { duration: durations.slow, ease } },
+  hidden: { opacity: 0, scale: 0.97, y: 20 },
+  show: { opacity: 1, scale: 1, y: 0, transition: { duration: durations.slow, ease } },
 };
 
 /** Parent variant that staggers its children. */

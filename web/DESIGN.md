@@ -50,11 +50,13 @@ Contrast: never put amber text on the light background (fails). Amber is a **fil
 
 ## 4. Motion spec (`lib/motion.ts`, `components/site/reveal.tsx`)
 
-- Easing `ease = [0.22, 1, 0.36, 1]`. Durations 0.2 (hover) / 0.5 (reveal) / 0.8 (hero, mock).
-- **Page load (hero only):** stagger 0.08 s; eyebrow → H1 → sub → form → mock (mock uses `scaleIn`).
-- **Scroll reveals:** wrap blocks in `<Reveal>` (fade-up) or `<Reveal group>` + `<RevealItem>` for grids. `viewport.once = true`. Never animate `filter: blur` on large blocks (perf); `BlurFade` is fine on small text.
-- **Hover:** cards lift 2–3 px + border darkens; buttons already handle `active:translate-y-px`.
-- **Sticky showcase (How it works):** left column of 4 steps, right column `sticky top-28` panel; the active step drives an `AnimatePresence` panel swap (`mode="wait"`, 0.35 s). Use `useInView` on each step (amount 0.6) to set active; on < md stack step text over its own panel instead of sticky.
+- Easing `ease = [0.23, 1, 0.32, 1]` (a strong ease-out: fast out, soft landing). Durations 0.16 (press, hover) / 0.55 (reveal) / 0.8 (hero, mock). Exits run faster than entrances.
+- **Page load (hero only):** stagger 0.07 s; eyebrow → H1 → sub → form → mock (mock uses `scaleIn`). The H1 arrives word by word (`HeroHeadline`, 60 ms apart, each word clearing a 10 px blur); the amber underline draws after the words land.
+- **Hero window:** leans back (`rotateX` 18° → 0°, `scale` 0.93 → 1, perspective 1400 px) and straightens as it scrolls into view (`useScroll` on the window). The title bar runs a live call clock (tabular figures) and each spoken line arrives word by word at speaking pace (`word-in`, 95 ms per word for the other person, 70 ms for you). Reduced motion: flat window, whole lines, stopped clock.
+- **Scroll reveals:** wrap blocks in `<Reveal>` (fade-up) or `<Reveal group>` + `<RevealItem>` for grids. `viewport.once = true`. Never animate `filter: blur` on large blocks (perf); blur is for small text (headline words, captions, the price) and the brief desktop panel crossfade. Without JavaScript a `<noscript>` rule shows everything a reveal would have faded in.
+- **Hover and press:** cards lift 2–3 px + border darkens; buttons press to `scale(0.97)` in 160 ms. The nav has one soft pill (`layoutId="nav-pill"`) that slides to the pointed-at link and rests on the current page, or on the home section in the middle of the screen. Scroll state comes from an IntersectionObserver sentinel, never a scroll listener.
+- **Sticky showcase (How it works):** left column of 4 steps, right column `sticky top-28` panel; the active step drives an `AnimatePresence` panel swap (`mode="wait"`): a blur crossfade, 0.34 s in and 0.16 s out. A 1 px rail beside the steps fills with amber as you read down them. Use `useInView` on each step (amount 0.6) to set active; on < md stack step text over its own panel instead of sticky.
+- **Scenario cards:** each card's "Rehearse this" action (a button whose hit area stretches over the card) dispatches `unmute:rehearse`; the live demo loads that conversation, scrolls to its panel and focuses Start.
 - **Ambient:** waveform bars (`animate-wave` keyframe with staggered `animation-delay`), `BorderBeam` on the hero mock, `AnimatedShinyText` on the hero eyebrow, `NumberTicker` for stats, `Marquee` for a chip strip, `AnimatedList` for dares, `ShineBorder` on the highlighted pricing tier, `DotPattern` faded behind the hero (`[mask-image:radial-gradient(...)]`).
 - Reduced motion: `MotionConfig reducedMotion="user"` is global; CSS keyframes are neutralized in globals. Do not add your own `matchMedia` checks unless a component has non-motion side effects (speech synthesis, autoplay loops) — then use `useReducedMotion()` from `motion/react`.
 

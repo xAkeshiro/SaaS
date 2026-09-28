@@ -33,7 +33,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 border-t border-border pt-8">
-          <ol className="flex max-w-[72ch] flex-col gap-1.5 text-xs leading-relaxed text-muted-foreground">
+          <ol className="flex max-w-[60ch] flex-col gap-1.5 text-xs leading-relaxed text-muted-foreground">
             {footnotes.map((f, i) => (
               <li key={i} id={`fn-${i + 1}`} className="flex gap-2">
                 <span className="font-mono text-amber-ink">{i + 1}</span>
@@ -41,7 +41,7 @@ export function Footer() {
               </li>
             ))}
           </ol>
-          <p className="mt-6 max-w-[72ch] text-xs leading-relaxed text-muted-foreground">{footer.finePrint}</p>
+          <p className="mt-6 max-w-[60ch] text-xs leading-relaxed text-muted-foreground">{footer.finePrint}</p>
           <p className="mt-6 text-xs text-muted-foreground">© 2026 {site.name}. All rights reserved.</p>
         </div>
       </Container>

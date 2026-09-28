@@ -162,7 +162,7 @@ export function RehearsalWindow({ className }: { className?: string }) {
               >
                 {rw.persona.initial}
               </span>
-              <span className="absolute -right-1 -bottom-1 rounded-full border border-border bg-card px-1 font-mono text-[10px] leading-4 text-muted-foreground">
+              <span className="absolute -right-1 -bottom-1 rounded-full border border-border bg-card px-1 font-mono text-[11px] leading-4 text-muted-foreground">
                 {rw.persona.tag}
               </span>
             </span>
@@ -320,7 +320,7 @@ function bubbleClass(role: Role) {
 
 function tagClass(role: Role) {
   return cn(
-    "mb-0.5 block font-mono text-[10px] tracking-[0.12em] uppercase",
+    "mb-0.5 block font-mono text-[11px] tracking-[0.12em] uppercase",
     role === "user" ? "text-white/60" : "text-muted-foreground",
   );
 }

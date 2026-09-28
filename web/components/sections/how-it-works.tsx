@@ -358,7 +358,7 @@ function DailyMock() {
           const state = i < m.todayIndex ? "done" : i === m.todayIndex ? "today" : "next";
           return (
             <div key={i} className="flex flex-col items-center gap-1.5">
-              <span className="font-mono text-[10px] uppercase text-muted-foreground">{day}</span>
+              <span className="font-mono text-[11px] uppercase text-muted-foreground">{day}</span>
               <span
                 className={cn(
                   "grid size-7 place-items-center rounded-full sm:size-8",
@@ -446,7 +446,7 @@ function RealMock() {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="font-mono text-lg leading-none font-semibold text-foreground tabular-nums">{time}</span>
-            <span className="mt-1 font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+            <span className="mt-1 font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
               {m.ring.caption}
             </span>
           </div>
