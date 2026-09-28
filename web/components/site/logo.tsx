@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { site } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 export function LogoMark({ className }: { className?: string }) {
@@ -24,11 +25,11 @@ export function Logo({ className, inverted = false }: { className?: string; inve
   return (
     <Link
       href="/"
-      aria-label="Unmute home"
+      aria-label={`${site.name} home`}
       className={cn("inline-flex items-center gap-2.5 font-display text-[1.2rem] font-bold tracking-tight", inverted ? "text-white" : "text-foreground", className)}
     >
       <LogoMark />
-      <span>Unmute</span>
+      <span>{site.name}</span>
     </Link>
   );
 }

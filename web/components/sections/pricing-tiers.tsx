@@ -139,9 +139,9 @@ function TierCard({ tier, billing, headingLevel }: { tier: Tier; billing: Billin
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
                   key={formatPrice(amount)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: 6, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -6, filter: "blur(6px)", transition: { duration: 0.14, ease } }}
                   transition={swap}
                   className="inline-block"
                 >
@@ -197,7 +197,7 @@ function TierCard({ tier, billing, headingLevel }: { tier: Tier; billing: Billin
 
       {/* mt-auto pins every CTA to the card's bottom edge, so Free's shorter list does not leave its button floating. */}
       <div className="mt-auto pt-8">
-        <Button asChild size="lg" variant={tier.id === "teams" ? "outline" : "default"} className="w-full">
+        <Button asChild size="lg" variant={tier.id === "teams" ? "outline" : tier.highlight ? "accent" : "default"} className="w-full">
           <Link href={tier.cta.href}>{tier.cta.label}</Link>
         </Button>
       </div>

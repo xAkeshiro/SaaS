@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <>
       <Nav />
-      <main className="flex flex-1 items-center bg-hero-mesh pt-32 pb-24">
+      <main id="main" className="flex flex-1 items-center bg-hero-mesh pt-32 pb-24">
         <Container className="flex flex-col items-start gap-6">
           <span className="eyebrow text-amber-ink">404</span>
           <h1 className="display-lg">This page went quiet.</h1>

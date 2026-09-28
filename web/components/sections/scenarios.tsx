@@ -15,6 +15,7 @@ import { MagicCard } from "@/components/magicui/magic-card";
 import { Container } from "@/components/site/container";
 import { Reveal, RevealItem } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
+import { ScenarioAction } from "@/components/sections/scenario-action";
 import { Button } from "@/components/ui/button";
 import { scenarioCards, scenariosHeading } from "@/lib/content";
 import { viewport } from "@/lib/motion";
@@ -55,13 +56,13 @@ export function Scenarios() {
               <RevealItem key={card.title} className="min-w-0">
                 {/* `--background` is what MagicCard paints its face with; point it at the white card token. */}
                 <MagicCard
-                  className="h-full rounded-2xl [--background:var(--card)] transition-transform duration-200 ease-out hover:-translate-y-0.5"
+                  className="group/card relative h-full rounded-2xl [--background:var(--card)] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5"
                   gradientFrom="#C7CDF8"
                   gradientTo="#FFD9AE"
                   gradientColor="#EEF1F8"
                   gradientSize={240}
                 >
-                  <div className="p-6 md:p-7">
+                  <div className="flex h-full flex-col p-6 md:p-7">
                     <div className="flex items-start justify-between gap-3">
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
                         <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
@@ -74,6 +75,9 @@ export function Scenarios() {
                       {card.title}
                     </h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{card.body}</p>
+                    <div className="mt-auto">
+                      <ScenarioAction index={i} title={card.title} />
+                    </div>
                   </div>
                 </MagicCard>
               </RevealItem>

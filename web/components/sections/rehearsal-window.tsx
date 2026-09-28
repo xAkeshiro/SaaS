@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Check, Mic, Sparkles } from "lucide-react";
 import { BorderBeam } from "@/components/magicui/border-beam";
@@ -19,6 +19,35 @@ const CUES = [500, 3300, 5700, 6800] as const;
 const LOOP_MS = 9600;
 const LAST_STEP = CUES.length;
 const BAR_HEIGHTS = [10, 18, 26, 32, 26, 18, 10];
+/** Speaking pace per word: the other person is slower and guarded; you are rehearsed. */
+const PACE = { persona: 95, user: 70 } as const;
+
+function clock(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/** A line that arrives the way it is said: word by word. The sentence is announced whole. */
+function Words({ text, pace, still }: { text: string; pace: number; still: boolean }) {
+  if (still) return <>{text}</>;
+  const words = text.split(" ");
+  return (
+    <>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">
+        {words.map((w, i) => (
+          <Fragment key={i}>
+            <span className="word-in inline-block" style={{ "--d": `${i * pace}ms` } as CSSProperties}>
+              {w}
+            </span>
+            {i < words.length - 1 ? " " : null}
+          </Fragment>
+        ))}
+      </span>
+    </>
+  );
+}
 
 function speakerFor(step: number): Role | "pause" | null {
   switch (step) {
@@ -38,6 +67,7 @@ function speakerFor(step: number): Role | "pause" | null {
 export function RehearsalWindow({ className }: { className?: string }) {
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
+  const [seconds, setSeconds] = useState<number>(rw.clockStart);
 
   useEffect(() => {
     const timers = new Set<number>();
@@ -54,6 +84,7 @@ export function RehearsalWindow({ className }: { className?: string }) {
       later(() => setStep(LAST_STEP), 0);
     } else {
       const cycle = () => {
+        setSeconds(rw.clockStart);
         CUES.forEach((ms, i) => later(() => setStep(i + 1), ms));
         later(() => {
           setStep(0);
@@ -63,7 +94,12 @@ export function RehearsalWindow({ className }: { className?: string }) {
       cycle();
     }
 
-    return () => timers.forEach((id) => window.clearTimeout(id));
+    // The call clock runs while the exchange plays.
+    const tick = reduce ? null : window.setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      if (tick) window.clearInterval(tick);
+    };
   }, [reduce]);
 
   // At rest (reduced motion shows the whole exchange static) nobody is talking.
@@ -103,7 +139,9 @@ export function RehearsalWindow({ className }: { className?: string }) {
             <span className="absolute inset-0 animate-ping rounded-full bg-amber opacity-60" />
             <span className="relative size-2 rounded-full bg-amber" />
           </span>
-          <span className="whitespace-nowrap">{rw.windowTitle}</span>
+          <span className="whitespace-nowrap">
+            {rw.windowTitle} · <span className="tabular-nums">{clock(seconds)}</span>
+          </span>
         </div>
         <div className="flex justify-end">
           <span className="inline-flex items-center rounded-full bg-amber/20 px-2.5 py-1 font-mono text-[11px] font-medium whitespace-nowrap text-amber-ink">
@@ -187,7 +225,7 @@ export function RehearsalWindow({ className }: { className?: string }) {
                     transition={{ duration: 0.45, ease }}
                   >
                     <span className={tagClass(m.role)}>{m.speaker}</span>
-                    {m.text}
+                    <Words text={m.text} pace={m.role === "user" ? PACE.user : PACE.persona} still={Boolean(reduce)} />
                   </motion.li>
                 ))}
                 {thinking ? (

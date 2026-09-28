@@ -21,7 +21,7 @@ export function Faq() {
             >
               {faq.map((item, i) => (
                 <AccordionItem key={item.q} value={`faq-${i}`} className="border-border">
-                  <AccordionTrigger className="py-5 text-left text-base font-medium text-foreground hover:no-underline [&>svg]:mt-0.5 [&>svg]:size-[1.125rem] [&>svg]:transition-[transform,color] [&:hover>svg]:text-foreground">
+                  <AccordionTrigger className="py-5 text-left font-sans text-base font-semibold tracking-normal text-foreground hover:no-underline [&>svg]:mt-0.5 [&>svg]:size-[1.125rem] [&>svg]:transition-[transform,color] [&:hover>svg]:text-foreground">
                     <span className="min-w-0 break-words pr-2">{item.q}</span>
                   </AccordionTrigger>
                   <AccordionContent className="max-w-[60ch] pb-6 text-[0.9375rem] leading-relaxed text-muted-foreground">

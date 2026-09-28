@@ -41,7 +41,7 @@ export const hero = {
     "the first date",
     "the breakup",
   ],
-  sub: "Rehearse the conversation you are dreading, out loud, with an AI that plays the other person and pushes back. Then get told exactly what to do differently. Three minutes a day.",
+  sub: "Rehearse the conversation you dread. The AI plays the other person, pushes back, and tells you exactly what to change.",
   stance: "Not a companion. A coach that wants you to need it less.",
   ctaPrimary: "Get early access",
   ctaSecondary: "Try a rehearsal",
@@ -58,7 +58,7 @@ export const stats = [
   {
     value: 37,
     suffix: "%",
-    label: "of adults 18–25 report significant anxiety, the highest of any adult age group.",
+    label: "of adults 18 to 25 report significant anxiety, the highest of any adult age group.",
     footnote: 2,
   },
   {
@@ -199,7 +199,7 @@ export const pricing = {
         "Your patterns and trends over time",
         "Practice rooms and dares",
       ],
-      cta: { label: "Start with Plus", href: "/#early-access" },
+      cta: { label: "Get early access", href: "/#early-access" },
       highlight: true,
       badge: "Most popular",
     },
@@ -207,7 +207,7 @@ export const pricing = {
       id: "teams",
       name: "Teams",
       price: null,
-      priceLabel: "Let’s talk",
+      priceLabel: "$3 to $8",
       period: "per seat, per month",
       blurb: "Career centers, companies, clinicians.",
       features: [
@@ -216,7 +216,7 @@ export const pricing = {
         "Structured practice programs with clinicians",
         "Admin dashboard and cohort reports",
       ],
-      cta: { label: "Talk to us", href: "/teams" },
+      cta: { label: "Request a pilot", href: "/teams#pilot" },
       highlight: false,
     },
   ],
@@ -274,11 +274,11 @@ export const finalCta = {
 export const footnotes = [
   "YouGov, phone habits by generation: 65% of Gen Z uncomfortable calling a stranger; 33% of Gen Z comfortable making calls versus 49% of Millennials and 67% of Boomers.",
   "Young adult mental health statistics compiled by Compass Health Center, 2026.",
-  "Y Combinator on Speak: 15M downloads, $100M+ annualized revenue, users practice speaking 5–10x more than on other apps.",
+  "Y Combinator on Speak: 15M downloads, $100M+ annualized revenue, users practice speaking 5 to 10 times more than on other apps.",
 ] as const;
 
 export const footer = {
-  blurb: "Voice practice for the conversations you are dreading. A working name; the company and the product are in preview.",
+  blurb: "Conversation practice for real life. A working name; the company and the product are in preview.",
   columns: [
     {
       title: "Product",
@@ -383,8 +383,8 @@ export const teams = {
   ],
   offer: {
     title: "Career centers: free for interview season.",
-    body: "Sep–Nov 2026. Bring your students, we bring the interviewers. Tell us your campus and we will set up your cohort.",
-    cta: "Request a campus pilot",
+    body: "September to November 2026. Bring your students, we bring the interviewers. Tell us your campus and we will set up your cohort.",
+    cta: "Request a pilot",
   },
   form: {
     fields: [
@@ -405,7 +405,9 @@ export const heroExtras = {
 
 /** Self-playing app-window mock under the hero. Pure UI, no network. */
 export const rehearsalWindow = {
-  windowTitle: "Rehearsal · 01:58",
+  windowTitle: "Rehearsal",
+  /** Where the window's clock starts each loop, in seconds. */
+  clockStart: 102,
   mode: "Hard mode",
   persona: {
     who: "Your roommate",
@@ -501,6 +503,11 @@ export const scenariosHeading = {
   title: "The ones people rehearse in the shower.",
   sub: "Eight to start. Describe your own in a sentence and the AI plays the other side.",
   cta: { label: "Or describe your own", href: "/#try" },
+  /** Shown on a card when it is pointed at; choosing a card loads it into the demo. */
+  action: "Rehearse this",
+  /** Which demo scenario each `scenarioCards` entry opens, in the same order. `null` opens the custom box. */
+  demoIds: ["doctor", "raise", "roommate", "interview", "date", "deposit", "no", null],
+  customPrefill: "I owe my best friend an apology for missing her birthday, and I keep putting it off.",
 } as const;
 
 /** Extra strings for the Together section. `together` above is unchanged. */
@@ -520,7 +527,7 @@ export const principlesExtras = {
 export const liveDemo = {
   eyebrow: "Try it",
   title: "Try a rehearsal right now.",
-  sub: "Pick a conversation and a mood. The AI plays the other person. Say what you would actually say, then end the rehearsal for your debrief. The full app is voice-first; this preview lets you type, and reads the other person's lines aloud where your browser allows it.",
+  sub: "Pick who you are talking to and how hard they push. Say what you would actually say, then end it for your debrief. The app is voice-first; this preview lets you type.",
   labels: {
     conversation: "Conversation",
     custom: "Or describe your own",
@@ -583,7 +590,7 @@ export const pricingExtras = {
       monthly: "Billed monthly. Cancel any time.",
       yearly: "That’s $8.25 a month, billed once a year.",
     },
-    teams: "Seats from $3 to $8. Free for career centers this interview season.",
+    teams: "Free for career centers this interview season.",
   },
   comparison: {
     eyebrow: "Compare plans",
@@ -608,7 +615,7 @@ export const manifestoExtras = {
   eyebrow: "Manifesto",
   /** Rendered as a pull-quote instead of a paragraph. Must match a paragraph in `manifesto.sections` exactly. */
   pullQuote: "If it works, you will use Unmute less over time. That is the point.",
-  signOff: "— the Unmute team, September 2026",
+  signOff: "The Unmute team, September 2026",
 } as const;
 
 /** Extra strings for the teams page and the pilot form. `teams` above is unchanged. */
@@ -651,4 +658,11 @@ export const teamsExtras = {
       network: "Network hiccup. Try again.",
     },
   },
+} as const;
+
+/** The scenario cards' action, shared by the card and the demo. */
+export const scenarioIndex = {
+  action: scenariosHeading.action,
+  demoIds: scenariosHeading.demoIds,
+  customPrefill: scenariosHeading.customPrefill,
 } as const;

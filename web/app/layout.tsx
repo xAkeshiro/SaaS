@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { site } from "@/lib/content";
+import { resolveSiteUrl } from "@/lib/site-url";
 
 const outfit = localFont({
   src: "../node_modules/@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2",
@@ -34,10 +35,8 @@ const jetbrains = localFont({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(resolveSiteUrl()),
   title: {
     default: `${site.name} · ${site.tagline}`,
     template: `%s · ${site.name}`,
@@ -69,7 +68,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${outfit.variable} ${inter.variable} ${jetbrains.variable} h-full`}
     >
+      <head>
+        {/* Without JavaScript, scroll reveals never run: show everything they would have faded in. */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html: '<style>[style*="opacity:0"]{opacity:1!important;transform:none!important;filter:none!important}</style>',
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col overflow-x-clip">
+        <a
+          href="#main"
+          className="sr-only z-[60] rounded-full bg-ink px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+        >
+          Skip to content
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>

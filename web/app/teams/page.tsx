@@ -31,7 +31,7 @@ export default function TeamsPage() {
   return (
     <>
       <Nav />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         {/* Hero */}
         <section className="bg-hero-mesh pt-36 pb-16 md:pt-44 md:pb-20">
           <Container>

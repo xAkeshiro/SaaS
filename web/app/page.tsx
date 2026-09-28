@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <>
       <Nav />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         <Hero />
         <Proof />
         <HowItWorks />

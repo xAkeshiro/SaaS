@@ -15,7 +15,7 @@ export default function PricingPage() {
   return (
     <>
       <Nav />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         <section className="bg-hero-mesh pt-36 pb-20 md:pt-44 md:pb-24">
           <Container>
             <Reveal className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion, useInView } from "motion/react";
+import { AnimatePresence, motion, useInView, useScroll } from "motion/react";
 import { Briefcase, CalendarDays, Check, Flame, PhoneCall, UserRound } from "lucide-react";
 import { Container } from "@/components/site/container";
 import { Reveal } from "@/components/site/reveal";
@@ -22,6 +22,8 @@ export function HowItWorks() {
     steps.findIndex((s) => s.id === active),
   );
   const activeStep = steps[activeIndex];
+  const listRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: progress } = useScroll({ target: listRef, offset: ["start 55%", "end 55%"] });
 
   return (
     <section id="how-it-works" className="scroll-mt-28 py-24 md:py-32">
@@ -31,11 +33,16 @@ export function HowItWorks() {
         </Reveal>
 
         <div className="mt-14 grid gap-14 lg:mt-16 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-          <ol className="flex min-w-0 flex-col gap-14 lg:gap-0">
-            {steps.map((step) => (
-              <StepBlock key={step.id} step={step} active={active === step.id} onActivate={setActive} />
-            ))}
-          </ol>
+          <div ref={listRef} className="relative min-w-0 lg:pl-10">
+            <div aria-hidden="true" className="absolute top-[10vh] bottom-[10vh] left-0 hidden w-px bg-border lg:block">
+              <motion.div className="absolute inset-0 origin-top bg-amber" style={{ scaleY: progress }} />
+            </div>
+            <ol className="flex min-w-0 flex-col gap-14 lg:gap-0">
+              {steps.map((step) => (
+                <StepBlock key={step.id} step={step} active={active === step.id} onActivate={setActive} />
+              ))}
+            </ol>
+          </div>
 
           {/* Sticky showcase, desktop only. Mobile renders each panel under its step. */}
           <div className="hidden lg:block">
@@ -45,10 +52,10 @@ export function HowItWorks() {
                   <motion.div
                     key={active}
                     className="absolute inset-0 flex flex-col justify-center p-6 xl:p-8"
-                    initial={{ opacity: 0, y: 16, scale: 0.985 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.985, transition: { duration: 0.2, ease } }}
-                    transition={{ duration: 0.35, ease }}
+                    initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -8, filter: "blur(8px)", transition: { duration: 0.16, ease } }}
+                    transition={{ duration: 0.34, ease }}
                   >
                     <Mock id={active} />
                   </motion.div>

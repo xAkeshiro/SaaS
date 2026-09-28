@@ -5,19 +5,10 @@ import { Container } from "@/components/site/container";
 import { EmailCapture } from "@/components/site/email-capture";
 import { Button } from "@/components/ui/button";
 import { hero, heroExtras } from "@/lib/content";
-import { HeroItem, HeroMock, HeroStagger, UnderlinedWord } from "@/components/sections/hero-motion";
+import { HeroHeadline, HeroItem, HeroMock, HeroStagger } from "@/components/sections/hero-motion";
 import { RehearsalWindow } from "@/components/sections/rehearsal-window";
 
-/** Splits `text` around the first occurrence of `word`; null when absent. */
-function splitHeadline(text: string, word: string): [string, string, string] | null {
-  const at = text.indexOf(word);
-  if (at < 0) return null;
-  return [text.slice(0, at), word, text.slice(at + word.length)];
-}
-
 export function Hero() {
-  const parts = splitHeadline(hero.headline, hero.headlineEmphasis);
-
   return (
     <section className="relative bg-hero-mesh pt-36 pb-16 md:pt-44">
       {/* Dot grid, faded out radially so it only reads behind the headline. Bounded to the
@@ -45,19 +36,9 @@ export function Hero() {
             </HeroItem>
 
             {/* Headline */}
-            <HeroItem className="mt-7">
-              <h1 className="display-xl text-foreground">
-                {parts ? (
-                  <>
-                    {parts[0]}
-                    <UnderlinedWord>{parts[1]}</UnderlinedWord>
-                    {parts[2]}
-                  </>
-                ) : (
-                  hero.headline
-                )}
-              </h1>
-            </HeroItem>
+            <div className="mt-7">
+              <HeroHeadline text={hero.headline} emphasis={hero.headlineEmphasis} className="display-xl text-foreground" />
+            </div>
 
             {/* Sub */}
             <HeroItem className="mt-6">
@@ -69,12 +50,13 @@ export function Hero() {
               <EmailCapture source="hero" buttonLabel={hero.ctaPrimary} />
             </HeroItem>
 
-            {/* Trust line + secondary link */}
-            <HeroItem className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:gap-5">
-              <p className="flex max-w-[40ch] items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            {/* Trust line + secondary link, one quiet row */}
+            <HeroItem className="mt-4 flex flex-col items-center gap-1 sm:flex-row sm:gap-3">
+              <p className="flex items-center justify-center gap-1.5 text-[0.8125rem] text-muted-foreground">
                 <Lock aria-hidden="true" className="size-3.5 shrink-0" />
                 <span>{hero.trust}</span>
               </p>
+              <span aria-hidden="true" className="hidden h-4 w-px bg-border sm:block" />
               <Button asChild variant="ghost" size="sm" className="group text-muted-foreground hover:text-foreground">
                 <a href="#try">
                   {hero.ctaSecondary}

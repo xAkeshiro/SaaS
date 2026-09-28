@@ -36,6 +36,10 @@ import { cn } from "@/lib/utils";
 
 type Role = "persona" | "user";
 type Msg = { id: number; role: Role; text: string };
+
+/** Anything on the page can load a conversation into the demo: dispatch this on `window`. */
+export const REHEARSE_EVENT = "unmute:rehearse";
+export type RehearseEventDetail = { id: string } | { custom: string };
 type Phase = "idle" | "starting" | "live" | "replying" | "debriefing" | "debrief";
 type Scenario = { id: string; label: string; who: string; setup: string; opener?: string };
 type Session = { scenario: Scenario; mood: MoodId };
@@ -150,7 +154,27 @@ export function LiveDemo() {
   const logRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
   const focusRef = useRef(false);
+
+  // A scenario picked elsewhere on the page (the scenario cards) lands here, ready to start.
+  useEffect(() => {
+    function onRehearse(e: Event) {
+      const detail = (e as CustomEvent<RehearseEventDetail>).detail;
+      if (!detail) return;
+      if ("id" in detail) {
+        setScenarioId(detail.id);
+        setCustom("");
+      } else {
+        setCustom(detail.custom);
+      }
+      // Land on the panel itself, so the chosen conversation and the Start button are both in view.
+      document.getElementById("try-panel")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      startRef.current?.focus({ preventScroll: true });
+    }
+    window.addEventListener(REHEARSE_EVENT, onRehearse);
+    return () => window.removeEventListener(REHEARSE_EVENT, onRehearse);
+  }, [reduce]);
 
   useEffect(() => {
     voiceRef.current = voiceOn;
@@ -388,7 +412,7 @@ export function LiveDemo() {
         </Reveal>
 
         <Reveal delay={0.1} className="mt-14">
-          <div className="rounded-3xl border border-border bg-card p-4 shadow-soft md:p-6">
+          <div id="try-panel" className="scroll-mt-24 rounded-3xl border border-border bg-card p-4 shadow-soft md:p-6">
             <div className="grid gap-6 lg:grid-cols-[360px_1fr] lg:gap-8">
               {/* ---------------- Controls ---------------- */}
               <div className="flex min-w-0 flex-col gap-6">
@@ -493,6 +517,7 @@ export function LiveDemo() {
 
                 <div className="flex flex-col gap-2">
                   <Button
+                    ref={startRef}
                     type="button"
                     size="lg"
                     className="w-full"
@@ -744,6 +769,11 @@ function DebriefView({
   onAgain: () => void;
 }) {
   const d = liveDemo.debrief;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // The transcript this replaces held focus; hand it to the debrief so keyboard and screen reader users land on it.
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:p-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -751,7 +781,9 @@ function DebriefView({
           <span className="flex size-6 items-center justify-center rounded-md bg-amber text-ink">
             <Sparkles className="size-3.5" aria-hidden="true" />
           </span>
-          <h3 className="font-display text-base font-semibold text-foreground">{d.title}</h3>
+          <h3 ref={headingRef} tabIndex={-1} className="font-display text-base font-semibold text-foreground focus:outline-none">
+            {d.title}
+          </h3>
           {mode === "sample" ? (
             <span className="font-mono text-[11px] text-muted-foreground">({liveDemo.badges.sample.toLowerCase()})</span>
           ) : null}

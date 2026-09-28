@@ -13,7 +13,7 @@ export default function ManifestoPage() {
   return (
     <>
       <Nav />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         {/* Hero */}
         <section className="bg-hero-mesh pt-36 pb-12 md:pt-44 md:pb-16">
           <Container>
@@ -46,8 +46,11 @@ export default function ManifestoPage() {
                           paragraph === manifestoExtras.pullQuote ? (
                             <blockquote
                               key={paragraph}
-                              className="my-2 border-l-4 border-amber pl-6 font-display text-2xl leading-snug font-semibold tracking-tight text-foreground md:text-[1.75rem]"
+                              className="my-4 font-display text-2xl leading-snug font-semibold tracking-tight text-balance text-foreground md:text-[2rem]"
                             >
+                              <span aria-hidden="true" className="-mb-3 block font-display text-[4.5rem] leading-none text-amber">
+                                &ldquo;
+                              </span>
                               {paragraph}
                             </blockquote>
                           ) : (
