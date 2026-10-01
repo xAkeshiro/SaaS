@@ -17,7 +17,6 @@ import {
   VolumeX,
 } from "lucide-react";
 import { Container } from "@/components/site/container";
-import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { demoScenarios, liveDemo, moods, type MoodId } from "@/lib/content";
 import { ease, stagger } from "@/lib/motion";
 import type { Debrief, RehearseMode } from "@/lib/rehearse";
-import { cn } from "@/lib/utils";
+import { cn, curly } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /* Types and constants                                                 */
@@ -47,8 +46,10 @@ const ENDPOINT = "/api/rehearse";
 const MAX_MESSAGES = 24;
 const MAX_TEXT = 800;
 const L = liveDemo.labels;
-/** How long to wait for `scrollend` before marking the picked chip anyway (no scroll, or no event support). */
-const SETTLE_FALLBACK_MS = 600;
+/** Settled once no scroll event has fired for this long; also covers browsers without scrollend. */
+const SCROLL_IDLE_MS = 150;
+/** Sample mode: every script in lib/rehearse.ts has 4 replies per mood, then its closer ends the call. */
+const SAMPLE_TURNS = 5;
 
 /**
  * Bubbles grow from the corner their tail hangs off. Your own line lands fast because you
@@ -140,6 +141,11 @@ function countIn(lines: readonly string[], re: RegExp) {
   return lines.reduce((n, line) => n + (line.match(re)?.length ?? 0), 0);
 }
 
+/** Persona replies after the opener, counted the way the server's sampleReply counts them. */
+function personaReplies(list: readonly Msg[]) {
+  return list.filter((m, i) => m.role === "persona" && i > 0).length;
+}
+
 /* ------------------------------------------------------------------ */
 /* Section                                                             */
 /* ------------------------------------------------------------------ */
@@ -211,10 +217,17 @@ export function LiveDemo() {
         pulseRef.current += 1;
         setPulse({ id: picked, n: pulseRef.current });
       };
-      const timer = window.setTimeout(settled, SETTLE_FALLBACK_MS);
+      // A fixed fallback fired mid-scroll on long jumps, so the ring had faded before the panel landed.
+      let timer = window.setTimeout(settled, SCROLL_IDLE_MS);
+      const onScroll = () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(settled, SCROLL_IDLE_MS);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("scrollend", settled, { once: true });
       settleRef.current = () => {
         window.clearTimeout(timer);
+        window.removeEventListener("scroll", onScroll);
         window.removeEventListener("scrollend", settled);
       };
     }
@@ -243,10 +256,14 @@ export function LiveDemo() {
   // keyboard over something the user cannot see.
   useEffect(() => {
     if (phase !== "live" || !focusRef.current) return;
-    focusRef.current = false;
     if (window.matchMedia("(min-width: 1024px)").matches) {
-      inputRef.current?.focus({ preventScroll: true });
+      const el = inputRef.current;
+      // After a debrief the transcript is still mounting behind its exit; the Input's ref focuses it then.
+      if (!el) return;
+      focusRef.current = false;
+      el.focus({ preventScroll: true });
     } else {
+      focusRef.current = false;
       panelRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
     }
   }, [phase, session, reduce]);
@@ -266,7 +283,12 @@ export function LiveDemo() {
     : preset;
 
   const busy = phase === "starting" || phase === "replying" || phase === "debriefing";
-  const canType = phase === "live" || phase === "replying";
+  // Sample mode: once the closer lands the script is over, so the call has ended and only End remains.
+  const scriptEnded =
+    mode === "sample" &&
+    personaReplies(messages) >= SAMPLE_TURNS &&
+    messages[messages.length - 1]?.role === "persona";
+  const canType = (phase === "live" || phase === "replying") && !scriptEnded;
   const hasExchange = messages.some((m) => m.role === "user");
   const waiting =
     (phase === "starting" || phase === "replying") && messages[messages.length - 1]?.role !== "persona";
@@ -382,6 +404,8 @@ export function LiveDemo() {
     e.preventDefault();
     const text = input.trim().slice(0, MAX_TEXT);
     if (!text || phase !== "live" || !session) return;
+    // Past the closer the script has nothing left; a request would only repeat it.
+    if (mode === "sample" && personaReplies(messages) >= SAMPLE_TURNS) return;
 
     cancelSpeech();
     setInput("");
@@ -452,6 +476,23 @@ export function LiveDemo() {
     setCustom("");
   }
 
+  function changeMood(next: MoodId) {
+    setMood(next);
+    // Mid-run, the switch applies to the next reply, so the header pill and the control agree.
+    if (phase === "starting" || phase === "live" || phase === "replying") {
+      setSession((s) => (s ? { ...s, mood: next } : s));
+    }
+  }
+
+  /** Desktop: after Start, focus the composer as soon as it mounts (after a debrief it mounts late). */
+  function attachInput(el: HTMLInputElement | null) {
+    inputRef.current = el;
+    if (el && focusRef.current && window.matchMedia("(min-width: 1024px)").matches) {
+      focusRef.current = false;
+      el.focus({ preventScroll: true });
+    }
+  }
+
   const idle = messages.length === 0 && !waiting;
   // While the pane is empty the header previews the current pick; a transcript or debrief keeps its own run's names.
   const header = (phase === "idle" && idle) || !session ? { scenario: selected, mood } : session;
@@ -461,12 +502,11 @@ export function LiveDemo() {
     // Short top gap: Scenarios above hands off straight into the demo (its own bottom is pb-12).
     <section id="try" className="scroll-mt-28 pt-12 pb-20 md:pb-24">
       <Container>
-        <Reveal>
-          <SectionHeading title={liveDemo.title} sub={liveDemo.sub} />
-        </Reveal>
+        <SectionHeading title={liveDemo.title} sub={liveDemo.sub} />
 
-        <Reveal delay={0.1} className="mt-14">
-          <div id="try-panel" className="scroll-mt-24 rounded-3xl border border-border bg-card p-4 shadow-soft md:p-6">
+        {/* Shadow only: a border under a wide soft shadow declares the elevation twice. */}
+        <div className="mt-14">
+          <div id="try-panel" className="scroll-mt-24 rounded-3xl bg-card p-4 shadow-soft md:p-6">
             <div className="grid gap-6 lg:grid-cols-[360px_1fr] lg:gap-8">
               {/* ---------------- Controls ---------------- */}
               <div className="flex min-w-0 flex-col gap-6">
@@ -482,7 +522,8 @@ export function LiveDemo() {
                           aria-pressed={active}
                           onClick={() => pickScenario(s.id)}
                           className={cn(
-                            "relative rounded-full px-3.5 py-1.5 text-sm font-medium outline-none transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-[0.97]",
+                            // Focus uses the global outline; `active:scale` sets `scale`, so that is what transitions.
+                            "relative min-h-11 rounded-full px-3.5 py-1.5 text-sm font-medium transition-[background-color,color,scale] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] lg:min-h-0",
                             active
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted text-foreground hover:bg-lavender",
@@ -522,15 +563,18 @@ export function LiveDemo() {
                   />
                 </div>
 
-                <Tabs value={mood} onValueChange={(v) => setMood(v as MoodId)} className="min-w-0 gap-0">
+                <Tabs value={mood} onValueChange={(v) => changeMood(v as MoodId)} className="min-w-0 gap-0">
                   <p className="mb-2 block text-sm font-medium text-foreground">{L.mood}</p>
-                  {/* `h-11!`: the component's own orientation variant (h-9) outranks a plain utility. */}
-                  <TabsList aria-label={L.mood} className="grid h-11! w-full grid-cols-3 rounded-full bg-muted p-1">
+                  {/* `!`: the component's own orientation variant (h-9) outranks a plain utility. h-13 gives 44px segments on touch. */}
+                  <TabsList
+                    aria-label={L.mood}
+                    className="grid h-13! w-full grid-cols-3 rounded-full bg-muted p-1 md:h-11!"
+                  >
                     {moods.map((m) => (
                       <TabsTrigger
                         key={m.id}
                         value={m.id}
-                        className="h-full rounded-full text-sm transition-[color] duration-200 data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none"
+                        className="h-full rounded-full text-sm transition-[color,scale] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-safe:active:scale-[0.97] data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none"
                       >
                         {/* One pill slides between segments, so there is never a half-dark pill on each side mid-change. */}
                         {mood === m.id ? (
@@ -546,8 +590,13 @@ export function LiveDemo() {
                     ))}
                   </TabsList>
                   {/* Each panel stays a Radix TabsContent so the triggers' aria-controls resolve; it remounts per switch. */}
+                  {/* It is also a Tab stop, so it restores the global focus outline that the component turns off. */}
                   {moods.map((m) => (
-                    <TabsContent key={m.id} value={m.id} className="mt-2 text-xs text-muted-foreground">
+                    <TabsContent
+                      key={m.id}
+                      value={m.id}
+                      className="mt-2 rounded-sm text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                    >
                       <motion.p
                         initial={{ opacity: 0, filter: "blur(2px)" }}
                         animate={{ opacity: 1, filter: "blur(0px)" }}
@@ -564,7 +613,7 @@ export function LiveDemo() {
                   aria-pressed={voiceOn}
                   disabled={!speechSupported}
                   onClick={toggleVoice}
-                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-3.5 py-2.5 text-left transition-[border-color] duration-200 hover:border-foreground/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-3.5 py-2.5 text-left transition-[border-color,scale] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-foreground/20 motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="flex min-w-0 items-center gap-2.5">
                     <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-foreground">
@@ -633,7 +682,8 @@ export function LiveDemo() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <p className="truncate font-display text-[1.05rem] leading-tight font-semibold text-foreground">
+                        {/* Wraps instead of truncating: on phones most names would lose their end. */}
+                        <p className="line-clamp-2 font-display text-[1.05rem] leading-tight font-semibold text-foreground">
                           {header.scenario.who}
                         </p>
                         <span className="rounded-full bg-lavender/70 px-2.5 py-0.5 text-xs font-medium text-foreground/80">
@@ -686,12 +736,14 @@ export function LiveDemo() {
                         ) : null}
 
                         {/* Log. The list stays mounted, so the first real line animates in where the preview sat. */}
+                        {/* The 1rem top fade equals the padding, so only lines scrolled up under the note fade. */}
                         <div
                           ref={logRef}
-                          className="flex max-h-[60vh] min-h-0 flex-1 flex-col overflow-y-auto p-4 lg:max-h-none"
+                          className="flex max-h-[60vh] min-h-0 flex-1 flex-col overflow-y-auto p-4 [mask-image:linear-gradient(to_bottom,transparent,#000_1rem)] lg:max-h-none"
                         >
-                          <ul className="flex flex-col gap-2.5">
-                            <AnimatePresence initial={false}>
+                          {/* popLayout takes the exiting typing dots out of the flow, so a reply lands in their slot instead of below and then jumping. */}
+                          <ul className="relative flex flex-col gap-2.5">
+                            <AnimatePresence initial={false} mode="popLayout">
                               {messages.map((m) => (
                                 <motion.li
                                   key={m.id}
@@ -705,7 +757,7 @@ export function LiveDemo() {
                                   <span className={tagClass(m.role)}>
                                     {m.role === "user" ? L.you : header.scenario.who}
                                   </span>
-                                  {m.text}
+                                  {curly(m.text)}
                                 </motion.li>
                               ))}
                               {waiting ? (
@@ -746,7 +798,7 @@ export function LiveDemo() {
                               {L.inputLabel}
                             </label>
                             <Input
-                              ref={inputRef}
+                              ref={attachInput}
                               id={inputId}
                               value={input}
                               onChange={(e) => setInput(e.target.value)}
@@ -761,7 +813,7 @@ export function LiveDemo() {
                               type="submit"
                               size="default"
                               className="h-11 shrink-0 px-4"
-                              disabled={phase !== "live" || !input.trim()}
+                              disabled={phase !== "live" || !input.trim() || scriptEnded}
                               aria-label={L.send}
                             >
                               <span className="hidden sm:inline">{L.send}</span>
@@ -770,20 +822,26 @@ export function LiveDemo() {
                           </form>
                           <div className="mt-2 flex min-h-8 flex-wrap items-center justify-between gap-2">
                             <p className="text-xs text-muted-foreground">
+                              {/* Enter is held while they reply; with a line typed ahead, say so instead of swallowing it. */}
                               {phase === "starting"
                                 ? L.waiting
                                 : phase === "replying"
-                                  ? L.replying
+                                  ? input.trim()
+                                    ? L.replyingHeld
+                                    : L.replying
                                   : phase === "debriefing"
                                     ? L.ending
                                     : phase === "live"
-                                      ? L.inputHint
+                                      ? scriptEnded
+                                        ? L.scriptEnd
+                                        : L.inputHint
                                       : ""}
                             </p>
+                            {/* Once the script has ended, End is the only way forward, so it takes the filled style. */}
                             {hasExchange ? (
                               <Button
                                 type="button"
-                                variant="outline"
+                                variant={scriptEnded ? "default" : "outline"}
                                 size="sm"
                                 onClick={end}
                                 disabled={busy}
@@ -806,7 +864,7 @@ export function LiveDemo() {
               </div>
             </div>
           </div>
-        </Reveal>
+        </div>
 
         {/* Completed persona lines are announced once, not on every streamed chunk. */}
         <div role="status" aria-live="polite" className="sr-only">
@@ -822,8 +880,9 @@ export function LiveDemo() {
 /* ------------------------------------------------------------------ */
 
 /**
- * Before Start: the pick's opening line, faded, where the real one will land, so the pane
- * previews the conversation instead of sitting empty. A custom setup has no fixed opener.
+ * Before Start: the pick's opening line where the real one will land, so the pane previews the
+ * conversation instead of sitting empty. A dashed outline, not fading, marks it as a preview, so
+ * the text keeps full contrast. A custom setup has no fixed opener.
  */
 function IdlePreview({ scenario }: { scenario: Scenario }) {
   return (
@@ -833,9 +892,9 @@ function IdlePreview({ scenario }: { scenario: Scenario }) {
           <AnimatePresence initial={false} mode="popLayout">
             <motion.p
               key={scenario.id}
-              className={bubbleClass("persona")}
+              className={cn(bubbleClass("persona"), "border border-dashed border-foreground/25 shadow-none")}
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: { duration: 0.1, ease } }}
               transition={{ duration: 0.2, ease }}
             >
@@ -886,96 +945,103 @@ function DebriefView({
   ];
 
   return (
-    <motion.div
-      className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:p-5"
-      variants={stagger(0.06, 0.05)}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={item} className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="flex size-6 items-center justify-center rounded-md bg-amber text-ink">
-            <Sparkles className="size-3.5" aria-hidden="true" />
-          </span>
-          <h3 ref={headingRef} tabIndex={-1} className="font-display text-base font-semibold text-foreground focus:outline-none">
-            {d.title}
-          </h3>
-        </div>
-        <motion.p
-          className="shrink-0 rounded-full bg-card px-2.5 py-0.5 text-sm font-semibold text-foreground tabular-nums"
-          initial={reduce ? { opacity: 0 } : { opacity: 0, transform: "scale(0.9)" }}
-          animate={reduce ? { opacity: 1 } : { opacity: 1, transform: "scale(1)" }}
-          transition={
-            reduce ? { duration: 0.2, ease, delay: 0.1 } : { type: "spring", duration: 0.5, bounce: 0.2, delay: 0.1 }
-          }
-        >
-          {debrief.score} <span className="font-medium text-muted-foreground">{d.scoreOf}</span>
-        </motion.p>
-      </motion.div>
-
-      {/* A scripted debrief quotes lines the visitor may never have typed, so it says so up front. */}
-      {mode === "sample" ? (
-        <motion.p variants={item} className="-mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
-          <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-          <span className="min-w-0">{d.sampleNote}</span>
-        </motion.p>
-      ) : null}
-
-      {/* The product's core output leads: the two lines to say next time, in your voice. */}
-      <motion.div variants={item}>
-        <p className="text-sm font-medium text-amber-ink">{d.next}</p>
-        <ul className="mt-2.5 flex flex-col items-end gap-2">
-          {debrief.next.map((line, i) => (
-            <li
-              key={i}
-              className="max-w-[88%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-base leading-snug break-words text-primary-foreground"
-            >
-              {line}
-            </li>
-          ))}
-        </ul>
-      </motion.div>
-
-      <motion.dl variants={item} className="divide-y divide-border/70 border-t border-border/70">
-        {metrics.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-3 py-2.5">
-            <dt className="min-w-0 text-sm text-muted-foreground">{row.label}</dt>
-            <dd className="shrink-0 text-[0.95rem] font-semibold text-foreground tabular-nums">{row.value}</dd>
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/*
+       * On lg the debrief outgrows its fixed pane, and the scrollbar is an overlay: the bottom fade says
+       * there is more, and pb-8 means nothing real is still faded once you reach the end.
+       */}
+      <motion.div
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 pb-8 [mask-image:linear-gradient(to_bottom,#000_calc(100%_-_2rem),transparent)] sm:p-5 sm:pb-8"
+        variants={stagger(0.06, 0.05)}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div variants={item} className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="flex size-6 items-center justify-center rounded-md bg-amber text-ink">
+              <Sparkles className="size-3.5" aria-hidden="true" />
+            </span>
+            <h3 ref={headingRef} tabIndex={-1} className="font-display text-base font-semibold text-foreground focus:outline-none">
+              {d.title}
+            </h3>
           </div>
-        ))}
-      </motion.dl>
+          <motion.p
+            className="shrink-0 rounded-full bg-card px-2.5 py-0.5 text-sm font-semibold text-foreground tabular-nums"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, transform: "scale(0.9)" }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, transform: "scale(1)" }}
+            transition={
+              reduce ? { duration: 0.2, ease, delay: 0.1 } : { type: "spring", duration: 0.5, bounce: 0.2, delay: 0.1 }
+            }
+          >
+            {debrief.score} <span className="font-medium text-muted-foreground">{d.scoreOf}</span>
+          </motion.p>
+        </motion.div>
 
-      <motion.div variants={item} className="grid gap-4 border-t border-border/70 pt-4 sm:grid-cols-2">
-        <DebriefList
-          title={d.worked}
-          items={debrief.worked}
-          empty={null}
-          icon={<Check className="size-3 text-amber-ink" strokeWidth={2.5} aria-hidden="true" />}
-          iconClass="bg-amber/25"
-        />
-        <DebriefList
-          title={d.folded}
-          items={debrief.folded}
-          empty={d.none}
-          icon={<Minus className="size-3 text-muted-foreground" strokeWidth={2.5} aria-hidden="true" />}
-          iconClass="bg-muted"
-        />
+        {/* A scripted debrief quotes lines the visitor may never have typed, so it says so up front. */}
+        {mode === "sample" ? (
+          <motion.p variants={item} className="-mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+            <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+            <span className="min-w-0">{d.sampleNote}</span>
+          </motion.p>
+        ) : null}
+
+        {/* The product's core output leads: the two lines to say next time, in your voice. */}
+        <motion.div variants={item}>
+          <p className="text-sm font-medium text-amber-ink">{d.next}</p>
+          <ul className="mt-2.5 flex flex-col items-end gap-2">
+            {debrief.next.map((line, i) => (
+              <li
+                key={i}
+                className="max-w-[88%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-base leading-snug break-words text-primary-foreground"
+              >
+                {curly(line)}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+
+        <motion.dl variants={item} className="divide-y divide-border/70 border-t border-border/70">
+          {metrics.map((row) => (
+            <div key={row.label} className="flex items-center justify-between gap-3 py-2.5">
+              <dt className="min-w-0 text-sm text-muted-foreground">{row.label}</dt>
+              <dd className="shrink-0 text-[0.95rem] font-semibold text-foreground tabular-nums">{row.value}</dd>
+            </div>
+          ))}
+        </motion.dl>
+
+        <motion.div variants={item} className="grid gap-4 border-t border-border/70 pt-4 sm:grid-cols-2">
+          <DebriefList
+            title={d.worked}
+            items={debrief.worked}
+            empty={null}
+            icon={<Check className="size-3 text-amber-ink" strokeWidth={2.5} aria-hidden="true" />}
+            iconClass="bg-amber/25"
+          />
+          <DebriefList
+            title={d.folded}
+            items={debrief.folded}
+            empty={d.none}
+            icon={<Minus className="size-3 text-muted-foreground" strokeWidth={2.5} aria-hidden="true" />}
+            iconClass="bg-muted"
+          />
+        </motion.div>
+
+        {debrief.pattern ? (
+          <motion.div variants={item} className="border-t border-border/70 pt-4">
+            <p className="text-sm font-medium text-foreground">{d.pattern}</p>
+            <p className="mt-1.5 text-sm leading-relaxed break-words text-foreground">{curly(debrief.pattern)}</p>
+          </motion.div>
+        ) : null}
       </motion.div>
 
-      {debrief.pattern ? (
-        <motion.div variants={item} className="border-t border-border/70 pt-4">
-          <p className="text-sm font-medium text-foreground">{d.pattern}</p>
-          <p className="mt-1.5 text-sm leading-relaxed break-words text-foreground">{debrief.pattern}</p>
-        </motion.div>
-      ) : null}
-
-      <motion.div variants={item} className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+      {/* Pinned under the scroller like the composer, so the debrief's one action is always in view. */}
+      <div className="shrink-0 border-t border-border/70 p-3 sm:p-4">
         <Button type="button" onClick={onAgain}>
           <RotateCcw className="size-4" aria-hidden="true" />
           {L.again}
         </Button>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -1004,7 +1070,7 @@ function DebriefList({
               <span className={cn("mt-0.5 grid size-5 shrink-0 place-items-center rounded-full", iconClass)}>
                 {icon}
               </span>
-              <span className="min-w-0 break-words">{item}</span>
+              <span className="min-w-0 break-words">{curly(item)}</span>
             </li>
           ))}
         </ul>

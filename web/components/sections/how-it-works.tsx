@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion, useInView, useReducedMotion, useScroll } from "motion/react";
-import { ArrowDown, CalendarDays, Check, Flame, PhoneCall, UserRound, Users } from "lucide-react";
+import { useRef, useState, type ReactNode } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from "motion/react";
+import { ArrowDown, CalendarDays, Check, Flame, PhoneCall, UserRound } from "lucide-react";
 import { Container } from "@/components/site/container";
-import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { demoScenarios, howItWorks, moods, steps, type MoodId } from "@/lib/content";
 import { ease } from "@/lib/motion";
@@ -30,6 +36,13 @@ const PANEL_MOTION_REDUCED = {
   exit: { opacity: 0, transition: { duration: 0.15, ease } },
 };
 
+/*
+ * The step whose middle is nearest this viewport line (px) drives the panel. The panel is
+ * pinned in pixels (top-28, 420px tall), so a fixed line tracks it at every viewport
+ * height where a percentage band drifts away from it.
+ */
+const ACTIVE_LINE_Y = 380;
+
 export function HowItWorks() {
   const [active, setActive] = useState<StepId>(steps[0].id);
   const activeIndex = Math.max(
@@ -39,22 +52,39 @@ export function HowItWorks() {
   const reduceMotion = useReducedMotion();
   const listRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress: progress } = useScroll({ target: listRef, offset: ["start 55%", "end 55%"] });
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", () => {
+    const els = listRef.current?.querySelectorAll<HTMLElement>("[data-step]");
+    if (!els) return;
+    let next: StepId = steps[0].id;
+    let best = Infinity;
+    for (const el of els) {
+      const r = el.getBoundingClientRect();
+      const d = Math.abs(r.top + r.height / 2 - ACTIVE_LINE_Y);
+      if (d < best) {
+        best = d;
+        next = el.dataset.step as StepId;
+      }
+    }
+    // Same id is a no-op: React bails out of the re-render.
+    setActive(next);
+  });
 
   return (
     <section id="how-it-works" className="scroll-mt-28 py-20 md:py-24">
       <Container>
-        <Reveal>
-          <SectionHeading align="left" title={howItWorks.title} />
-        </Reveal>
+        <SectionHeading align="left" title={howItWorks.title} />
 
-        <div className="mt-14 grid gap-14 lg:mt-16 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+        {/* minmax(0, …) lets the columns share 1024px by ratio instead of the panel claiming a min width. */}
+        <div className="mt-14 grid gap-14 lg:mt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
           <div ref={listRef} className="relative min-w-0 lg:pl-10">
             <div aria-hidden="true" className="absolute top-[10vh] bottom-[10vh] left-0 hidden w-px bg-border lg:block">
               <motion.div className="absolute inset-0 origin-top bg-amber" style={{ scaleY: progress }} />
             </div>
             <ol className="flex min-w-0 flex-col gap-14 lg:gap-0">
               {steps.map((step, i) => (
-                <StepBlock key={step.id} step={step} index={i} active={active === step.id} onActivate={setActive} />
+                <StepBlock key={step.id} step={step} index={i} active={active === step.id} />
               ))}
             </ol>
           </div>
@@ -62,7 +92,7 @@ export function HowItWorks() {
           {/* Sticky showcase, desktop only. Mobile renders each panel under its step. */}
           <div className="hidden lg:block">
             <div className="sticky top-28">
-              <PanelFrame className="aspect-[4/3] min-h-[420px]">
+              <PanelFrame className="h-[420px]">
                 <AnimatePresence initial={false}>
                   <motion.div
                     key={active}
@@ -105,43 +135,27 @@ export function HowItWorks() {
 /* Steps                                                               */
 /* ------------------------------------------------------------------ */
 
-function StepBlock({
-  step,
-  index,
-  active,
-  onActivate,
-}: {
-  step: Step;
-  index: number;
-  active: boolean;
-  onActivate: (id: StepId) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  // Shrink the observed area to the middle 60% of the viewport so the panel swaps
-  // while the step text sits beside the sticky panel, not when it first peeks in.
-  const inView = useInView(ref, { amount: 0.6, margin: "-20% 0px -20% 0px" });
-
-  useEffect(() => {
-    if (inView) onActivate(step.id);
-  }, [inView, onActivate, step.id]);
-
+function StepBlock({ step, index, active }: { step: Step; index: number; active: boolean }) {
   return (
     <li className="lg:flex lg:min-h-[52vh] lg:flex-col lg:justify-center lg:last:min-h-[40vh]">
       {/* No reveal and no dimming: every step stays readable. Only the title marks the active one. */}
-      <div ref={ref} className="max-w-[52ch]">
+      <div data-step={step.id} className="max-w-[52ch]">
         <h3
           className={cn(
             "display-md text-foreground transition-colors duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
             !active && "lg:text-foreground/55",
           )}
         >
-          <span className="mr-2.5 text-amber-ink">{index + 1}</span>
+          {/* The <ol> already numbers the steps for screen readers; hiding the digit keeps the heading name clean. */}
+          <span aria-hidden="true" className="mr-2.5 text-amber-ink">
+            {index + 1}
+          </span>
           {step.title}
         </h3>
         <p className="mt-3 text-[1.0625rem] leading-relaxed text-muted-foreground">{step.body}</p>
       </div>
 
-      <Reveal className="mt-8 lg:hidden">
+      <div className="mt-8 lg:hidden">
         <PanelFrame>
           <div className="p-4 sm:p-6">
             <Mock id={step.id} />
@@ -153,7 +167,7 @@ function StepBlock({
             {howItWorks.caption}
           </p>
         ) : null}
-      </Reveal>
+      </div>
     </li>
   );
 }
@@ -236,7 +250,7 @@ function RehearseMock() {
             <p className="truncate text-sm font-semibold text-foreground">{scenario.who}</p>
             <p className="truncate text-xs text-muted-foreground">{scenario.label}</p>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 font-mono text-xs text-foreground tabular-nums">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-foreground tabular-nums">
             <span className="size-1.5 rounded-full bg-amber" />
             {m.status}
           </span>
@@ -258,7 +272,7 @@ function RehearseMock() {
         <p className={cn(LABEL, "mt-1 text-center")}>{m.speaking}</p>
 
         <div className="mt-3 rounded-2xl rounded-tl-md bg-muted px-3.5 py-2.5 text-sm leading-snug text-foreground">
-          {scenario.opener}
+          {m.line}
         </div>
 
         <div className="mt-4">
@@ -383,7 +397,7 @@ function DailyMock() {
 
       <div className="mt-4 flex items-center gap-3 rounded-xl bg-muted/70 p-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-lavender-deep/50 text-foreground">
-          <Users className="size-4" strokeWidth={1.75} />
+          <PhoneCall className="size-4" strokeWidth={1.75} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm leading-snug font-medium text-foreground">{m.rep.title}</p>
@@ -433,7 +447,7 @@ function RealMock() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-mono text-lg leading-none font-semibold text-foreground tabular-nums">{time}</span>
+            <span className="text-lg leading-none font-semibold text-foreground tabular-nums">{time}</span>
             <span className={cn(LABEL, "mt-1")}>{m.ring.caption}</span>
           </div>
         </div>

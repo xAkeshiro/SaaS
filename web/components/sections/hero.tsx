@@ -1,4 +1,3 @@
-import { ArrowDown } from "lucide-react";
 import { Container } from "@/components/site/container";
 import { EmailCapture } from "@/components/site/email-capture";
 import { hero } from "@/lib/content";
@@ -33,28 +32,14 @@ export function Hero() {
               <HeroHeadline text={hero.headline} emphasis={hero.headlineEmphasis} className="display-xl text-foreground" />
             </div>
 
-            {/* Sub */}
-            <HeroItem className="mt-6">
+            {/* Sub and form wait for the headline's last words (custom = delay in seconds). */}
+            <HeroItem custom={0.35} className="mt-6">
               <p className="lede mx-auto max-w-[60ch]">{hero.sub}</p>
             </HeroItem>
 
             {/* Email capture (anchor target for the nav and footer) */}
-            <HeroItem id="early-access" className="mt-8 flex w-full scroll-mt-32 justify-center">
+            <HeroItem id="early-access" custom={0.41} className="mt-8 flex w-full scroll-mt-32 justify-center">
               <EmailCapture source="hero" buttonLabel={hero.ctaPrimary} />
-            </HeroItem>
-
-            {/* Secondary path: a quiet text link, so the form stays the one obvious action. */}
-            <HeroItem className="mt-4">
-              <a
-                href="#try"
-                className="group inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[0.8125rem] font-medium text-foreground/80 transition-colors duration-200 hover:text-foreground"
-              >
-                {hero.ctaSecondary}
-                <ArrowDown
-                  aria-hidden="true"
-                  className="size-4 transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-y-0.5"
-                />
-              </a>
             </HeroItem>
           </div>
 

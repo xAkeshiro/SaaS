@@ -1,6 +1,5 @@
 import { Clapperboard, Flame, Users, type LucideIcon } from "lucide-react";
 import { Container } from "@/components/site/container";
-import { Reveal, RevealItem } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { TogetherDares } from "@/components/sections/together-dares";
 import { together } from "@/lib/content";
@@ -15,17 +14,15 @@ export function Together() {
   return (
     <section className="bg-band-lavender-soft py-20 md:py-24">
       <Container>
-        <Reveal>
-          <SectionHeading align="left" title={together.title} sub={together.sub} />
-        </Reveal>
+        <SectionHeading align="left" title={together.title} sub={together.sub} />
 
         <div className="mt-12 grid gap-10 lg:mt-14 lg:grid-cols-[1fr_420px] lg:items-start lg:gap-16">
           {/* Plain rows, not cards: none of these is clickable, so nothing lifts or frames them. */}
-          <Reveal group className="flex min-w-0 flex-col">
+          <div className="flex min-w-0 flex-col">
             {together.features.map((feature) => {
               const Icon = icons[feature.icon];
               return (
-                <RevealItem
+                <div
                   key={feature.title}
                   className="flex min-w-0 gap-5 border-t border-border py-6 first:border-t-0 first:pt-0"
                 >
@@ -38,14 +35,13 @@ export function Together() {
                     </h3>
                     <p className="mt-2 max-w-[52ch] text-base leading-relaxed text-muted-foreground">{feature.body}</p>
                   </div>
-                </RevealItem>
+                </div>
               );
             })}
-          </Reveal>
+          </div>
 
-          <Reveal delay={0.15} className="min-w-0">
-            <TogetherDares />
-          </Reveal>
+          {/* No scroll reveal here: the dares arriving one by one is this section's motion. */}
+          <TogetherDares className="min-w-0" />
         </div>
       </Container>
     </section>

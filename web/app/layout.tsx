@@ -33,6 +33,8 @@ const jetbrains = localFont({
   variable: "--font-jetbrains",
   weight: "100 800",
   display: "swap",
+  // Timers and numerals use Inter tabular-nums, so no route needs mono up front; any mono text fetches it on use.
+  preload: false,
 });
 
 export const metadata: Metadata = {

@@ -1,5 +1,4 @@
 import { Container } from "@/components/site/container";
-import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { PricingTiers } from "@/components/sections/pricing-tiers";
 import { pricing } from "@/lib/content";
@@ -11,9 +10,7 @@ export function Pricing() {
   return (
     <section id="pricing" className="scroll-mt-28 py-20 md:py-24">
       <Container>
-        <Reveal>
-          <SectionHeading title={pricing.title} sub={pricing.sub} />
-        </Reveal>
+        <SectionHeading title={pricing.title} sub={pricing.sub} />
         <PricingTiers className="mt-12 md:mt-14" />
       </Container>
     </section>

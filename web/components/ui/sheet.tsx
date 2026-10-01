@@ -74,7 +74,8 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute top-2.5 right-2.5 grid size-11 place-items-center rounded-full opacity-80 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+          // Radix focuses this button on every open; focus-visible keeps the ring off a tap-open.
+          <SheetPrimitive.Close className="absolute top-2.5 right-2.5 grid size-11 place-items-center rounded-full opacity-80 ring-offset-background transition-opacity outline-hidden hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none">
             <XIcon className="size-5" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>

@@ -24,14 +24,16 @@ export default function Home() {
         <LiveDemo />
         <Together />
         <Pricing />
-        <Faq />
+        {/* The dark band right below answers these three, so home skips them; /pricing keeps the full list. */}
+        <Faq omit={["Is this an AI companion?", "Is it therapy?", "What happens to my rehearsals?"]} />
         {/* One dark block at the end instead of two separate bands, so the page switches theme once. */}
         <div className="dark relative overflow-hidden bg-band-ink text-foreground">
           <AntiCompanion />
           <FinalCta band={false} />
         </div>
       </main>
-      <Footer />
+      {/* Proof cites sources 1 and 2. */}
+      <Footer notes={[1, 2]} />
     </>
   );
 }

@@ -4,10 +4,9 @@ import Link from "next/link";
 import { useId, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check } from "lucide-react";
-import { Reveal, RevealItem } from "@/components/site/reveal";
 import { Button } from "@/components/ui/button";
 import { pricing, pricingExtras } from "@/lib/content";
-import { ease, viewport } from "@/lib/motion";
+import { ease } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type Billing = "monthly" | "yearly";
@@ -38,26 +37,20 @@ export function PricingTiers({ className, headingLevel = "h3" }: PricingTiersPro
   const [billing, setBilling] = useState<Billing>("monthly");
 
   return (
-    // Three stacked cards are ~1600px tall on a phone; the default 20% threshold would leave a blank gap.
-    <Reveal
-      group
-      staggerBy={0.08}
-      viewport={{ ...viewport, amount: 0.1 }}
-      className={cn("flex flex-col items-center gap-10 md:gap-12", className)}
-    >
-      <RevealItem className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+    <div className={cn("flex flex-col items-center gap-10 md:gap-12", className)}>
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
         <BillingToggle value={billing} onChange={setBilling} />
         <span className="text-[0.8125rem] font-medium text-amber-ink">{pricing.yearlyNote}</span>
-      </RevealItem>
+      </div>
 
       <div className="grid w-full gap-4 lg:grid-cols-3 lg:gap-5">
         {pricing.tiers.map((tier) => (
-          <RevealItem key={tier.id} className="h-full min-w-0">
+          <div key={tier.id} className="h-full min-w-0">
             <TierCard tier={tier} billing={billing} headingLevel={headingLevel} />
-          </RevealItem>
+          </div>
         ))}
       </div>
-    </Reveal>
+    </div>
   );
 }
 
@@ -78,7 +71,9 @@ function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Bill
             aria-pressed={selected}
             onClick={() => onChange(b)}
             className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium transition-[color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-safe:active:scale-[0.97]",
+              // Transition `scale`, not `transform`: Tailwind v4's active:scale-* sets the standalone property.
+              // min-h-11 gives phones a 44px tap target.
+              "relative min-h-11 rounded-full px-4 py-1.5 text-sm font-medium transition-[color,scale] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-safe:active:scale-[0.97] md:min-h-0",
               selected ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -196,9 +191,10 @@ function TierCard({ tier, billing, headingLevel }: { tier: Tier; billing: Billin
         ))}
       </ul>
 
-      {/* mt-auto pins every CTA to the card's bottom edge, so Free's shorter list does not leave its button floating. */}
+      {/* mt-auto pins every CTA to the card's bottom edge, so Free's shorter list does not leave its button floating.
+          Only the highlighted tier gets a filled button, so the emphasis lands on the plan the ring points to. */}
       <div className="mt-auto pt-8">
-        <Button asChild size="lg" variant={tier.id === "teams" ? "outline" : tier.highlight ? "accent" : "default"} className="w-full">
+        <Button asChild size="lg" variant={tier.highlight ? "accent" : "outline"} className="w-full">
           <Link href={tier.cta.href}>{tier.cta.label}</Link>
         </Button>
       </div>

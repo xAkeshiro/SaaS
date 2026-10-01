@@ -187,6 +187,11 @@
       /* Movement goes, but color and opacity still fade, so state changes never snap. */
       transition-property: color, background-color, border-color, outline-color, opacity, box-shadow, fill, stroke !important;
     }
+    /* A spinner turns in place and is the only sign a request is in flight, so it keeps turning. */
+    .animate-spin {
+      animation-duration: 1s !important;
+      animation-iteration-count: infinite !important;
+    }
   }
   /* One stroke weight for every lucide icon, whatever a call site passes. */
   svg.lucide {
@@ -206,9 +211,10 @@
 }
 @utility bg-band-ink {
   background-color: var(--ink);
+  /* The amber glow is pixel-sized and lifted off the bottom edge, so it stays round on short bands and fades out before the footer. */
   background-image:
     radial-gradient(60% 70% at 15% 0%, rgba(79, 70, 229, 0.32) 0%, transparent 65%),
-    radial-gradient(45% 55% at 90% 100%, rgba(255, 180, 84, 0.35) 0%, transparent 60%),
+    radial-gradient(560px 400px at 86% calc(100% - 240px), rgba(255, 180, 84, 0.3) 0%, transparent 70%),
     linear-gradient(180deg, #0b0f1a 0%, #131a33 100%);
 }
 @utility bg-band-lavender {
@@ -235,7 +241,7 @@
 @utility shadow-window {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 2px 6px rgba(11, 15, 26, 0.05), 0 40px 80px -30px rgba(29, 38, 84, 0.35);
 }
-/* A quiet sentence-case label. Inner pages use it; the home page keeps only "Not a companion". */
+/* A quiet sentence-case label for table headers and list labels. Never a kicker above a heading. */
 @utility eyebrow {
   font-family: var(--font-sans);
   font-size: 0.8125rem;

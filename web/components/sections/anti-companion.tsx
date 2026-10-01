@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/site/container";
-import { Reveal, RevealItem } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Button } from "@/components/ui/button";
 import { principles } from "@/lib/content";
@@ -14,31 +13,23 @@ export function AntiCompanion() {
   return (
     <section className="relative">
       <Container className="py-24 md:py-28">
-        <Reveal>
-          <SectionHeading
-            inverted
-            eyebrow={principles.eyebrow}
-            title={principles.title}
-            sub={principles.intro}
-          />
-        </Reveal>
+        <SectionHeading inverted title={principles.title} sub={principles.intro} />
 
         {/* Unordered commitments, so typographic rows rather than numbered tiles. */}
-        <Reveal group className="mt-14 md:mt-16">
-          <dl className="grid gap-x-12 gap-y-10 md:grid-cols-2">
-            {principles.items.map((item) => (
-              <RevealItem key={item.title} className="min-w-0 border-t border-white/15 pt-6">
-                <dt className="font-display text-2xl leading-snug font-semibold text-white break-words">
-                  {item.title}
-                </dt>
-                <dd className="mt-3 max-w-[44ch] text-base leading-relaxed text-white/70">{item.body}</dd>
-              </RevealItem>
-            ))}
-          </dl>
-        </Reveal>
+        <dl className="mt-14 grid gap-x-12 gap-y-10 md:mt-16 md:grid-cols-2">
+          {principles.items.map((item) => (
+            <div key={item.title} className="min-w-0 border-t border-white/15 pt-6">
+              <dt className="font-display text-2xl leading-snug font-semibold text-white break-words">
+                {item.title}
+              </dt>
+              <dd className="mt-3 max-w-[44ch] text-base leading-relaxed text-white/70">{item.body}</dd>
+            </div>
+          ))}
+        </dl>
 
-        <Reveal className="mt-14 flex justify-center">
-          <Button asChild variant="accent" size="lg" className="group w-full sm:w-auto">
+        {/* Outline, not amber: the email capture just below is the block's one primary action. */}
+        <div className="mt-14 flex justify-center">
+          <Button asChild variant="outline" size="lg" className="group w-full sm:w-auto">
             <Link href={principles.cta.href}>
               {principles.cta.label}
               <ArrowRight
@@ -47,7 +38,7 @@ export function AntiCompanion() {
               />
             </Link>
           </Button>
-        </Reveal>
+        </div>
       </Container>
     </section>
   );

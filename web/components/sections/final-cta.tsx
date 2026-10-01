@@ -1,6 +1,5 @@
 import { Container } from "@/components/site/container";
 import { EmailCapture } from "@/components/site/email-capture";
-import { Reveal } from "@/components/site/reveal";
 import { finalCta } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +19,11 @@ export function FinalCta({ band = true }: FinalCtaProps) {
     >
       <Container>
         <div className={cn("py-24 md:py-32", !band && "border-t border-white/10")}>
-          <Reveal className="mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
+          <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
             <h2 className="display-lg text-white">{finalCta.title}</h2>
             <p className="lede text-white/70">{finalCta.sub}</p>
             <EmailCapture source="footer-cta" inverted note={finalCta.note} className="mt-2 text-center" />
-          </Reveal>
+          </div>
         </div>
       </Container>
     </section>

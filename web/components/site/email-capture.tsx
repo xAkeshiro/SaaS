@@ -137,10 +137,11 @@ export function EmailCapture({
               transition: { duration: 0.15, ease },
             }}
           >
+            {/* The input has no outline of its own, so the shell's solid 2px ring is its focus mark (3:1 or better). */}
             <div
               className={cn(
                 shell,
-                "transition-[box-shadow,border-color] duration-200 focus-within:ring-[3px] focus-within:ring-ring/40",
+                "transition-[box-shadow,border-color] duration-200 focus-within:ring-2 focus-within:ring-ring",
               )}
             >
               <label htmlFor={`email-${source}`} className="sr-only">

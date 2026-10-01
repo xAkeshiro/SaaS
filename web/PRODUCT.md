@@ -10,7 +10,7 @@ web
 
 ## Users
 
-- **Primary: young adults who dread a specific real conversation.** Gen Z and people 18-25, college students first, putting off conversations like booking a doctor's appointment, getting a bank fee waived, asking for $18 an hour, office hours for an extension, the group project ghost, getting paid back by a friend, telling their parents they're not coming home, saying no to a trip they can't afford. They are not in crisis; they are avoiding. *(Inferred from docs/plan/11-unmute.md §3; the owner approved this audience when choosing Unmute.)*
+- **Primary: young adults who dread a specific real conversation.** Gen Z and people 18-25, college students first, putting off conversations like getting paid back by a friend, getting a bank fee waived, asking for $18 an hour, office hours for an extension, the group project ghost, booking a doctor's appointment, telling their mom they're not coming home for Thanksgiving, saying no to a trip they can't afford. They are not in crisis; they are avoiding. *(Inferred from docs/plan/11-unmute.md §3; the owner approved this audience when choosing Unmute.)*
 - **Evidence of the problem:** 65% of Gen Z say calling a stranger makes them uncomfortable, and only a third are comfortable making calls at all (YouGov); 37% of adults 18-25 report significant anxiety, the highest adult group (Compass Health Center, 2026). *(Sourced in the brief and site footnotes.)*
 - **Secondary (Teams): career centers** running interview season, **companies** training customer-facing staff and new managers, **clinicians** running structured social-anxiety practice between sessions. *(docs/plan/11-unmute.md, launch addendum.)*
 - **How they arrive:** a short before-and-after clip (someone's first call next to their tenth), a dare, a friend's practice room, or a career-center link during interview season, usually on a phone. *(Launch sequence in the plan.)*
@@ -36,12 +36,12 @@ Unmute lets you rehearse the conversation you are dreading, out loud, with an AI
 
 ## Capabilities and Constraints
 
-- **Stage:** pre-launch. The consumer app (Expo, voice-first) is not built yet; the web marketing site is the live surface. Early access opens campus by campus in interview season (Sep-Nov 2026).
+- **Stage:** pre-launch. The consumer app (Expo, voice-first) is not built yet; the web marketing site is the live surface. Early access opens campus by campus in fall 2026 (Sep-Nov). Consumer copy says "fall": no consumer scenario is an interview, so "interview season" belongs only to the Teams offer for career centers.
 - **Working on the site today:** a text-mode rehearsal demo backed by Claude (`/api/rehearse`; runs a labeled scripted sample when no API key is configured), a waitlist (`/api/waitlist`), and a Teams pilot request form.
 - **Pricing (set by the owner):** Free, one rehearsal a day; Plus $14.99 a month or $99 a year; Teams $3-8 per seat per month, free for career centers this interview season.
 - **Privacy commitments:** rehearsals are private to the user, never used to train models, deleted when the user says so. Sharing a clip is always explicit.
 - **Safety commitments:** a coach, not therapy. Crisis language routes to real resources every time. No romantic roleplay; every persona is clearly synthetic.
-- **Routes to keep:** `/`, `/pricing`, `/manifesto`, `/teams`, anchors `#how-it-works`, `#try`, `#scenarios`, `#early-access`, `#pilot`, and manifesto anchors `#not-a-companion`, `#privacy`, `#safety`.
+- **Routes to keep:** `/`, `/pricing`, `/manifesto`, `/teams`, anchors `#how-it-works`, `#try` (with `#try-panel` on the demo panel itself, where "Try a rehearsal" links land), `#scenarios`, `#early-access`, `#pilot`, and manifesto anchors `#not-a-companion`, `#privacy`, `#safety`.
 - **Stack (existing):** Next.js 16 App Router, React 19, Tailwind v4, Motion, deployed on Vercel from this repository with root directory `web`.
 
 ## Brand Commitments
@@ -55,7 +55,7 @@ Unmute lets you rehearse the conversation you are dreading, out loud, with an AI
 ## Evidence on Hand
 
 - **Real:** the problem statistics above (YouGov; Compass Health Center 2026; Y Combinator on Speak), cited in the site footnotes.
-- **Real:** pricing, the privacy and safety commitments, the scenario library, the persona and coach prompts (`lib/rehearse.ts`), the working demo.
+- **Real:** pricing, the privacy and safety commitments, the scenario library, the persona and coach prompts (`lib/rehearse.ts`), the working demo (in sample mode each scenario plays four scripted replies per mood, then a closer, then its debrief).
 - **Absent, must not be fabricated:** users, testimonials, reviews, customer or university logos, press, ratings, download counts, retention or outcome numbers, partner names. Any illustrative person, transcript, or debrief shown on the site is demonstration material and must read as an example, never as a customer.
 
 ## Product Principles

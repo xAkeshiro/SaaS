@@ -25,6 +25,8 @@ const PACE = { persona: 95, user: 70 } as const;
 /** Pending skeleton widths per debrief row, so the blanks look like the values they stand in for. */
 const SKELETON_WIDTHS = ["w-16", "w-11", "w-12"] as const;
 const EASE_OUT = "ease-[cubic-bezier(0.23,1,0.32,1)]";
+/** Where the clock stops: it ticks once a second until the last cue ends the call. */
+const END_SECONDS = rw.clockStart + Math.floor(CUES[CUES.length - 1] / 1000);
 
 const tryScenario = demoScenarios.find((s) => s.id === rw.tryScenarioId);
 
@@ -47,10 +49,11 @@ function subscribeVisibility(onChange: () => void) {
 const visibleOnClient = () => document.visibilityState === "visible";
 const visibleOnServer = () => true;
 
+/** M:SS, the same shape as the debrief's times ("0:11"), so the window never mixes two formats. */
 function clock(seconds: number) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /** A prefix ending in ":" means the number is the seconds of a time, so it always shows two digits ("0:07", never "0:7"). */
@@ -177,8 +180,9 @@ export function RehearsalWindow({ className }: { className?: string }) {
   const pending = !reduce && step >= 1 && step < LAST_STEP;
   // Numbers count up and the check lands each time a call ends, not on first paint.
   const counting = playing && step === LAST_STEP;
+  // Reduced motion rests on the finished call, so it reads as ended like the motion end frame.
   const status =
-    step === LAST_STEP && playing
+    reduce || (step === LAST_STEP && playing)
       ? rw.status.ended
       : speaking === "persona"
       ? rw.status.persona
@@ -208,7 +212,12 @@ export function RehearsalWindow({ className }: { className?: string }) {
           </span>
         </div>
         <p className="min-w-0 truncate text-xs font-medium text-muted-foreground">
-          {rw.windowTitle} · <CallClock key={loop} running={playing && step < LAST_STEP} />
+          {rw.windowTitle} ·{" "}
+          {reduce ? (
+            <span className="tabular-nums">{clock(END_SECONDS)}</span>
+          ) : (
+            <CallClock key={loop} running={playing && step < LAST_STEP} />
+          )}
         </p>
         <div className="flex justify-end">
           <button
@@ -287,12 +296,16 @@ export function RehearsalWindow({ className }: { className?: string }) {
                 </li>
               ))}
             </ul>
+            {/* popLayout lifts the leaving dots out of the flow (this absolute list is their
+                positioned parent), so the reply lands straight in their slot instead of below them. */}
             <ul className="absolute inset-0 flex flex-col gap-2.5">
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {rw.transcript.slice(0, bubbles).map((m, i) => (
                   <motion.li
                     key={i}
                     className={bubbleClass(m.role)}
+                    // Grows from the corner its tail hangs off, like the live demo's bubbles.
+                    style={{ transformOrigin: m.role === "user" ? "100% 100%" : "0% 100%" }}
                     initial={reduce ? false : { opacity: 0, transform: "translateY(8px) scale(0.98)" }}
                     animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
                     exit={{ opacity: 0, transition: { duration: 0.15, ease } }}

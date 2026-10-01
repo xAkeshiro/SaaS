@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -89,15 +89,22 @@ export function Nav() {
                     )}
                   >
                     {/* One soft pill slides to whichever link the pointer is on, or rests on the current one.
-                        Keyboard focus moves no pill: the focus outline marks it instantly. */}
-                    {pill === l.href ? (
-                      <motion.span
-                        layoutId="nav-pill"
-                        aria-hidden="true"
-                        className="absolute inset-0 rounded-full bg-muted"
-                        transition={{ duration: 0.22, ease }}
-                      />
-                    ) : null}
+                        Keyboard focus moves no pill: the focus outline marks it instantly.
+                        It fades in and out where it is, so it never blinks next to the 200ms text fade. */}
+                    <AnimatePresence initial={false}>
+                      {pill === l.href ? (
+                        <motion.span
+                          key="nav-pill"
+                          layoutId="nav-pill"
+                          aria-hidden="true"
+                          className="absolute inset-0 rounded-full bg-muted"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.15, ease, layout: { duration: 0.22, ease } }}
+                        />
+                      ) : null}
+                    </AnimatePresence>
                     <span className="relative">{l.label}</span>
                   </Link>
                 </li>

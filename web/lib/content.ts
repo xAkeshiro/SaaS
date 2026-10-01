@@ -8,7 +8,7 @@ export const site = {
   tagline: "Talk to an AI so you can talk to people",
   description:
     "Rehearse the conversation you are dreading, out loud, with an AI that plays the other person and pushes back. Then get told exactly what to do differently. Three minutes a day. Not a companion.",
-  status: "Early access · interview season 2026",
+  status: "Early access · fall 2026",
   contactEmail: "hello@unmute.app",
   social: {
     x: "https://x.com",
@@ -35,7 +35,6 @@ export const hero = {
   headlineEmphasis: "people",
   sub: "Rehearse the conversation you dread. The AI plays the other person, pushes back, and tells you exactly what to change.",
   ctaPrimary: "Get early access",
-  ctaSecondary: "Try a rehearsal",
 } as const;
 
 /** Sourced in `footnotes`. Speak's revenue (footnote 3) is cited from the manifesto, not shown as a stat about Unmute. */
@@ -72,13 +71,13 @@ export const steps = [
     id: "daily",
     name: "Daily rep",
     title: "Three minutes, every day.",
-    body: "A streak and a scenario picked from what you have coming up. Connect your calendar and “group call Thursday” becomes Tuesday’s rep.",
+    body: "A streak and a scenario picked from what you have coming up. Connect your calendar and “call the bank Thursday” becomes Tuesday’s rep.",
   },
   {
     id: "real",
     name: "Real mode",
     title: "Warm up, then make the call.",
-    body: "A 60-second warmup and a cue card before the real call, a debrief after. Unmute never listens to the call itself.",
+    body: "A 60-second warmup and a cue card before the real call, a debrief after.",
   },
 ] as const;
 
@@ -93,9 +92,11 @@ export type MoodId = (typeof moods)[number]["id"];
 /**
  * The one scenario list: demo chips, scenario cards and the scripted sample
  * (`SCRIPTS` in lib/rehearse.ts, keyed by these ids) all read from it.
- * The first entry is the demo's default. `label` is the chip and the
- * transcript header; `cardTitle`/`cardBody` are the scenario card.
- * `who`, `setup` and `opener` go to the persona prompt and the first bubble.
+ * The first entry is the demo's default; the scenario cards set their own
+ * order (ORDER in scenarios.tsx). `label` is the chip and the transcript
+ * header; `cardTitle`/`cardBody` are the scenario card. `who`, `setup` and
+ * `opener` go to the persona prompt and the first bubble. `setup` is
+ * model-facing only, so it stays in plain ASCII; the visible strings use ’.
  */
 export const demoScenarios = [
   {
@@ -103,7 +104,8 @@ export const demoScenarios = [
     label: "Book a doctor’s appointment",
     who: "Front desk at student health",
     setup: "The user is calling the student health center to book a regular appointment this week. They've put the call off since Monday. They work afternoons, so they want a morning before noon. The front desk person is rushed, with a second line ringing, and asks for name, date of birth and student ID. The first opening they offer is next Wednesday at 3:20pm. A Thursday 9:40am slot is free if the user asks for anything earlier, for a morning, or about a cancellation list. Keep it to scheduling. Do not ask about or discuss symptoms.",
-    opener: "Student health, thanks for holding. What can I do for you?",
+    /** Same line the hero window opens with, so "Try this one" picks up the call the visitor just watched. */
+    opener: "Student health, can you hold one sec? Okay, sorry. How can I help?",
     cardTitle: "The appointment call",
     cardBody: "Student health, the dentist, the pharmacy. Say what you need and get the earliest slot.",
   },
@@ -111,17 +113,17 @@ export const demoScenarios = [
     id: "bank-fee",
     label: "Get a fee waived",
     who: "A rep at your bank",
-    setup: "The user got a $35 overdraft fee on Tuesday when a $6.49 coffee went through two days before payday and took their checking account $2.18 negative. It's their first overdraft in two years. They're calling to get the fee waived as a one-time courtesy. The rep follows policy: verifies identity first (full name, last four of the debit card), then says the fee is valid under the account agreement. The rep can put in one courtesy refund, or bring in a supervisor, if the user asks directly and calmly instead of apologizing or over-explaining.",
+    setup: "The user got a $35 overdraft fee on Tuesday when their $65 phone bill autopay went through two days before payday and took checking $58.12 negative. It's their first overdraft in two years. They're calling to get the fee waived as a one-time courtesy. The rep follows policy: verifies identity first (full name, last four of the debit card), then says the fee is valid under the account agreement. The rep can put in one courtesy refund, or bring in a supervisor, if the user asks directly and calmly instead of apologizing or over-explaining.",
     opener: "Thanks for calling. Can I get your full name and the last four of your card?",
     cardTitle: "The $35 overdraft fee",
-    cardBody: "You went $2.18 over and got hit with $35. One calm call can get it waived.",
+    cardBody: "Your phone bill autopay hit two days before payday and the bank took $35. One calm call can get it waived.",
   },
   {
     id: "raise",
     label: "Ask for $18 an hour",
     who: "Your manager",
     setup: "The user has worked part-time at a coffee shop near campus for 11 months. They close three nights a week, train the new hires, and still make $16.50 an hour. New hires start at $16. The user wants $18 an hour starting next pay period. The manager likes them but says raises happen in January with reviews, and anything over $17 has to go through the owner. The manager is short two people and busy. They move toward $18 if the user names the number, gives one concrete reason and asks for a date, and they stall if the user hedges or apologizes.",
-    opener: "Hey, you wanted to talk? I've got like five minutes before the rush.",
+    opener: "Hey, you wanted to talk? I’ve got like five minutes before the rush.",
     cardTitle: "The raise, by the hour",
     cardBody: "Eleven months in, training the new hires, still at $16.50. Ask for $18, then stop talking.",
   },
@@ -130,7 +132,7 @@ export const demoScenarios = [
     label: "Ask for an extension",
     who: "Your professor",
     setup: "The user is at office hours. They have a 10-page paper due Friday at 11:59pm for a 200-level history class, two exams the same week, and a 20-hour work week. They want an extension to Monday at noon. The syllabus says 10% off per late day. The professor hears this a lot, is fair but busy, and responds to one clear reason and a concrete new date, not a long story. An outline or a draft helps.",
-    opener: "Come on in. I've got about five minutes before my next class. What's up?",
+    opener: "Hi, come on in. Which section are you in again?",
     cardTitle: "Office hours for an extension",
     cardBody: "Paper due Friday, two exams the same week. Ask for Monday at noon in under a minute.",
   },
@@ -139,7 +141,7 @@ export const demoScenarios = [
     label: "Group project ghost",
     who: "Your group project partner",
     setup: "The user's group presentation for an intro marketing class is Monday at 9am. One partner owns the four budget slides, hasn't started them, and hasn't answered the group chat since Tuesday. The user called them to get the slides in the shared deck by Saturday at noon. The class has a peer evaluation form, and the user is ready to be honest on it if the slides don't show up. The partner is friendly but vague, a little embarrassed, works Saturdays, and gets defensive if pushed.",
-    opener: "Hey. Yeah, I saw the group chat. I've had like three exams this week.",
+    opener: "Hey. Yeah, I saw the group chat. I’ve had like three exams this week.",
     cardTitle: "The group project ghost",
     cardBody: "Four slides, due Monday, no reply since Tuesday. Get a time, not a “yeah, I got it.”",
   },
@@ -156,17 +158,17 @@ export const demoScenarios = [
     id: "thanksgiving",
     label: "Not coming home for break",
     who: "Your mom",
-    setup: "The user is calling their mom to say they're not coming home for Thanksgiving. Flights are $380 round trip, and they picked up three shifts that weekend. Their mom assumed they were coming and already told the family. The user wants to say it clearly, offer to call in on Thursday, and promise to be home for all of winter break, without getting talked out of it. Mom is loving but uses guilt, offers to help with the flight, and brings up grandma and dad.",
+    setup: "The user is calling their mom to say they're not coming home for Thanksgiving. Flights are $380 round trip, and they picked up three shifts that weekend. Their mom assumed they were coming and already told the family. The user wants to say it clearly, offer to FaceTime in for dinner on Thursday, and promise to be home for all of winter break, without getting talked out of it. Mom is loving but uses guilt, offers to help with the flight, and brings up grandma and dad.",
     opener: "Hi, sweetie! Did you book your flight yet? Prices are going up.",
-    cardTitle: "Telling your parents",
+    cardTitle: "Telling your mom",
     cardBody: "You’re not coming home for Thanksgiving. Say it once, then don’t take it back.",
   },
   {
     id: "spring-trip",
     label: "Say no to the trip",
     who: "The friend planning the trip",
-    setup: "The user's friend group is planning a spring break beach trip: $420 each for the rental plus gas, with a $140 deposit due Friday. Everyone else already paid. The friend organizing it calls the user to collect. The user can't afford it and wants to say no clearly, without walking through their bank balance and without offering to pay part of it out of guilt. The friend is disappointed, worried about the split, and pushes a little before accepting.",
-    opener: "Okay, I need your $140 for the deposit by Friday. You're in, right?",
+    setup: "The user's friend group is planning a spring break beach trip: $420 each for the rental plus gas, with a $140 deposit due Friday. Everyone else already paid. The user hasn't answered the group chat, so the friend organizing it calls to collect. The user can't afford it and wants to say no clearly, without walking through their bank balance and without offering to pay part of it out of guilt. The friend is disappointed, worried about the split, and pushes a little before accepting.",
+    opener: "Hey, you didn’t answer the group chat. I need your $140 for the deposit by Friday. You’re in, right?",
     cardTitle: "The trip you can’t afford",
     cardBody: "Everyone sent the $140 deposit. Say you’re out without showing your bank balance.",
   },
@@ -179,7 +181,7 @@ export const together = {
   sub: "Bring a friend into the room. It’s less weird than it sounds.",
   features: [
     { icon: "Users", title: "Practice rooms", body: "A friend plays your manager while the AI coaches. Or the AI plays the front desk while your friends rate you." },
-    { icon: "Flame", title: "Dares", body: "“Call to book your haircut instead of using the app.” Shareable clips, voice-changed if you want." },
+    { icon: "Flame", title: "Dares", body: "Small real-world reps, 30 seconds to 5 minutes. Shareable clips, voice-changed if you want." },
     { icon: "Clapperboard", title: "The before-and-after", body: "Your first call next to your tenth. Post it if you want. It stays private if you don’t." },
   ],
   /** Real spoken reps. The last one lands on top of the animated list. */
@@ -194,8 +196,6 @@ export const together = {
 } as const;
 
 export const principles = {
-  /** The one section kicker the home page keeps, on the dark band. */
-  eyebrow: "Not a companion",
   title: "It exists to make you need it less.",
   intro:
     "AI companions are built to keep you talking to them. Unmute is built to get you talking to people. Every rehearsal ends with a real conversation to go have.",
@@ -209,10 +209,9 @@ export const principles = {
 } as const;
 
 export const pricing = {
-  /** Only the /pricing page header shows this; the home section has no kicker. */
-  eyebrow: "Pricing",
   title: "One rep a day is free.",
-  sub: "Free for one rep a day. Plus is $14.99 a month, or $99 a year.",
+  /** The title already says Free; the lede only adds the Plus prices. */
+  sub: "Plus is $14.99 a month, or $99 a year.",
   yearlyNote: "Save 45%",
   tiers: [
     {
@@ -231,7 +230,7 @@ export const pricing = {
       price: { monthly: 14.99, yearly: 99 },
       period: "a month",
       yearlyPeriod: "a year",
-      blurb: "For the season you actually have to get good.",
+      blurb: "For when one rep a day isn’t enough.",
       features: [
         "Unlimited rehearsals and custom scenarios",
         "Hard mode, real mode, calendar reps",
@@ -240,7 +239,8 @@ export const pricing = {
       ],
       cta: { label: "Get early access", href: "/#early-access" },
       highlight: true,
-      badge: "Best for interview season",
+      /** Consumer copy says fall, not interview season: no scenario here is an interview (that pitch is Teams'). */
+      badge: "Best for a hard semester",
     },
     {
       id: "teams",
@@ -277,6 +277,10 @@ export const pricing = {
   },
 } as const;
 
+/**
+ * Full list on /pricing. Home omits the companion, therapy and privacy answers
+ * by `q` (the dark band right below says them), so keep those questions verbatim.
+ */
 export const faq = [
   {
     q: "Is this an AI companion?",
@@ -284,7 +288,7 @@ export const faq = [
   },
   {
     q: "Does it listen to my real calls?",
-    a: "Never. Phones do not allow it and you would not want it to. Real mode is a warmup before the call and a debrief from your own notes after.",
+    a: "Never. Phones don’t allow it, and you wouldn’t want it to. Real mode is a warmup before the call and a debrief from your own notes after.",
   },
   {
     q: "What happens to my rehearsals?",
@@ -296,17 +300,22 @@ export const faq = [
   },
   {
     q: "How real is the other person?",
-    a: "It interrupts, sighs, puts you on hold and pushes back. You choose the mood: kind, neutral or hostile. Clear, calm asks move it. Rambling and apologizing do not.",
+    a: "It interrupts, sighs, puts you on hold and pushes back. You choose the mood: kind, neutral or hostile. Clear, calm asks move it. Rambling and apologizing don’t.",
   },
   {
     q: "When can I use it?",
-    a: "Early access opens campus by campus this interview season. Join the list and we will tell you the day it reaches yours.",
+    a: "Early access opens campus by campus this fall. Join the list and we’ll tell you the day it reaches yours.",
+  },
+  {
+    q: "What if my conversation isn’t one of the eight?",
+    a: "Describe it in a sentence or two and the AI plays whoever is on the other end. Custom scenarios come with Plus.",
   },
 ] as const;
 
 export const finalCta = {
   title: "Say it here first.",
-  sub: "Early access opens campus by campus this interview season. Get on the list and we will tell you the day it reaches yours.",
+  /** The launch timing is the FAQ's job (it sits right above on home and /pricing), so this line doesn't repeat it. */
+  sub: "The conversation you keep putting off is still there. Practice it tonight, then go have it.",
   note: "One email when it launches. Nothing else.",
 } as const;
 
@@ -325,7 +334,8 @@ export const footer = {
       links: [
         { label: "How it works", href: "/#how-it-works" },
         { label: "Scenarios", href: "/#scenarios" },
-        { label: "Try a rehearsal", href: "/#try" },
+        /* The panel, not the section heading, so Start lands above the fold. */
+        { label: "Try a rehearsal", href: "/#try-panel" },
         { label: "Pricing", href: "/pricing" },
       ],
     },
@@ -360,7 +370,7 @@ export const manifesto = {
       heading: "Everyone has a conversation they are dreading this week.",
       paragraphs: [
         "The call to book a doctor’s appointment. The $35 fee you let the bank keep. Asking for $18 an hour. The extension you never asked for. The group project partner who went quiet. The $72 a friend still owes you. Telling your mom you’re not coming home. Saying no to the trip.",
-        "Sixty-five percent of Gen Z say calling a stranger makes them uncomfortable. Only a third are comfortable making calls at all. This is not a character flaw. It is a skill nobody was given a place to practice.",
+        "Sixty-five percent of Gen Z say calling a stranger makes them uncomfortable. Only a third are comfortable making calls at all.[1] This is not a character flaw. It is a skill nobody was given a place to practice.",
         "Language apps figured this out years ago: get people to say it out loud, every day, and reward the rep. Speak built a hundred-million-dollar business on that.[3] Nobody built it for the conversations people actually fear, in their own language.",
       ],
     },
@@ -383,7 +393,7 @@ export const manifesto = {
       id: "privacy",
       heading: "Your rehearsals are yours.",
       paragraphs: [
-        "Rehearsals are private to you, never used to train models, and deleted when you say so. Unmute never listens to real calls. Phones do not allow it and you would not want it to. Sharing a clip is always your explicit choice, voice-changed if you like.",
+        "Rehearsals are private to you, never used to train models, and deleted when you say so. Unmute never listens to real calls. Phones don’t allow it, and you wouldn’t want it to. Sharing a clip is always your explicit choice, voice-changed if you like.",
       ],
     },
     {
@@ -398,7 +408,6 @@ export const manifesto = {
 } as const;
 
 export const teams = {
-  eyebrow: "Teams",
   title: "Interview season for a whole campus.",
   sub: "Career centers, companies and clinicians run structured practice on Unmute. Seats from $3 to $8 a month, free for career centers this interview season.",
   audiences: [
@@ -451,7 +460,8 @@ export const rehearsalWindow = {
   /** Where the window's clock starts each loop, in seconds. The ask lands near 0:11, matching the first debrief row. */
   clockStart: 8,
   persona: {
-    who: "Front desk, student health",
+    /** Same name as the doctor scenario's `who`, which the card and demo chip show. */
+    who: "Front desk at student health",
     initial: "F",
     tag: "AI",
     scenario: "Booking the appointment you’ve put off since Monday",
@@ -466,7 +476,7 @@ export const rehearsalWindow = {
   },
   transcript: [
     { role: "persona", speaker: "Front desk", text: "Student health, can you hold one sec? Okay, sorry. How can I help?" },
-    { role: "user", speaker: "You", text: "Hi, um, I need an appointment this week, whatever's earliest. I'm free any morning before noon." },
+    { role: "user", speaker: "You", text: "Hi, um, I need an appointment this week, whatever’s earliest. I’m free any morning before noon." },
     { role: "persona", speaker: "Front desk", text: "Thursday at 9:40 is my only morning. Want it?" },
   ],
   debrief: {
@@ -481,8 +491,9 @@ export const rehearsalWindow = {
       { label: "Asked for the earliest slot", prefix: "", value: 1, note: "yes", check: true },
     ],
     nextLabel: "Next time, say",
+    /** next[0] matches the demo's doctor debrief (SCRIPTS.doctor in lib/rehearse.ts), so both coach the same line. */
     next: [
-      "Hi, I'd like the earliest morning appointment this week. I have my student ID ready.",
+      "Hi, I need the earliest morning appointment you have this week.",
       "Can you put me on the cancellation list in case something earlier opens?",
     ],
   },
@@ -502,8 +513,11 @@ export const howItWorks = {
   mocks: {
     rehearse: {
       scenarioId: "bank-fee" satisfies DemoScenario["id"],
-      status: "01:12",
+      /** M:SS like the hero clock. Just after the ask (0:38 in the debrief mock), so the rep is pushing back. */
+      status: "0:52",
       speaking: "Bank rep is talking",
+      /** The neutral script's pushback (SCRIPTS["bank-fee"].lines.neutral[1]), matching the mock's selected mood. */
+      line: "Those fees are valid under your account agreement. I can’t just take them off.",
       moodLabel: "Mood",
     },
     debrief: {
@@ -527,7 +541,7 @@ export const howItWorks = {
       weekLabel: "Last 7 days",
       days: ["W", "T", "F", "S", "S", "M", "T"],
       todayIndex: 6,
-      rep: { title: "Tuesday’s rep: group project", meta: "From your calendar · group call Thursday" },
+      rep: { title: "Tuesday’s rep: the $35 fee", meta: "From your calendar · call the bank Thursday" },
     },
     real: {
       title: "Real mode",
@@ -559,11 +573,15 @@ export const scenariosHeading = {
   /** Shown on a card when it is pointed at. */
   action: "Rehearse this",
   customPrefill: "I need to ask my shift manager for fewer hours during finals, and the schedule posts Friday.",
-  /** The lead card (the first scenario) plays a few more turns under its opener on desktop. */
+  /**
+   * The lead card (pay-me-back, first in scenarios.tsx's ORDER) plays a few
+   * more turns under its opener on desktop. Not the doctor call: the hero
+   * window already plays that one.
+   */
   leadPreview: [
-    { from: "you", text: "Hi, I need an appointment this week. What’s the earliest you have?" },
-    { from: "them", text: "Earliest I have is next Wednesday at 3:20. Want that one?" },
-    { from: "you", text: "Is there anything sooner? Any morning works for me." },
+    { from: "you", text: "Nothing’s wrong. Just calling about the $72 from the concert." },
+    { from: "them", text: "Oh. Yeah, my bad, I keep forgetting. I’ll send it soon, I swear." },
+    { from: "you", text: "Can you send it Friday when you get paid?" },
   ],
 } as const;
 
@@ -610,6 +628,10 @@ export const liveDemo = {
     idleBody: "Press Start, then type what you’d say.",
     waiting: "The other person is picking up…",
     replying: "The other person is thinking…",
+    /** Replaces `replying` when the visitor has typed ahead: Enter waits until the reply lands. */
+    replyingHeld: "Hold that line. Send it once they answer.",
+    /** Sample mode only: the script has given its closer, so the composer locks and End takes over. */
+    scriptEnd: "They wrapped up. End it for your debrief.",
   },
   badges: { sample: "Sample", live: "Live" },
   /** Shown whenever the replies are scripted, so the visitor knows they will not react to exactly what was typed. */
@@ -622,8 +644,11 @@ export const liveDemo = {
     none: "Nothing. You held the line.",
     next: "Say this next time",
     pattern: "Your pattern",
-    /** Rows counted from the visitor's own typed lines, matching the hero debrief's labels. */
-    metrics: { sorry: "Sorry count", filler: "Filler words" },
+    /**
+     * Rows counted from the visitor's own typed lines. Every apology counts,
+     * not only those before the ask, so the label drops the hero's "before the ask".
+     */
+    metrics: { sorry: "Apologies", filler: "Filler words" },
     /** Shown on a scripted debrief: its quotes are written ahead of time, so it must not read as a verdict on what was typed. */
     sampleNote: "Example debrief, written ahead of time. Only the two counts come from what you typed.",
   },
@@ -654,9 +679,8 @@ export const pricingExtras = {
     teams: "Free for career centers this interview season.",
   },
   comparison: {
-    eyebrow: "Compare plans",
     title: "Everything in each plan.",
-    sub: "Start free. Upgrade for the season you actually have to get good.",
+    sub: "Start free. Every plan gets the same debrief.",
     featureColumn: "Feature",
     included: "Included",
     notIncluded: "Not included",
@@ -673,7 +697,6 @@ export const faqHeading = {
 
 /** Extra strings for the manifesto page. */
 export const manifestoExtras = {
-  eyebrow: "Manifesto",
   /** Rendered as a pull-quote instead of a paragraph. Must match a paragraph in `manifesto.sections` exactly. */
   pullQuote: "If it works, you will use Unmute less over time. That is the point.",
   signOff: "The Unmute team, September 2026",
@@ -682,15 +705,10 @@ export const manifestoExtras = {
 /** Extra strings for the teams page and the pilot form. */
 export const teamsExtras = {
   audiencesHeading: {
-    eyebrow: "Who it is for",
     title: "Built for the people who run practice.",
     sub: "Same rehearsal, same debrief. You set the scenarios and see the results.",
   },
-  offer: {
-    eyebrow: "Interview season",
-  },
   pilot: {
-    eyebrow: "Campus pilot",
     title: "Tell us about your campus or team.",
     sub: "A few lines is enough. A human reads every request.",
     stepsTitle: "What happens next",
