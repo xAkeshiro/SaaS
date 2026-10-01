@@ -2,9 +2,11 @@
 
 import React, { useCallback, useEffect, useRef } from "react"
 import {
+  animate,
   motion,
   useMotionTemplate,
   useMotionValue,
+  useReducedMotion,
   useSpring,
 } from "motion/react"
 
@@ -49,11 +51,15 @@ interface MagicCardOrbProps extends MagicCardBaseProps {
 }
 
 type MagicCardProps = MagicCardGradientProps | MagicCardOrbProps
-type ResetReason = "enter" | "leave" | "global" | "init"
 
 function isOrbMode(props: MagicCardProps): props is MagicCardOrbProps {
   return props.mode === "orb"
 }
+
+const ease = [0.23, 1, 0.32, 1] as const
+/** Exits run faster than entrances. */
+const fadeIn = { duration: 0.24, ease }
+const fadeOut = { duration: 0.16, ease }
 
 export function MagicCard(props: MagicCardProps) {
   const {
@@ -76,97 +82,127 @@ export function MagicCard(props: MagicCardProps) {
   // Unmute: site is light by default; pass `dark` when the card sits on a dark band.
   const isDarkTheme = props.dark ?? false
 
+  // The pointer is the target; the springs trail it so the light follows smoothly instead of snapping.
   const mouseX = useMotionValue(-gradientSize)
   const mouseY = useMotionValue(-gradientSize)
+  const lightX = useSpring(mouseX, { stiffness: 250, damping: 30, mass: 0.6 })
+  const lightY = useSpring(mouseY, { stiffness: 250, damping: 30, mass: 0.6 })
 
-  const orbX = useSpring(mouseX, { stiffness: 250, damping: 30, mass: 0.6 })
-  const orbY = useSpring(mouseY, { stiffness: 250, damping: 30, mass: 0.6 })
-  const orbVisible = useSpring(0, { stiffness: 300, damping: 35 })
+  // Hover strength, 0 to 1. Fading this instead of parking the light off-card means
+  // leaving never drags the glow across the card, and entering never sweeps it in from a corner.
+  const strength = useMotionValue(0)
+  const fillOpacity = useMotionValue(0)
+  const borderMix = useMotionValue(0)
+  const orbVisible = useMotionValue(0)
 
-  const modeRef = useRef(mode)
-  const glowOpacityRef = useRef(glowOpacity)
-  const gradientSizeRef = useRef(gradientSize)
-
-  useEffect(() => {
-    modeRef.current = mode
-  }, [mode])
-
-  useEffect(() => {
-    glowOpacityRef.current = glowOpacity
-  }, [glowOpacity])
+  const reduceMotion = useReducedMotion()
+  const reduceRef = useRef(reduceMotion)
+  const settingsRef = useRef({ mode, gradientOpacity, glowOpacity })
 
   useEffect(() => {
-    gradientSizeRef.current = gradientSize
-  }, [gradientSize])
+    reduceRef.current = reduceMotion
+  }, [reduceMotion])
 
-  const reset = useCallback(
-    (reason: ResetReason = "leave") => {
-      const currentMode = modeRef.current
+  useEffect(() => {
+    settingsRef.current = { mode, gradientOpacity, glowOpacity }
+  }, [mode, gradientOpacity, glowOpacity])
 
-      if (currentMode === "orb") {
-        if (reason === "enter") orbVisible.set(glowOpacityRef.current)
-        else orbVisible.set(0)
+  // One driver for every hover layer, so they always fade together.
+  useEffect(() => {
+    return strength.on("change", (v) => {
+      const s = settingsRef.current
+      if (s.mode === "orb") {
+        orbVisible.set(v * s.glowOpacity)
         return
       }
+      fillOpacity.set(v * s.gradientOpacity)
+      borderMix.set(v * 100)
+    })
+  }, [strength, fillOpacity, borderMix, orbVisible])
 
-      const off = -gradientSizeRef.current
-      mouseX.set(off)
-      mouseY.set(off)
+  const moveTo = useCallback(
+    (x: number, y: number, jump: boolean) => {
+      mouseX.set(x)
+      mouseY.set(y)
+      // Under reduced motion the light sits under the pointer instead of trailing it.
+      if (jump || reduceRef.current) {
+        lightX.jump(x)
+        lightY.jump(y)
+      }
     },
-    [mouseX, mouseY, orbVisible]
+    [mouseX, mouseY, lightX, lightY]
+  )
+
+  const hide = useCallback(() => {
+    animate(strength, 0, fadeOut)
+  }, [strength])
+
+  // Spotlight is a mouse affordance only: on touch, a tap would paint it where the finger lands.
+  const handlePointerEnter = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType !== "mouse") return
+      const rect = e.currentTarget.getBoundingClientRect()
+      moveTo(e.clientX - rect.left, e.clientY - rect.top, true)
+      animate(strength, 1, fadeIn)
+    },
+    [moveTo, strength]
   )
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType !== "mouse") return
       const rect = e.currentTarget.getBoundingClientRect()
-      mouseX.set(e.clientX - rect.left)
-      mouseY.set(e.clientY - rect.top)
+      moveTo(e.clientX - rect.left, e.clientY - rect.top, false)
     },
-    [mouseX, mouseY]
+    [moveTo]
   )
 
   useEffect(() => {
-    reset("init")
-  }, [reset])
-
-  useEffect(() => {
     const handleGlobalPointerOut = (e: PointerEvent) => {
-      if (!e.relatedTarget) reset("global")
+      if (!e.relatedTarget) hide()
     }
-    const handleBlur = () => reset("global")
     const handleVisibility = () => {
-      if (document.visibilityState !== "visible") reset("global")
+      if (document.visibilityState !== "visible") hide()
     }
 
     window.addEventListener("pointerout", handleGlobalPointerOut)
-    window.addEventListener("blur", handleBlur)
+    window.addEventListener("blur", hide)
     document.addEventListener("visibilitychange", handleVisibility)
 
     return () => {
       window.removeEventListener("pointerout", handleGlobalPointerOut)
-      window.removeEventListener("blur", handleBlur)
+      window.removeEventListener("blur", hide)
       document.removeEventListener("visibilitychange", handleVisibility)
     }
-  }, [reset])
+  }, [hide])
+
+  // The border glow mixes toward the plain border colour as the hover fades out.
+  const borderBackground = useMotionTemplate`
+    linear-gradient(var(--color-background) 0 0) padding-box,
+    radial-gradient(${gradientSize}px circle at ${lightX}px ${lightY}px,
+      color-mix(in oklab, ${gradientFrom} ${borderMix}%, var(--color-border)),
+      color-mix(in oklab, ${gradientTo} ${borderMix}%, var(--color-border)),
+      var(--color-border) 100%
+    ) border-box
+  `
+  const fillBackground = useMotionTemplate`
+    radial-gradient(${gradientSize}px circle at ${lightX}px ${lightY}px,
+      ${gradientColor},
+      transparent 100%
+    )
+  `
 
   return (
     <motion.div
       className={cn(
-        "group relative isolate overflow-hidden rounded-[inherit] border border-transparent",
+        "relative isolate overflow-hidden rounded-[inherit] border border-transparent",
         className
       )}
+      onPointerEnter={handlePointerEnter}
       onPointerMove={handlePointerMove}
-      onPointerLeave={() => reset("leave")}
-      onPointerEnter={() => reset("enter")}
+      onPointerLeave={hide}
       style={{
-        background: useMotionTemplate`
-          linear-gradient(var(--color-background) 0 0) padding-box,
-          radial-gradient(${gradientSize}px circle at ${mouseX}px ${mouseY}px,
-            ${gradientFrom},
-            ${gradientTo},
-            var(--color-border) 100%
-          ) border-box
-        `,
+        background: borderBackground,
       }}
     >
       <div className="bg-background absolute inset-px z-20 rounded-[inherit]" />
@@ -174,15 +210,11 @@ export function MagicCard(props: MagicCardProps) {
       {mode === "gradient" && (
         <motion.div
           suppressHydrationWarning
-          className="pointer-events-none absolute inset-px z-30 rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-px z-30 rounded-[inherit]"
           style={{
-            background: useMotionTemplate`
-              radial-gradient(${gradientSize}px circle at ${mouseX}px ${mouseY}px,
-                ${gradientColor},
-                transparent 100%
-              )
-            `,
-            opacity: gradientOpacity,
+            background: fillBackground,
+            opacity: fillOpacity,
           }}
         />
       )}
@@ -195,8 +227,8 @@ export function MagicCard(props: MagicCardProps) {
           style={{
             width: glowSize,
             height: glowSize,
-            x: orbX,
-            y: orbY,
+            x: lightX,
+            y: lightY,
             translateX: "-50%",
             translateY: "-50%",
             borderRadius: 9999,

@@ -31,7 +31,8 @@ const INPUT_MODE: Partial<Record<FieldId, "email" | "numeric">> = {
 const fieldClass =
   "h-11 rounded-xl border-border bg-background/60 px-3.5 text-base shadow-none transition-[border-color,box-shadow,background-color] duration-200 hover:border-foreground/25 focus-visible:bg-card md:text-[0.95rem]";
 
-const cardClass = "rounded-3xl border border-border bg-card p-6 shadow-soft md:p-8";
+/** Bordered, so flat: only the hero window, the demo panel and the highlighted tier carry a wide shadow. */
+const cardClass = "rounded-3xl border border-border bg-card p-6 md:p-8";
 
 const { form } = teamsExtras;
 
@@ -100,7 +101,7 @@ export function PilotForm({ className }: { className?: string }) {
         </div>
         <p className="flex min-w-0 max-w-full flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
           <span>{form.success.emailLabel}</span>
-          <span className="min-w-0 font-mono text-foreground break-all">{state.message}</span>
+          <span className="min-w-0 font-medium text-foreground break-all">{state.message}</span>
         </p>
       </div>
     );

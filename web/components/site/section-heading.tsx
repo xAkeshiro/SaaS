@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 
 type Props = {
+  /** Optional sentence-case label. On the home page only "Not a companion" keeps one. */
   eyebrow?: string;
   title: string;
   sub?: string;
@@ -23,9 +24,8 @@ export function SectionHeading({ eyebrow, title, sub, align = "center", classNam
         <span className={cn("eyebrow", inverted ? "text-amber" : "text-amber-ink")}>{eyebrow}</span>
       ) : null}
       <h2 className={cn("display-lg max-w-[20ch]", inverted ? "text-white" : "text-foreground")}>{title}</h2>
-      {sub ? (
-        <p className={cn("lede max-w-[58ch]", inverted && "text-white/70")}>{sub}</p>
-      ) : null}
+      {/* 46ch keeps ledes to two even lines (with the utility's balance) instead of a stub last line. */}
+      {sub ? <p className={cn("lede max-w-[46ch]", inverted && "text-white/70")}>{sub}</p> : null}
     </div>
   );
 }

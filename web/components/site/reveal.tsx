@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, type HTMLMotionProps } from "motion/react";
-import { fadeUp, stagger, viewport } from "@/lib/motion";
+import { motion, useReducedMotion, type HTMLMotionProps } from "motion/react";
+import { fadeUpWith, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type RevealProps = HTMLMotionProps<"div"> & {
@@ -15,17 +15,18 @@ type RevealProps = HTMLMotionProps<"div"> & {
 
 /**
  * Scroll-triggered reveal. Server components can wrap any markup in it.
- * Respects prefers-reduced-motion through the global MotionConfig.
+ * The delay is baked into the variant (a `transition` prop would be ignored), and under reduced
+ * motion the block fades in place without rising.
  */
-export function Reveal({ delay = 0, group = false, staggerBy = 0.08, className, children, ...rest }: RevealProps) {
+export function Reveal({ delay = 0, group = false, staggerBy = 0.06, className, children, ...rest }: RevealProps) {
+  const reduce = useReducedMotion();
   return (
     <motion.div
       className={cn(className)}
-      variants={group ? stagger(staggerBy, delay) : fadeUp}
+      variants={group ? stagger(staggerBy, delay) : fadeUpWith({ delay, reduce })}
       initial="hidden"
       whileInView="show"
       viewport={viewport}
-      transition={group ? undefined : { delay }}
       {...rest}
     >
       {children}
@@ -34,8 +35,9 @@ export function Reveal({ delay = 0, group = false, staggerBy = 0.08, className, 
 }
 
 export function RevealItem({ className, children, ...rest }: HTMLMotionProps<"div">) {
+  const reduce = useReducedMotion();
   return (
-    <motion.div className={cn(className)} variants={fadeUp} {...rest}>
+    <motion.div className={cn(className)} variants={fadeUpWith({ reduce })} {...rest}>
       {children}
     </motion.div>
   );

@@ -55,7 +55,7 @@ export default function ManifestoPage() {
                             </blockquote>
                           ) : (
                             <p key={paragraph} className="text-[1.0625rem] leading-[1.75] text-foreground/85">
-                              {paragraph}
+                              <WithFootnotes text={paragraph} />
                             </p>
                           ),
                         )}
@@ -80,5 +80,24 @@ export default function ManifestoPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+/** Paragraphs mark a source as "[n]"; it renders as a superscript link to footnote n in the footer. */
+function WithFootnotes({ text }: { text: string }) {
+  return text.split(/\[(\d+)\]/).map((part, i) =>
+    i % 2 === 1 ? (
+      <sup key={i} className="ml-0.5">
+        <a
+          href={`#fn-${part}`}
+          aria-label={`Source ${part}`}
+          className="rounded-sm px-0.5 text-xs font-semibold text-amber-ink transition-colors duration-200 hover:text-foreground"
+        >
+          {part}
+        </a>
+      </sup>
+    ) : (
+      part
+    ),
   );
 }

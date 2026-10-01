@@ -9,7 +9,6 @@ import {
   Stethoscope,
   type LucideIcon,
 } from "lucide-react";
-import { DotPattern } from "@/components/magicui/dot-pattern";
 import { Nav } from "@/components/site/nav";
 import { Footer } from "@/components/site/footer";
 import { Container } from "@/components/site/container";
@@ -78,7 +77,8 @@ export default function TeamsPage() {
                 const Icon = icons[audience.icon];
                 return (
                   <RevealItem key={audience.title} className="h-full min-w-0">
-                    <article className="flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-6 transition-[transform,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/20 md:p-8">
+                    {/* Not clickable, so no hover lift or hover border. */}
+                    <article className="flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-6 md:p-8">
                       <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
                         <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
                       </span>
@@ -110,13 +110,14 @@ export default function TeamsPage() {
         <section className="pb-24 md:pb-32">
           <Container>
             <Reveal>
-              <div className="relative overflow-hidden rounded-3xl border border-border bg-band-lavender p-8 shadow-soft md:p-12">
-                {/* Dot grid fading in from the right edge. Purely decorative. */}
+              {/* Bordered, so flat: a wide shadow on top of the hairline would double the edge. */}
+              <div className="relative overflow-hidden rounded-3xl border border-border bg-band-lavender p-8 md:p-12">
+                {/* Dot grid fading in from the right edge. Purely decorative, and plain CSS like the hero's. */}
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_60%_90%_at_90%_50%,#000_10%,transparent_100%)]"
                 >
-                  <DotPattern width={22} height={22} cr={1} className="text-ink/15" />
+                  <div className="absolute inset-0 text-ink/15 [background-image:radial-gradient(currentColor_1px,transparent_1.1px)] [background-size:22px_22px]" />
                 </div>
                 <div className="relative grid gap-8 md:grid-cols-[1fr_auto] md:items-center md:gap-12">
                   <div className="min-w-0">

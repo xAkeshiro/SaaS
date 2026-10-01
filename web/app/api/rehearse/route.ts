@@ -5,10 +5,10 @@ import {
   DebriefOutputSchema,
   MODE_HEADER,
   RehearseRequestSchema,
-  SAMPLE_DEBRIEF,
   buildCoachPrompt,
   buildPersonaSystem,
   normalizeDebrief,
+  sampleDebrief,
   sampleReply,
   toAnthropicMessages,
   type Mood,
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   const { action, scenario, mood, messages } = parsed.data;
 
   if (currentMode() === "sample") {
-    return action === "reply" ? sampleReplyResponse(scenario, mood, messages) : sampleDebriefResponse();
+    return action === "reply" ? sampleReplyResponse(scenario, mood, messages) : sampleDebriefResponse(scenario);
   }
 
   // Credentials resolve from ANTHROPIC_API_KEY; the key never touches a response.
@@ -214,7 +214,8 @@ function sampleReplyResponse(scenario: Scenario, mood: Mood, messages: Transcrip
   });
 }
 
-async function sampleDebriefResponse(): Promise<Response> {
+/** The scenario's own scripted debrief, so a sample rehearsal never ends on another scenario's advice. */
+async function sampleDebriefResponse(scenario: Scenario): Promise<Response> {
   await sleep(450);
-  return Response.json(SAMPLE_DEBRIEF, { headers: headersFor("sample") });
+  return Response.json(sampleDebrief(scenario), { headers: headersFor("sample") });
 }

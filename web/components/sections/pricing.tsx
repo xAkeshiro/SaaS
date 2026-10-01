@@ -6,13 +6,13 @@ import { pricing } from "@/lib/content";
 
 export { PricingTiers } from "@/components/sections/pricing-tiers";
 
-/** Home-page pricing section: heading plus the shared tiers block. */
+/** Home-page pricing section: heading plus the shared tiers block. No kicker: the H2 already says it. */
 export function Pricing() {
   return (
-    <section id="pricing" className="scroll-mt-28 py-24 md:py-32">
+    <section id="pricing" className="scroll-mt-28 py-20 md:py-24">
       <Container>
         <Reveal>
-          <SectionHeading eyebrow={pricing.eyebrow} title={pricing.title} sub={pricing.sub} />
+          <SectionHeading title={pricing.title} sub={pricing.sub} />
         </Reveal>
         <PricingTiers className="mt-12 md:mt-14" />
       </Container>

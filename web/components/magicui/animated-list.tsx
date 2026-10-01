@@ -10,16 +10,23 @@ import { AnimatePresence, motion, type MotionProps } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
-export function AnimatedListItem({ children }: { children: React.ReactNode }) {
-  const animations: MotionProps = {
-    initial: { scale: 0, opacity: 0 },
-    animate: { scale: 1, opacity: 1, originY: 0 },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: "spring", stiffness: 350, damping: 40 },
-  }
+const ease = [0.23, 1, 0.32, 1] as const
 
+/*
+ * Each item drops in a few pixels from the top edge instead of growing out of its centre.
+ * These stay y/scale keys rather than a transform string: the item has `layout`, and the
+ * projection writes `transform` itself, which would override a string.
+ */
+const animations: MotionProps = {
+  initial: { opacity: 0, y: -8, scale: 0.96 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, scale: 0.96, transition: { duration: 0.15, ease } },
+  transition: { type: "spring", duration: 0.45, bounce: 0.15 },
+}
+
+export function AnimatedListItem({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div {...animations} layout className="mx-auto w-full">
+    <motion.div {...animations} layout style={{ originY: 0 }} className="mx-auto w-full">
       {children}
     </motion.div>
   )
@@ -27,6 +34,7 @@ export function AnimatedListItem({ children }: { children: React.ReactNode }) {
 
 export interface AnimatedListProps extends ComponentPropsWithoutRef<"div"> {
   children: React.ReactNode
+  /** Milliseconds between items. The sequence plays once and stops on the last item. */
   delay?: number
 }
 
@@ -39,25 +47,16 @@ export const AnimatedList = React.memo(
     )
 
     useEffect(() => {
-      let timeout: ReturnType<typeof setTimeout> | null = null
-
-      if (index < childrenArray.length - 1) {
-        timeout = setTimeout(() => {
-          setIndex((prevIndex) => (prevIndex + 1) % childrenArray.length)
-        }, delay)
-      }
-
-      return () => {
-        if (timeout !== null) {
-          clearTimeout(timeout)
-        }
-      }
+      if (index >= childrenArray.length - 1) return
+      const timeout = setTimeout(() => setIndex((i) => i + 1), delay)
+      return () => clearTimeout(timeout)
     }, [index, delay, childrenArray.length])
 
-    const itemsToShow = useMemo(() => {
-      const result = childrenArray.slice(0, index + 1).reverse()
-      return result
-    }, [index, childrenArray])
+    // Newest first: each arrival lands on top and pushes the rest down.
+    const itemsToShow = useMemo(
+      () => childrenArray.slice(0, index + 1).reverse(),
+      [index, childrenArray]
+    )
 
     return (
       <div

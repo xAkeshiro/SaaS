@@ -19,13 +19,17 @@ export default function Home() {
         <Hero />
         <Proof />
         <HowItWorks />
-        <LiveDemo />
+        {/* Scenarios sits above the demo, so picking a card scrolls down into it. */}
         <Scenarios />
+        <LiveDemo />
         <Together />
-        <AntiCompanion />
         <Pricing />
         <Faq />
-        <FinalCta />
+        {/* One dark block at the end instead of two separate bands, so the page switches theme once. */}
+        <div className="dark relative overflow-hidden bg-band-ink text-foreground">
+          <AntiCompanion />
+          <FinalCta band={false} />
+        </div>
       </main>
       <Footer />
     </>

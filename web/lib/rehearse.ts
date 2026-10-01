@@ -5,7 +5,7 @@
  * client can import types from here without pulling it into the bundle.
  */
 import { z } from "zod";
-import { moods, type MoodId } from "@/lib/content";
+import { demoScenarios, moods, type DemoScenario, type MoodId } from "@/lib/content";
 
 export const MAX_MESSAGES = 24;
 export const MAX_TEXT = 800;
@@ -82,8 +82,8 @@ export const DebriefOutputSchema = z.object({
 export type DebriefOutput = z.infer<typeof DebriefOutputSchema>;
 
 const NEXT_FALLBACK = [
-  "I'll say the ask in one sentence, then stop talking.",
-  "If they push back, I'll repeat the number and the date.",
+  "I'll say what I need in one sentence, then stop talking.",
+  "If they push back, I'll say it again in the same words.",
 ] as const;
 
 function tidy(items: readonly string[], max: number): string[] {
@@ -109,9 +109,9 @@ export function normalizeDebrief(raw: DebriefOutput): Debrief {
 
 export const moodText: Record<Mood, string> = {
   kind: "warm, patient and reasonable, but you still have your own interests",
-  neutral: "businesslike, a little distracted, not hostile but not doing the user any favors",
+  neutral: "polite but distracted, sticking to your usual routine or rules, not making it easy for the user",
   hostile:
-    "impatient, defensive and dismissive; you interrupt, deflect and try to end the conversation early, though you can be moved by a calm, specific, well-evidenced ask",
+    "rushed, defensive and short with the user; you interrupt, deflect and try to end it early, though a calm, clear, specific ask can move you",
 };
 
 /** Ensures a setup ends as a sentence; a closing quote or bracket after the stop still counts. */
@@ -131,6 +131,8 @@ export function buildPersonaSystem(scenario: Scenario, mood: Mood, alreadySaid?:
     `You play: ${scenario.who}. Situation: ${sentence(scenario.setup)} Your mood: ${moodText[mood]}. ` +
     `Rules: Stay in character as this person only. Reply with what this person would actually say next, 1 to 3 short sentences, ` +
     `natural spoken language, no narration, no stage directions, no coaching, no quotation marks, no labels. ` +
+    `Talk like a real person out loud: short spoken sentences, contractions, everyday words, no corporate or HR phrasing, and never narrate your feelings. ` +
+    `If you are the user's friend, classmate, coworker or manager at a part-time job, sound like someone in your early twenties or a busy shift lead. ` +
     `React realistically to what the user says: reward clear, specific, calm asks with movement; punish rambling, apologizing and vagueness with resistance. ` +
     `Never break character. Keep it safe: no slurs, no sexual content, no threats. ` +
     `If the user expresses intent to harm themselves or others, drop the character and say once, plainly, that this is practice ` +
@@ -195,94 +197,381 @@ export function toAnthropicMessages(messages: readonly TranscriptMessage[]): {
 /* Scripted sample (no API key)                                        */
 /* ------------------------------------------------------------------ */
 
-/** A line is plain text, or a pair: `[withRole, withoutRole]` when the persona names its role. */
-type Line = string | readonly [(role: string) => string, string];
-
-/** The placeholder the site sends for custom scenarios; lines drop the role reference for it. */
-const GENERIC_WHO = /^(the )?other person$/i;
+/** A scenario's scripted replies per mood, plus the debrief shown when it ends. */
+export type Script = { lines: Record<Mood, readonly string[]>; debrief: Debrief };
 
 /**
- * "Your former landlord" -> "your former landlord" so it reads mid-sentence.
- * A first word with several capitals (an acronym like "HR lead") is left
- * alone. Returns null for the generic placeholder.
+ * Scripted replies for every preset scenario, keyed by `demoScenarios` id. The
+ * opener lives in content.ts; each mood's lines then move from resistance to a
+ * believable partial or full yes, so a visitor who keeps asking sees the other
+ * side give ground. `satisfies` fails the build if a scenario has no script.
  */
-function asRole(who: string): string | null {
-  const w = who.trim().replace(/[.!?]+$/, "");
-  if (!w || GENERIC_WHO.test(w)) return null;
-  const first = w.split(/\s+/)[0] ?? "";
-  const capitals = (first.match(/[A-Z]/g) ?? []).length;
-  return capitals > 1 ? w : w.charAt(0).toLowerCase() + w.slice(1);
-}
+export const SCRIPTS: Readonly<Record<string, Script>> = {
+  doctor: {
+    lines: {
+      kind: [
+        "Sure, I can help with that. Can I get your name and date of birth?",
+        "Okay, got you. First thing I have is next Wednesday at 3:20. Does that work?",
+        "This week's pretty packed. I could put you on the cancellation list, if you want.",
+        "Oh, wait, Thursday at 9:40 just opened up. Want me to put you in?",
+      ],
+      neutral: [
+        "Okay. Name, date of birth and student ID?",
+        "Earliest I have is next Wednesday at 3:20. Want that one?",
+        "This week's booked. There's walk-in hours, but the wait's usually like two hours.",
+        "Hang on. Someone just cancelled Thursday at 9:40. I can put you there.",
+      ],
+      hostile: [
+        "Name and date of birth. I've got two other lines going.",
+        "Next opening's Wednesday at 3:20. That's what I've got.",
+        "I can't make slots appear. Do you want Wednesday or not?",
+        "...Okay. Thursday at 9:40 just freed up. You want it or not?",
+      ],
+    },
+    debrief: {
+      score: 8,
+      worked: [
+        "You said what you needed in your first sentence.",
+        "You asked for something earlier instead of taking Wednesday at 3:20.",
+      ],
+      folded: [
+        "You said “sorry to bug you” before saying why you called. Booking you is their job.",
+      ],
+      next: [
+        "Hi, I need the earliest morning appointment you have this week.",
+        "Is there a cancellation list I can get on?",
+      ],
+      pattern: "You take the first time they offer. Ask once for something better.",
+    },
+  },
+  "bank-fee": {
+    lines: {
+      kind: [
+        "Okay, I see it. The fee hit Tuesday because the account went negative by $2.18.",
+        "I get it, that's annoying. Technically the fee's valid, though. It's in your account agreement.",
+        "Let me see what I can do. You haven't had one in two years, so that helps.",
+        "Okay, I put in a one-time courtesy refund. The $35 should be back in two or three days.",
+      ],
+      neutral: [
+        "Okay. Yeah, that's an overdraft fee. The account went negative on Tuesday.",
+        "Those fees are valid under your account agreement. I can't just take them off.",
+        "I'd have to request it as a courtesy, and that's not guaranteed.",
+        "Alright, it went through. One-time courtesy, so $35 back in a few business days.",
+      ],
+      hostile: [
+        "The fee's correct. You went negative, so the system charged it automatically.",
+        "We don't reverse fees because someone didn't check their balance.",
+        "I mean, I can ask a supervisor, but you'll be on hold. You want that?",
+        "...Okay. My supervisor approved it, one time only. It'll post in three to five days.",
+      ],
+    },
+    debrief: {
+      score: 7,
+      worked: [
+        "You said “waive” instead of hinting at it.",
+        "You mentioned it was your first overdraft, once.",
+      ],
+      folded: [
+        "You said “sorry, I know it's my fault” before asking.",
+        "You explained your payday timing three times.",
+      ],
+      next: [
+        "Can you waive the $35 overdraft fee as a one-time courtesy?",
+        "If you can't, can a supervisor take a look?",
+      ],
+      pattern: "You apologize before every ask.",
+    },
+  },
+  raise: {
+    lines: {
+      kind: [
+        "Okay. Honestly, you've been really good with the new people.",
+        "The thing is, raises usually go through in January, with reviews.",
+        "I could probably get you to $17.50 now without asking the owner.",
+        "Okay. I'll ask the owner for $18 this week and tell you by Friday.",
+      ],
+      neutral: [
+        "Okay. Raises are kind of a January thing, though. That's when we do reviews.",
+        "Honestly, I'm hearing this from like three people right now.",
+        "I can't promise $18. Maybe $17 now, and we look again in January?",
+        "Fine. Write down what you've been doing and I'll bring $18 to the owner.",
+      ],
+      hostile: [
+        "A raise? Right now? We're down two people and there's a line out the door.",
+        "You know new people start at $16, right? You're already above that.",
+        "If I give you $18, everybody's gonna want $18.",
+        "...Okay. Text me what you've been doing. I'll talk to the owner Friday.",
+      ],
+    },
+    debrief: {
+      score: 6,
+      worked: [
+        "You said $18 an hour, not “a little more.”",
+        "You gave one reason, training the new hires, and stopped there.",
+      ],
+      folded: [
+        "You opened with “sorry, I know you're busy” before you'd asked anything.",
+        "When they said January, you said “oh, that's fine.”",
+      ],
+      next: [
+        "I've been here 11 months and I train the new hires. I'm asking for $18 an hour.",
+        "If it has to wait, can we agree today that it's $18 on January 1?",
+      ],
+      pattern: "You take the first “not now” as a no.",
+    },
+  },
+  extension: {
+    lines: {
+      kind: [
+        "Okay. Is this the paper that's due Friday?",
+        "I get it, it's a heavy week. Lots of people are asking, though.",
+        "How far along are you? I'd want to see an outline or a draft first.",
+        "Okay. Monday at noon. Email me so I have it in writing.",
+      ],
+      neutral: [
+        "Mm. And this is the paper due Friday?",
+        "The late policy's in the syllabus. Ten percent a day.",
+        "If I do this for you, I kind of have to do it for everybody.",
+        "Fine. Monday at noon, no later. Send me a quick email confirming.",
+      ],
+      hostile: [
+        "Is this about the paper? Because I've had four of these today.",
+        "Everyone has other exams. That's what the late policy is for.",
+        "Why am I hearing about this now and not last week?",
+        "Okay. Monday at noon, and I won't move it again. Email me tonight.",
+      ],
+    },
+    debrief: {
+      score: 8,
+      worked: [
+        "You asked for a specific new deadline: Monday at noon.",
+        "You gave one reason and didn't pile on three more.",
+      ],
+      folded: [
+        "You opened with “I know you're probably busy, I'm so sorry.”",
+        "When they asked why you didn't ask sooner, you apologized instead of answering.",
+      ],
+      next: [
+        "I have two exams this week. Can I turn the paper in Monday at noon instead of Friday?",
+        "I have the outline done and can send it to you tonight.",
+      ],
+      pattern: "You apologize for asking before you ask. Lead with the date.",
+    },
+  },
+  "group-project": {
+    lines: {
+      kind: [
+        "No, you're right, I've been ghosting the chat. That's on me.",
+        "Wait, mine are the budget ones, right? The four at the end?",
+        "Can I do them Sunday night, though? I work all day Saturday.",
+        "Okay. Saturday by noon, in the deck. I'll post in the chat when they're up.",
+      ],
+      neutral: [
+        "I mean, it's not due till Monday. We still have time.",
+        "Can someone else take the budget part? I'm better at presenting.",
+        "Okay. I'll try to get them done this weekend.",
+        "Fine. Saturday by noon. I'll put them in the deck.",
+      ],
+      hostile: [
+        "Wow. You could've just texted me instead of making it a whole thing.",
+        "Everyone's busy. You're not the only one with stuff going on.",
+        "So what, you're gonna tell the professor on me or something?",
+        "...Fine. Saturday at noon. But I'm not redoing the intro too.",
+      ],
+    },
+    debrief: {
+      score: 7,
+      worked: [
+        "You named the exact ask: four budget slides, in the deck, Saturday at noon.",
+        "You didn't let “three exams” move the deadline.",
+      ],
+      folded: [
+        "You opened with “no worries if not,” which handed them a way out.",
+        "When they asked for Sunday night, you almost said yes.",
+      ],
+      next: [
+        "I need your four budget slides in the deck by Saturday at noon.",
+        "If they're not in by noon, I'll do them myself and say so on the peer eval.",
+      ],
+      pattern: "You negotiate against yourself before they even push back.",
+    },
+  },
+  "pay-me-back": {
+    lines: {
+      kind: [
+        "Oh my god, wait. I thought I sent that. Hold on, let me check.",
+        "No, yeah, it's not there. I'm so bad with this stuff, I'm sorry.",
+        "Can I do half now and the rest Friday? I just paid my phone bill.",
+        "Actually no, it's been three weeks. Sending all $72 right now. Check your phone.",
+      ],
+      neutral: [
+        "Oh, the tickets? Yeah, I know. It's been kind of a crazy month.",
+        "I mean, I wasn't gonna not pay you. I just keep forgetting.",
+        "Can it wait till Friday? That's when I get paid.",
+        "Okay. Friday morning, all $72. Text me if you don't see it.",
+      ],
+      hostile: [
+        "Wait, you called me for this? It's been like three weeks, not three months.",
+        "I've paid for food for you like five times and never said anything.",
+        "Fine, but I don't have $72 right now. I can do forty.",
+        "...Okay. Forty now, the other thirty-two Friday. Can we drop it after that?",
+      ],
+    },
+    debrief: {
+      score: 7,
+      worked: [
+        "You said $72, not “the ticket thing.”",
+        "You stopped talking after the ask and let them answer.",
+      ],
+      folded: [
+        "You said “no rush” right after asking, which made it optional.",
+        "When they said “soon,” you took it instead of asking for a day.",
+      ],
+      next: [
+        "You still owe me $72 for the concert. Can you send it today?",
+        "If today's bad, what day works? I'll look for it then.",
+      ],
+      pattern: "You soften money asks with “no rush.” Give a day instead.",
+    },
+  },
+  thanksgiving: {
+    lines: {
+      kind: [
+        "Oh. Okay. Grandma was really looking forward to seeing you, that's all.",
+        "We could help with the flight, you know. You don't have to work.",
+        "Okay. I get it, I do. I just miss you.",
+        "Okay. Then you're home all of December, and you call in Thursday. Deal?",
+      ],
+      neutral: [
+        "Wait, you're not coming? Everyone's going to ask where you are.",
+        "Can't you just ask for those days off? It's one weekend.",
+        "Hm. Well, you're an adult. I just don't love you being there alone.",
+        "Okay. But you're calling in for dinner Thursday, and you're home in December.",
+      ],
+      hostile: [
+        "So you'd rather work than see your family. Okay. Got it.",
+        "We pay for a lot of things for you. I'd think you could come home.",
+        "Your dad's going to be upset. You're telling him, not me.",
+        "...Fine. But you're calling in for dinner, and that part's not optional.",
+      ],
+    },
+    debrief: {
+      score: 7,
+      worked: [
+        "You said “I'm not coming home for Thanksgiving” in the first 20 seconds.",
+        "You gave one reason, the shifts, not five.",
+      ],
+      folded: [
+        "When the guilt came in, you said “maybe I can figure something out.”",
+        "You apologized four times for a decision you'd already made.",
+      ],
+      next: [
+        "I'm not coming home for Thanksgiving. I'm working those shifts, and I'll be home all of December.",
+        "I know it's hard. I'm still not coming, but I'll call in Thursday.",
+      ],
+      pattern: "Guilt makes you reopen decisions you already made.",
+    },
+  },
+  "spring-trip": {
+    lines: {
+      kind: [
+        "Wait, really? It's not gonna be the same without you, though.",
+        "What if we split it so you pay less? Like $300 total?",
+        "Okay, no, that's fair. I don't want you stressing about money over this.",
+        "Okay. But you're coming to dinner before we leave, no excuses.",
+      ],
+      neutral: [
+        "Oh. Everyone already sent theirs, so that kind of messes up the split.",
+        "Can you at least think about it till Friday?",
+        "Okay. I'll have to tell the group. They're gonna ask why.",
+        "Fine. I'll take you off the list. Come to dinner before we leave, though.",
+      ],
+      hostile: [
+        "Are you serious? You said you were in like two weeks ago.",
+        "So now the rest of us pay more because you bailed.",
+        "You literally went out three times this week, though.",
+        "...Okay. Whatever. I'll tell everyone. Just don't be weird about it.",
+      ],
+    },
+    debrief: {
+      score: 7,
+      worked: [
+        "You said “I'm out” instead of “I don't know yet.”",
+        "You didn't walk them through your bank account to prove it.",
+      ],
+      folded: [
+        "When they said the split goes up, you offered to pay part of it.",
+        "You said “I'm so sorry” three times before the actual no.",
+      ],
+      next: [
+        "I can't do the trip this time. It's more than I can spend right now.",
+        "Send me pictures, and let's do something cheap when you're back.",
+      ],
+      pattern: "You offer money to make the guilt stop.",
+    },
+  },
+} satisfies Record<DemoScenario["id"], Script>;
 
-function render(line: Line, who: string): string {
-  if (typeof line === "string") return line;
-  const role = asRole(who);
-  return role ? line[0](role) : line[1];
-}
-
+/** Openers for a custom scenario, which has no preset opener. They work for any person. */
 export const sampleOpeners: Record<Mood, string> = {
-  kind: "Hi. Thanks for coming to me directly. What did you want to talk about?",
-  neutral: "Yeah, hi. I've got a few minutes. Go ahead.",
-  hostile: "What is it? I'm in the middle of something.",
+  kind: "Hey! Yeah, I've got a minute. What's going on?",
+  neutral: "Yeah, hi. What's up? I've got a few minutes.",
+  hostile: "Can this be quick? I'm in the middle of something.",
 };
 
-/** Per-mood pushback, in order: resistance first, movement only if the user keeps going. */
-export const sampleLines: Record<Mood, readonly Line[]> = {
+/** Per-mood pushback for custom scenarios, worded to fit any relationship. */
+export const sampleLines: Record<Mood, readonly string[]> = {
   kind: [
-    "I hear you, and I want to sort this out. Tell me exactly what you're asking for.",
-    "That's fair. Put it in writing so I have it in front of me and I'll take a proper look.",
-    [
-      (role) => `Okay, I can meet you partway. As ${role}, I've got constraints of my own, but I'm not trying to make this hard for you.`,
-      "Okay, I can meet you partway. I've got constraints of my own, but I'm not trying to make this hard for you.",
-    ],
-    "Okay. Let's do it your way. Thanks for being straight with me.",
+    "Okay, yeah. What exactly do you need from me?",
+    "Hm. I didn't really see it that way, but okay.",
+    "I can't do all of that, but I can do part of it.",
+    "Okay. Let's do it your way. Thanks for just saying it.",
   ],
   neutral: [
-    "Right. And what is it you actually want from me?",
-    [
-      (role) => `Email me the details. As ${role}, I don't decide this on the spot.`,
-      "Email me the details. I don't decide this on the spot.",
-    ],
-    "Mm. I can look into it. I'm not promising anything today.",
-    "Fine. If it's what you say it is, I'll sort it by the end of the week.",
+    "Okay. So what are you actually asking for?",
+    "I mean, I'd have to think about it. It's a lot.",
+    "Maybe. I'm not saying yes right now, though.",
+    "Fine, let's do that. Remind me if I forget.",
   ],
   hostile: [
-    "Look, I've got about thirty seconds. What do you want?",
-    [
-      (role) => `No. As ${role}, I've heard every version of this, and the answer is still no.`,
-      "No. I've heard every version of this, and the answer is still no.",
-    ],
-    "Send me that in writing. I'm not deciding anything on the spot.",
-    "...Fine. Send me what you've got and I'll look at it tonight.",
+    "Okay, and? Why is this coming up right now?",
+    "Honestly, I don't think that's fair.",
+    "You're kind of making this a bigger deal than it is.",
+    "...Fine. Okay. I'll do it. Can we be done now?",
   ],
 };
 
-/**
- * Next scripted persona line. With no transcript this is the opener; after
- * that it walks the mood's list and holds on the last line, which nudges the
- * user to end the rehearsal.
- */
-export function sampleReply(mood: Mood, scenario: Scenario, messages: readonly TranscriptMessage[]): string {
-  if (messages.length === 0) return sampleOpeners[mood];
-  const replies = messages.filter((m, i) => m.role === "persona" && i > 0).length;
-  const lines = sampleLines[mood];
-  return render(lines[Math.min(replies, lines.length - 1)], scenario.who);
+/** The debrief for a custom scenario: habits any ask can show, with no scenario details. */
+const CUSTOM_DEBRIEF: Debrief = {
+  score: 7,
+  worked: ["You got to the point without a long lead-in.", "You stayed calm when they pushed back."],
+  folded: ["You softened the ask right after saying it.", "You gave your reasons more than once."],
+  next: ["I need to ask you something, and I'd rather just say it.", "I get that it's not ideal. I still need it."],
+  pattern: "You fill silence with more reasons. Let them answer.",
+};
+
+/** `hasOwn` so an id like "constructor" or "__proto__" falls through to the generic script. */
+function scriptFor(id: string): Script | undefined {
+  return Object.hasOwn(SCRIPTS, id) ? SCRIPTS[id] : undefined;
 }
 
-/** The canned debrief from the launch landing page. */
-export const SAMPLE_DEBRIEF: Debrief = {
-  score: 7,
-  worked: [
-    "You named the number and the deadline in one sentence.",
-    "You acknowledged they were busy without apologizing for calling.",
-  ],
-  folded: [
-    "You said 'sorry to bother you' before the ask; it signals the ask is optional.",
-    "You explained your side three times; once was enough.",
-  ],
-  next: [
-    "Normal wear is not a deduction. I have move-in photos. I'd like the full $1,200 back within 14 days.",
-    "I'll send the photos tonight. What's the best email?",
-  ],
-  pattern: "You tend to explain again when the other person goes quiet. Silence is theirs to fill.",
-};
+/**
+ * Next scripted persona line. With no transcript this is the opener (the site
+ * shows a preset's opener itself, so this path serves custom scenarios and
+ * direct API calls). After that it walks the scenario's lines for the mood,
+ * or the generic ones for a custom scenario, and holds on the last line, which
+ * nudges the user to end the rehearsal.
+ */
+export function sampleReply(mood: Mood, scenario: Scenario, messages: readonly TranscriptMessage[]): string {
+  if (messages.length === 0) {
+    return demoScenarios.find((s) => s.id === scenario.id)?.opener ?? sampleOpeners[mood];
+  }
+  const replies = messages.filter((m, i) => m.role === "persona" && i > 0).length;
+  const lines = scriptFor(scenario.id)?.lines[mood] ?? sampleLines[mood];
+  return lines[Math.min(replies, lines.length - 1)];
+}
+
+/** The scripted debrief for a scenario, or the generic one for a custom scenario. */
+export function sampleDebrief(scenario: Pick<Scenario, "id">): Debrief {
+  return scriptFor(scenario.id)?.debrief ?? CUSTOM_DEBRIEF;
+}

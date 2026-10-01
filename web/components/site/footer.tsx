@@ -11,7 +11,7 @@ export function Footer() {
           <div className="flex flex-col gap-4">
             <Logo />
             <p className="max-w-[36ch] text-sm leading-relaxed text-muted-foreground">{footer.blurb}</p>
-            <p className="eyebrow text-amber-ink">{site.status}</p>
+            <p className="text-sm text-muted-foreground">{site.status}</p>
           </div>
           {footer.columns.map((col) => (
             <div key={col.title}>
@@ -36,7 +36,7 @@ export function Footer() {
           <ol className="flex max-w-[60ch] flex-col gap-1.5 text-xs leading-relaxed text-muted-foreground">
             {footnotes.map((f, i) => (
               <li key={i} id={`fn-${i + 1}`} className="flex gap-2">
-                <span className="font-mono text-amber-ink">{i + 1}</span>
+                <span className="font-medium tabular-nums text-amber-ink">{i + 1}</span>
                 <span>{f}</span>
               </li>
             ))}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -17,7 +17,6 @@ const SECTION_LINKS = nav.links.filter((l) => l.href.startsWith("/#"));
 
 export function Nav() {
   const pathname = usePathname();
-  const reduce = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -63,19 +62,14 @@ export function Nav() {
   return (
     <>
       <div ref={sentinel} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-3" />
-      <motion.header
-        initial={reduce ? false : { y: -16, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease }}
-        className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))]"
-      >
+      {/* No entrance: the nav remounts on every route change, and chrome on every page shouldn't announce itself. */}
+      <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
         <nav
           aria-label="Primary"
           className={cn(
-            "flex h-14 w-full max-w-[1120px] items-center justify-between gap-4 rounded-full border px-3 pl-4 transition-[background-color,box-shadow,border-color] duration-300",
-            scrolled
-              ? "border-border bg-white/90 shadow-soft backdrop-blur-xl backdrop-saturate-150"
-              : "border-transparent bg-transparent",
+            "flex h-14 w-full max-w-[1120px] items-center justify-between gap-4 rounded-full border border-transparent px-3 pl-4 transition-[background-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+            // Elevation comes from the shadow alone; a hairline on top of it would double the edge.
+            scrolled ? "bg-white/90 shadow-soft backdrop-blur-xl backdrop-saturate-150" : "bg-transparent",
           )}
         >
           <Logo />
@@ -89,14 +83,13 @@ export function Nav() {
                     href={l.href}
                     aria-current={active ? (l.href.startsWith("/#") ? "location" : "page") : undefined}
                     onMouseEnter={() => setHovered(l.href)}
-                    onFocus={() => setHovered(l.href)}
-                    onBlur={() => setHovered(null)}
                     className={cn(
                       "relative block rounded-full px-3.5 py-2 text-[0.9rem] font-medium transition-colors duration-200",
                       active || hovered === l.href ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
-                    {/* One soft pill slides to whichever link is pointed at, or rests on the current one. */}
+                    {/* One soft pill slides to whichever link the pointer is on, or rests on the current one.
+                        Keyboard focus moves no pill: the focus outline marks it instantly. */}
                     {pill === l.href ? (
                       <motion.span
                         layoutId="nav-pill"
@@ -147,7 +140,7 @@ export function Nav() {
             </Sheet>
           </div>
         </nav>
-      </motion.header>
+      </header>
     </>
   );
 }

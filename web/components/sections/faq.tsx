@@ -1,35 +1,45 @@
 import { Container } from "@/components/site/container";
-import { Reveal } from "@/components/site/reveal";
+import { Reveal, RevealItem } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { faq, faqHeading } from "@/lib/content";
+import { faq, faqHeading, site } from "@/lib/content";
 
+/**
+ * Every answer stays open: they are one to three sentences, and the privacy and therapy ones are
+ * exactly what an anxious visitor came to read, so hiding them behind clicks costs more than it saves.
+ */
 export function Faq() {
   return (
-    <section id="faq" className="scroll-mt-28 py-24 md:py-32">
+    <section id="faq" className="scroll-mt-28 py-20 md:py-24">
       <Container>
-        <div className="mx-auto max-w-3xl">
-          <Reveal>
-            <SectionHeading eyebrow={faqHeading.eyebrow} title={faqHeading.title} />
-          </Reveal>
+        <div className="grid gap-10 lg:grid-cols-12">
+          <div className="self-start lg:sticky lg:top-28 lg:col-span-4">
+            <Reveal className="flex flex-col gap-4">
+              <SectionHeading align="left" title={faqHeading.title} />
+              <p className="text-base leading-relaxed text-muted-foreground">
+                {faqHeading.contact}
+                <br />
+                <a
+                  href={`mailto:${site.contactEmail}`}
+                  className="font-medium text-foreground underline decoration-foreground/30 underline-offset-4 transition-[text-decoration-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:decoration-foreground"
+                >
+                  {site.contactEmail}
+                </a>
+              </p>
+            </Reveal>
+          </div>
 
-          <Reveal className="mt-12 md:mt-14">
-            <Accordion
-              type="single"
-              collapsible
-              className="rounded-3xl border border-border bg-card px-5 sm:px-6 md:px-8"
-            >
-              {faq.map((item, i) => (
-                <AccordionItem key={item.q} value={`faq-${i}`} className="border-border">
-                  <AccordionTrigger className="py-5 text-left font-sans text-base font-semibold tracking-normal text-foreground hover:no-underline [&>svg]:mt-0.5 [&>svg]:size-[1.125rem] [&>svg]:transition-[transform,color] [&:hover>svg]:text-foreground">
-                    <span className="min-w-0 break-words pr-2">{item.q}</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="max-w-[60ch] pb-6 text-[0.9375rem] leading-relaxed text-muted-foreground">
-                    {item.a}
-                  </AccordionContent>
-                </AccordionItem>
+          <Reveal group staggerBy={0.05} className="min-w-0 lg:col-span-8">
+            <dl className="border-b border-border">
+              {faq.map((item) => (
+                <RevealItem
+                  key={item.q}
+                  className="grid gap-2 border-t border-border py-6 md:grid-cols-[minmax(0,16rem)_1fr] md:gap-8"
+                >
+                  <dt className="font-display text-lg leading-snug font-semibold text-foreground break-words">{item.q}</dt>
+                  <dd className="max-w-[60ch] text-base leading-relaxed text-muted-foreground">{item.a}</dd>
+                </RevealItem>
               ))}
-            </Accordion>
+            </dl>
           </Reveal>
         </div>
       </Container>

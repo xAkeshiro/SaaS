@@ -10,7 +10,7 @@ web
 
 ## Users
 
-- **Primary: young adults who dread a specific real conversation.** Gen Z and people 18-25, college students first, facing the call to the doctor's office, the ask for a raise, the roommate talk, the interview, the first date, the refund, saying no. They are not in crisis; they are avoiding. *(Inferred from docs/plan/11-unmute.md §3; the owner approved this audience when choosing Unmute.)*
+- **Primary: young adults who dread a specific real conversation.** Gen Z and people 18-25, college students first, putting off conversations like booking a doctor's appointment, getting a bank fee waived, asking for $18 an hour, office hours for an extension, the group project ghost, getting paid back by a friend, telling their parents they're not coming home, saying no to a trip they can't afford. They are not in crisis; they are avoiding. *(Inferred from docs/plan/11-unmute.md §3; the owner approved this audience when choosing Unmute.)*
 - **Evidence of the problem:** 65% of Gen Z say calling a stranger makes them uncomfortable, and only a third are comfortable making calls at all (YouGov); 37% of adults 18-25 report significant anxiety, the highest adult group (Compass Health Center, 2026). *(Sourced in the brief and site footnotes.)*
 - **Secondary (Teams): career centers** running interview season, **companies** training customer-facing staff and new managers, **clinicians** running structured social-anxiety practice between sessions. *(docs/plan/11-unmute.md, launch addendum.)*
 - **How they arrive:** a short before-and-after clip (someone's first call next to their tenth), a dare, a friend's practice room, or a career-center link during interview season, usually on a phone. *(Launch sequence in the plan.)*
@@ -31,7 +31,7 @@ Unmute lets you rehearse the conversation you are dreading, out loud, with an AI
 - **The debrief:** what worked, where you folded, time to the ask, apologies before the ask, filler words, whether you held the number or the boundary, the two sentences to try next time, and a pattern across sessions ("you apologize before every ask").
 - **The daily rep:** three minutes, a streak, a scenario chosen from what is coming up (calendar-aware when connected).
 - **Real mode:** a 60-second warmup and a cue card before the real call, a debrief from your own notes after. Unmute never listens to real calls.
-- **Together:** practice rooms (a friend plays the recruiter while the AI coaches), dares, shareable before-and-after clips, voice-changed if wanted.
+- **Together:** practice rooms (a friend plays your manager while the AI coaches), dares, shareable before-and-after clips, voice-changed if wanted.
 - *(All from docs/plan/11-unmute.md §3 and the site copy the owner approved.)*
 
 ## Capabilities and Constraints

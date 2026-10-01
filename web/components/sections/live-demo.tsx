@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
 import {
   ArrowUp,
   Check,
   Info,
   Loader2,
   Minus,
-  Mic,
   Play,
   RotateCcw,
   Sparkles,
@@ -26,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { demoScenarios, liveDemo, moods, type MoodId } from "@/lib/content";
-import { ease } from "@/lib/motion";
+import { ease, stagger } from "@/lib/motion";
 import type { Debrief, RehearseMode } from "@/lib/rehearse";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +47,22 @@ const ENDPOINT = "/api/rehearse";
 const MAX_MESSAGES = 24;
 const MAX_TEXT = 800;
 const L = liveDemo.labels;
-const BAR_HEIGHTS = [10, 18, 26, 32, 26, 18, 10];
+/** How long to wait for `scrollend` before marking the picked chip anyway (no scroll, or no event support). */
+const SETTLE_FALLBACK_MS = 600;
+
+/**
+ * Bubbles grow from the corner their tail hangs off. Your own line lands fast because you
+ * just pressed Enter; theirs takes a beat longer, like someone answering.
+ */
+const BUBBLE_IN = {
+  user: { from: "translateY(4px) scale(0.98)", duration: 0.16, origin: "100% 100%" },
+  persona: { from: "translateY(8px) scale(0.97)", duration: 0.24, origin: "0% 100%" },
+} as const;
+const AT_REST = "translateY(0px) scale(1)";
+
+/** Counted on the client from the visitor's own lines. "like" is left out: "I'd like a refund" is not filler. */
+const SORRY_RE = /\b(sorry|apologi[sz]e|apologies)\b/gi;
+const FILLER_RE = /\b(um+|uh+|erm|i mean|kind of|sort of|basically|literally|just)\b/gi;
 
 /* ------------------------------------------------------------------ */
 /* Small helpers                                                       */
@@ -122,6 +136,10 @@ function toWire(messages: Msg[]) {
   return messages.slice(-MAX_MESSAGES).map((m) => ({ role: m.role, text: m.text.slice(0, MAX_TEXT) }));
 }
 
+function countIn(lines: readonly string[], re: RegExp) {
+  return lines.reduce((n, line) => n + (line.match(re)?.length ?? 0), 0);
+}
+
 /* ------------------------------------------------------------------ */
 /* Section                                                             */
 /* ------------------------------------------------------------------ */
@@ -147,6 +165,8 @@ export function LiveDemo() {
   const [debrief, setDebrief] = useState<Debrief | null>(null);
   const [input, setInput] = useState("");
   const [announce, setAnnounce] = useState("");
+  /** The chip a scenario card just picked; `n` replays the ring on a repeat pick. */
+  const [pulse, setPulse] = useState<{ id: string; n: number } | null>(null);
 
   const idRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
@@ -155,25 +175,55 @@ export function LiveDemo() {
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const startRef = useRef<HTMLButtonElement>(null);
+  const customRef = useRef<HTMLTextAreaElement>(null);
   const focusRef = useRef(false);
+  const pulseRef = useRef(0);
+  const settleRef = useRef<(() => void) | null>(null);
 
   // A scenario picked elsewhere on the page (the scenario cards) lands here, ready to start.
   useEffect(() => {
+    function cancelSettle() {
+      settleRef.current?.();
+      settleRef.current = null;
+    }
+
     function onRehearse(e: Event) {
       const detail = (e as CustomEvent<RehearseEventDetail>).detail;
       if (!detail) return;
+      const picked = "id" in detail ? demoScenarios.find((s) => s.id === detail.id)?.id : undefined;
       if ("id" in detail) {
         setScenarioId(detail.id);
         setCustom("");
       } else {
         setCustom(detail.custom);
       }
-      // Land on the panel itself, so the chosen conversation and the Start button are both in view.
+      // Land on the panel itself, so the chosen conversation and the next control are both in view.
       document.getElementById("try-panel")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-      startRef.current?.focus({ preventScroll: true });
+      // A preset is ready to go, so Start takes focus; a custom prompt is a draft to edit first.
+      if ("id" in detail) startRef.current?.focus({ preventScroll: true });
+      else customRef.current?.focus({ preventScroll: true });
+
+      // The chip changed while it was off screen. Mark it once the scroll has landed, so the eye finds it.
+      cancelSettle();
+      if (reduce || !picked) return;
+      const settled = () => {
+        cancelSettle();
+        pulseRef.current += 1;
+        setPulse({ id: picked, n: pulseRef.current });
+      };
+      const timer = window.setTimeout(settled, SETTLE_FALLBACK_MS);
+      window.addEventListener("scrollend", settled, { once: true });
+      settleRef.current = () => {
+        window.clearTimeout(timer);
+        window.removeEventListener("scrollend", settled);
+      };
     }
+
     window.addEventListener(REHEARSE_EVENT, onRehearse);
-    return () => window.removeEventListener(REHEARSE_EVENT, onRehearse);
+    return () => {
+      window.removeEventListener(REHEARSE_EVENT, onRehearse);
+      cancelSettle();
+    };
   }, [reduce]);
 
   useEffect(() => {
@@ -402,13 +452,17 @@ export function LiveDemo() {
     setCustom("");
   }
 
-  const header = session ?? { scenario: selected, mood };
+  const idle = messages.length === 0 && !waiting;
+  // While the pane is empty the header previews the current pick; a transcript or debrief keeps its own run's names.
+  const header = (phase === "idle" && idle) || !session ? { scenario: selected, mood } : session;
+  const userLines = messages.filter((m) => m.role === "user").map((m) => m.text);
 
   return (
-    <section id="try" className="scroll-mt-28 py-24 md:py-32">
+    // Short top gap: Scenarios above hands off straight into the demo (its own bottom is pb-12).
+    <section id="try" className="scroll-mt-28 pt-12 pb-20 md:pb-24">
       <Container>
         <Reveal>
-          <SectionHeading eyebrow={liveDemo.eyebrow} title={liveDemo.title} sub={liveDemo.sub} />
+          <SectionHeading title={liveDemo.title} sub={liveDemo.sub} />
         </Reveal>
 
         <Reveal delay={0.1} className="mt-14">
@@ -417,7 +471,7 @@ export function LiveDemo() {
               {/* ---------------- Controls ---------------- */}
               <div className="flex min-w-0 flex-col gap-6">
                 <fieldset className="min-w-0">
-                  <legend className="eyebrow mb-3 p-0 text-muted-foreground">{L.conversation}</legend>
+                  <legend className="mb-2 block p-0 text-sm font-medium text-foreground">{L.conversation}</legend>
                   <div className="flex flex-wrap gap-2">
                     {demoScenarios.map((s) => {
                       const active = !customText && s.id === scenarioId;
@@ -428,12 +482,23 @@ export function LiveDemo() {
                           aria-pressed={active}
                           onClick={() => pickScenario(s.id)}
                           className={cn(
-                            "rounded-full px-3.5 py-1.5 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out active:translate-y-px",
+                            "relative rounded-full px-3.5 py-1.5 text-sm font-medium outline-none transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-[0.97]",
                             active
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted text-foreground hover:bg-lavender",
                           )}
                         >
+                          {pulse?.id === s.id ? (
+                            <motion.span
+                              key={pulse.n}
+                              aria-hidden="true"
+                              className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-amber"
+                              initial={{ opacity: 0.9, transform: "scale(1)" }}
+                              animate={{ opacity: 0, transform: "scale(1.12)" }}
+                              transition={{ duration: 0.5, ease }}
+                              onAnimationComplete={() => setPulse(null)}
+                            />
+                          ) : null}
                           {s.label}
                         </button>
                       );
@@ -442,37 +507,54 @@ export function LiveDemo() {
                 </fieldset>
 
                 <div className="min-w-0">
-                  <label htmlFor={customId} className="eyebrow mb-3 block text-muted-foreground">
+                  <label htmlFor={customId} className="mb-2 block text-sm font-medium text-foreground">
                     {L.custom}
                   </label>
                   <Textarea
+                    ref={customRef}
                     id={customId}
                     rows={2}
                     maxLength={MAX_TEXT}
                     value={custom}
                     onChange={(e) => setCustom(e.target.value)}
                     placeholder={L.customPlaceholder}
-                    className="max-h-40 min-h-[4.5rem] resize-none rounded-xl bg-background/60 text-sm leading-relaxed"
+                    className="max-h-40 min-h-[4.5rem] resize-none rounded-xl bg-card text-sm leading-relaxed"
                   />
                 </div>
 
-                <Tabs value={mood} onValueChange={(v) => setMood(v as MoodId)} className="min-w-0 gap-2">
-                  <p className="eyebrow mb-1 text-muted-foreground">{L.mood}</p>
+                <Tabs value={mood} onValueChange={(v) => setMood(v as MoodId)} className="min-w-0 gap-0">
+                  <p className="mb-2 block text-sm font-medium text-foreground">{L.mood}</p>
                   {/* `h-11!`: the component's own orientation variant (h-9) outranks a plain utility. */}
                   <TabsList aria-label={L.mood} className="grid h-11! w-full grid-cols-3 rounded-full bg-muted p-1">
                     {moods.map((m) => (
                       <TabsTrigger
                         key={m.id}
                         value={m.id}
-                        className="h-full rounded-full text-sm transition-[background-color,color,box-shadow] duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+                        className="h-full rounded-full text-sm transition-[color] duration-200 data-[state=active]:bg-transparent data-[state=active]:text-primary-foreground group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none"
                       >
-                        {m.label}
+                        {/* One pill slides between segments, so there is never a half-dark pill on each side mid-change. */}
+                        {mood === m.id ? (
+                          <motion.span
+                            layoutId="mood-pill"
+                            aria-hidden="true"
+                            className="absolute inset-0 rounded-full bg-primary shadow-sm"
+                            transition={{ duration: 0.25, ease }}
+                          />
+                        ) : null}
+                        <span className="relative">{m.label}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
+                  {/* Each panel stays a Radix TabsContent so the triggers' aria-controls resolve; it remounts per switch. */}
                   {moods.map((m) => (
-                    <TabsContent key={m.id} value={m.id} className="text-xs text-muted-foreground">
-                      {m.hint}
+                    <TabsContent key={m.id} value={m.id} className="mt-2 text-xs text-muted-foreground">
+                      <motion.p
+                        initial={{ opacity: 0, filter: "blur(2px)" }}
+                        animate={{ opacity: 1, filter: "blur(0px)" }}
+                        transition={{ duration: 0.2, ease }}
+                      >
+                        {m.hint}
+                      </motion.p>
                     </TabsContent>
                   ))}
                 </Tabs>
@@ -482,7 +564,7 @@ export function LiveDemo() {
                   aria-pressed={voiceOn}
                   disabled={!speechSupported}
                   onClick={toggleVoice}
-                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-background/60 px-3.5 py-2.5 text-left transition-[border-color,background-color] duration-200 hover:border-foreground/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-3.5 py-2.5 text-left transition-[border-color] duration-200 hover:border-foreground/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="flex min-w-0 items-center gap-2.5">
                     <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-foreground">
@@ -508,7 +590,7 @@ export function LiveDemo() {
                   >
                     <span
                       className={cn(
-                        "absolute top-0.5 left-0.5 size-5 rounded-full bg-card shadow-sm transition-transform duration-200 ease-out",
+                        "absolute top-0.5 left-0.5 size-5 rounded-full bg-card shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
                         voiceOn && "translate-x-4",
                       )}
                     />
@@ -540,11 +622,12 @@ export function LiveDemo() {
               </div>
 
               {/* ---------------- Transcript / debrief ---------------- */}
-              {/* On lg the panel fills the row the controls set, so a long transcript scrolls inside it instead of stretching the page. */}
+              {/* One card: the pane is a plain fill inside it, not a second bordered box. */}
+              {/* On lg the pane fills the row the controls set, so a long transcript scrolls inside it instead of stretching the page. */}
               <div ref={panelRef} className="relative min-h-[380px] min-w-0 scroll-mt-24 lg:min-h-[600px]">
-                <div className="flex min-h-[380px] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-background/60 lg:absolute lg:inset-0 lg:min-h-0">
+                <div className="flex min-h-[380px] min-w-0 flex-col overflow-hidden rounded-xl bg-muted/40 lg:absolute lg:inset-0 lg:min-h-0">
                   {/* Persona header */}
-                  <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+                  <div className="flex items-center gap-3 border-b border-border/70 px-4 py-3">
                     <span className="grid size-9 shrink-0 place-items-center rounded-full bg-lavender-deep/60 text-foreground">
                       <UserRound className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
                     </span>
@@ -553,8 +636,8 @@ export function LiveDemo() {
                         <p className="truncate font-display text-[1.05rem] leading-tight font-semibold text-foreground">
                           {header.scenario.who}
                         </p>
-                        <span className="rounded-full bg-muted px-2.5 py-0.5 font-mono text-[11px] text-foreground/80">
-                          {moods.find((m) => m.id === header.mood)?.label.toLowerCase() ?? header.mood}
+                        <span className="rounded-full bg-lavender/70 px-2.5 py-0.5 text-xs font-medium text-foreground/80">
+                          {moods.find((m) => m.id === header.mood)?.label ?? header.mood}
                         </span>
                       </div>
                       <p className="truncate text-xs text-muted-foreground">{header.scenario.label}</p>
@@ -562,7 +645,7 @@ export function LiveDemo() {
                     {mode ? (
                       <Badge
                         variant={mode === "live" ? "default" : "secondary"}
-                        className="shrink-0 gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wide uppercase"
+                        className={cn("shrink-0 gap-1.5 px-2.5 py-1", mode === "sample" && "bg-lavender/70")}
                       >
                         <span
                           aria-hidden="true"
@@ -575,15 +658,16 @@ export function LiveDemo() {
 
                   <AnimatePresence mode="wait" initial={false}>
                     {phase === "debrief" && debrief ? (
+                      // Opacity only: the blocks inside carry the movement, so the two do not stack.
                       <motion.div
                         key="debrief"
                         className="flex min-h-0 flex-1 flex-col"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8, transition: { duration: 0.2, ease } }}
-                        transition={{ duration: 0.4, ease }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, transition: { duration: 0.15, ease } }}
+                        transition={{ duration: 0.2, ease }}
                       >
-                        <DebriefView debrief={debrief} mode={mode} onAgain={start} />
+                        <DebriefView debrief={debrief} mode={mode} userLines={userLines} onAgain={start} />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -591,68 +675,67 @@ export function LiveDemo() {
                         className="flex min-h-0 flex-1 flex-col"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, transition: { duration: 0.2, ease } }}
-                        transition={{ duration: 0.3, ease }}
+                        exit={{ opacity: 0, transition: { duration: 0.15, ease } }}
+                        transition={{ duration: 0.2, ease }}
                       >
                         {mode === "sample" ? (
-                          <p className="flex items-center gap-1.5 border-b border-border bg-muted/50 px-4 py-2 text-xs text-muted-foreground">
+                          <p className="flex items-center gap-1.5 px-4 pt-3 text-xs text-muted-foreground">
                             <Info className="size-3.5 shrink-0" aria-hidden="true" />
                             <span className="min-w-0">{liveDemo.sampleNote}</span>
                           </p>
                         ) : null}
 
-                        {/* Log */}
+                        {/* Log. The list stays mounted, so the first real line animates in where the preview sat. */}
                         <div
                           ref={logRef}
                           className="flex max-h-[60vh] min-h-0 flex-1 flex-col overflow-y-auto p-4 lg:max-h-none"
                         >
-                          {messages.length === 0 && !waiting ? (
-                            <IdleState />
-                          ) : (
-                            <ul className="flex flex-col gap-2.5">
-                              <AnimatePresence initial={false}>
-                                {messages.map((m) => (
-                                  <motion.li
-                                    key={m.id}
-                                    className={bubbleClass(m.role)}
-                                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                                    transition={{ duration: 0.35, ease }}
-                                  >
-                                    <span className={tagClass(m.role)}>
-                                      {m.role === "user" ? L.you : header.scenario.who}
-                                    </span>
-                                    {m.text}
-                                  </motion.li>
-                                ))}
-                                {waiting ? (
-                                  <motion.li
-                                    key="typing"
-                                    aria-hidden="true"
-                                    className="flex items-center gap-1 self-start rounded-2xl rounded-bl-md bg-muted px-3.5 py-3"
-                                    initial={{ opacity: 0, y: 6 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                                    transition={{ duration: 0.3, ease }}
-                                  >
-                                    {[0, 1, 2].map((d) => (
-                                      <motion.span
-                                        key={d}
-                                        className="size-1.5 rounded-full bg-foreground/50"
-                                        animate={{ opacity: [0.3, 1, 0.3] }}
-                                        transition={{ duration: 0.9, repeat: Infinity, delay: d * 0.15, ease: "easeInOut" }}
-                                      />
-                                    ))}
-                                  </motion.li>
-                                ) : null}
-                              </AnimatePresence>
-                            </ul>
-                          )}
+                          <ul className="flex flex-col gap-2.5">
+                            <AnimatePresence initial={false}>
+                              {messages.map((m) => (
+                                <motion.li
+                                  key={m.id}
+                                  className={bubbleClass(m.role)}
+                                  style={{ transformOrigin: BUBBLE_IN[m.role].origin }}
+                                  initial={reduce ? { opacity: 0 } : { opacity: 0, transform: BUBBLE_IN[m.role].from }}
+                                  animate={reduce ? { opacity: 1 } : { opacity: 1, transform: AT_REST }}
+                                  exit={{ opacity: 0, transition: { duration: 0.12, ease } }}
+                                  transition={{ duration: BUBBLE_IN[m.role].duration, ease }}
+                                >
+                                  <span className={tagClass(m.role)}>
+                                    {m.role === "user" ? L.you : header.scenario.who}
+                                  </span>
+                                  {m.text}
+                                </motion.li>
+                              ))}
+                              {waiting ? (
+                                <motion.li
+                                  key="typing"
+                                  aria-hidden="true"
+                                  className="flex items-center gap-1 self-start rounded-2xl rounded-bl-md bg-card px-3.5 py-3 shadow-xs"
+                                  style={{ transformOrigin: BUBBLE_IN.persona.origin }}
+                                  initial={reduce ? { opacity: 0 } : { opacity: 0, transform: BUBBLE_IN.persona.from }}
+                                  animate={reduce ? { opacity: 1 } : { opacity: 1, transform: AT_REST }}
+                                  exit={{ opacity: 0, transition: { duration: 0.12, ease } }}
+                                  transition={{ duration: BUBBLE_IN.persona.duration, ease }}
+                                >
+                                  {[0, 1, 2].map((d) => (
+                                    <motion.span
+                                      key={d}
+                                      className="size-1.5 rounded-full bg-foreground/50"
+                                      animate={{ opacity: [0.3, 1, 0.3] }}
+                                      transition={{ duration: 0.9, repeat: Infinity, delay: d * 0.15, ease: "easeInOut" }}
+                                    />
+                                  ))}
+                                </motion.li>
+                              ) : null}
+                            </AnimatePresence>
+                          </ul>
+                          {idle ? <IdlePreview scenario={selected} /> : null}
                         </div>
 
                         {/* Composer */}
-                        <div className="border-t border-border p-3 sm:p-4">
+                        <div className="border-t border-border/70 p-3 sm:p-4">
                           {error && phase !== "idle" ? (
                             <p role="alert" className="mb-2 text-xs text-destructive">
                               {error}
@@ -738,20 +821,31 @@ export function LiveDemo() {
 /* Pieces                                                              */
 /* ------------------------------------------------------------------ */
 
-function IdleState() {
+/**
+ * Before Start: the pick's opening line, faded, where the real one will land, so the pane
+ * previews the conversation instead of sitting empty. A custom setup has no fixed opener.
+ */
+function IdlePreview({ scenario }: { scenario: Scenario }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10 text-center">
-      <div className="flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2.5">
-        <span className="grid size-7 place-items-center rounded-full bg-muted text-muted-foreground">
-          <Mic className="size-3.5" aria-hidden="true" />
-        </span>
-        <span aria-hidden="true" className="flex h-8 items-center gap-1">
-          {BAR_HEIGHTS.map((h, i) => (
-            <span key={i} className="w-1 rounded-full bg-foreground/15" style={{ height: h }} />
-          ))}
-        </span>
-      </div>
-      <div>
+    <div className="flex flex-1 flex-col">
+      {scenario.opener ? (
+        <div className="relative flex flex-col">
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.p
+              key={scenario.id}
+              className={bubbleClass("persona")}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0, transition: { duration: 0.1, ease } }}
+              transition={{ duration: 0.2, ease }}
+            >
+              <span className={tagClass("persona")}>{scenario.who}</span>
+              {scenario.opener}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+      ) : null}
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 text-center">
         <p className="font-display text-base font-semibold text-foreground">{L.idleTitle}</p>
         <p className="mx-auto mt-1 max-w-[34ch] text-sm text-muted-foreground">{L.idleBody}</p>
       </div>
@@ -762,21 +856,43 @@ function IdleState() {
 function DebriefView({
   debrief,
   mode,
+  userLines,
   onAgain,
 }: {
   debrief: Debrief;
   mode: RehearseMode | null;
+  /** The visitor's own lines: the counted rows come from these, not from the model. */
+  userLines: readonly string[];
   onAgain: () => void;
 }) {
   const d = liveDemo.debrief;
+  const reduce = useReducedMotion();
   const headingRef = useRef<HTMLHeadingElement>(null);
   // The transcript this replaces held focus; hand it to the debrief so keyboard and screen reader users land on it.
   useEffect(() => {
     headingRef.current?.focus({ preventScroll: true });
   }, []);
+
+  // The payoff arrives in reading order instead of as one slab. Reduced motion keeps the fade, drops the rise.
+  const item: Variants = reduce
+    ? { hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.3, ease } } }
+    : {
+        hidden: { opacity: 0, transform: "translateY(8px)" },
+        show: { opacity: 1, transform: "translateY(0px)", transition: { duration: 0.3, ease } },
+      };
+  const metrics = [
+    { label: d.metrics.sorry, value: countIn(userLines, SORRY_RE) },
+    { label: d.metrics.filler, value: countIn(userLines, FILLER_RE) },
+  ];
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:p-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <motion.div
+      className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:p-5"
+      variants={stagger(0.06, 0.05)}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div variants={item} className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="flex size-6 items-center justify-center rounded-md bg-amber text-ink">
             <Sparkles className="size-3.5" aria-hidden="true" />
@@ -784,24 +900,52 @@ function DebriefView({
           <h3 ref={headingRef} tabIndex={-1} className="font-display text-base font-semibold text-foreground focus:outline-none">
             {d.title}
           </h3>
-          {mode === "sample" ? (
-            <span className="font-mono text-[11px] text-muted-foreground">({liveDemo.badges.sample.toLowerCase()})</span>
-          ) : null}
         </div>
-        <p className="flex items-baseline gap-1.5 font-mono">
-          <motion.span
-            className="text-6xl leading-none font-semibold text-foreground tabular-nums"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease, delay: 0.1 }}
-          >
-            {debrief.score}
-          </motion.span>
-          <span className="text-sm text-muted-foreground">{d.scoreOf}</span>
-        </p>
-      </div>
+        <motion.p
+          className="shrink-0 rounded-full bg-card px-2.5 py-0.5 text-sm font-semibold text-foreground tabular-nums"
+          initial={reduce ? { opacity: 0 } : { opacity: 0, transform: "scale(0.9)" }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, transform: "scale(1)" }}
+          transition={
+            reduce ? { duration: 0.2, ease, delay: 0.1 } : { type: "spring", duration: 0.5, bounce: 0.2, delay: 0.1 }
+          }
+        >
+          {debrief.score} <span className="font-medium text-muted-foreground">{d.scoreOf}</span>
+        </motion.p>
+      </motion.div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* A scripted debrief quotes lines the visitor may never have typed, so it says so up front. */}
+      {mode === "sample" ? (
+        <motion.p variants={item} className="-mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+          <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+          <span className="min-w-0">{d.sampleNote}</span>
+        </motion.p>
+      ) : null}
+
+      {/* The product's core output leads: the two lines to say next time, in your voice. */}
+      <motion.div variants={item}>
+        <p className="text-sm font-medium text-amber-ink">{d.next}</p>
+        <ul className="mt-2.5 flex flex-col items-end gap-2">
+          {debrief.next.map((line, i) => (
+            <li
+              key={i}
+              className="max-w-[88%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-base leading-snug break-words text-primary-foreground"
+            >
+              {line}
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+
+      <motion.dl variants={item} className="divide-y divide-border/70 border-t border-border/70">
+        {metrics.map((row) => (
+          <div key={row.label} className="flex items-center justify-between gap-3 py-2.5">
+            <dt className="min-w-0 text-sm text-muted-foreground">{row.label}</dt>
+            <dd className="shrink-0 text-[0.95rem] font-semibold text-foreground tabular-nums">{row.value}</dd>
+          </div>
+        ))}
+      </motion.dl>
+
+      <motion.div variants={item} className="grid gap-4 border-t border-border/70 pt-4 sm:grid-cols-2">
         <DebriefList
           title={d.worked}
           items={debrief.worked}
@@ -816,33 +960,22 @@ function DebriefView({
           icon={<Minus className="size-3 text-muted-foreground" strokeWidth={2.5} aria-hidden="true" />}
           iconClass="bg-muted"
         />
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-3.5">
-        <p className="eyebrow text-amber-ink">{d.next}</p>
-        <ul className="mt-2.5 flex flex-col gap-2.5">
-          {debrief.next.map((line, i) => (
-            <li key={i} className="border-l-2 border-amber pl-3 text-sm leading-relaxed break-words text-foreground">
-              {line}
-            </li>
-          ))}
-        </ul>
-      </div>
+      </motion.div>
 
       {debrief.pattern ? (
-        <div className="rounded-xl bg-muted p-3.5">
-          <p className="eyebrow text-muted-foreground">{d.pattern}</p>
+        <motion.div variants={item} className="border-t border-border/70 pt-4">
+          <p className="text-sm font-medium text-foreground">{d.pattern}</p>
           <p className="mt-1.5 text-sm leading-relaxed break-words text-foreground">{debrief.pattern}</p>
-        </div>
+        </motion.div>
       ) : null}
 
-      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+      <motion.div variants={item} className="mt-auto flex flex-wrap items-center gap-2 pt-1">
         <Button type="button" onClick={onAgain}>
           <RotateCcw className="size-4" aria-hidden="true" />
           {L.again}
         </Button>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -860,8 +993,8 @@ function DebriefList({
   iconClass: string;
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-border bg-card p-3.5">
-      <p className="eyebrow text-muted-foreground">{title}</p>
+    <div className="min-w-0">
+      <p className="text-sm font-medium text-foreground">{title}</p>
       {items.length === 0 ? (
         <p className="mt-2 text-sm text-muted-foreground">{empty}</p>
       ) : (
@@ -880,18 +1013,19 @@ function DebriefList({
   );
 }
 
+/** On the pane's muted fill, their bubbles are white so they still read as a surface. */
 function bubbleClass(role: Role) {
   return cn(
     "max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[0.9rem] leading-snug break-words whitespace-pre-wrap",
     role === "user"
       ? "self-end rounded-br-md bg-primary text-primary-foreground"
-      : "self-start rounded-bl-md bg-muted text-foreground",
+      : "self-start rounded-bl-md bg-card text-foreground shadow-xs",
   );
 }
 
 function tagClass(role: Role) {
   return cn(
-    "mb-0.5 block font-mono text-[11px] tracking-[0.12em] uppercase",
-    role === "user" ? "text-white/60" : "text-muted-foreground",
+    "mb-0.5 block text-xs font-medium",
+    role === "user" ? "text-primary-foreground/60" : "text-muted-foreground",
   );
 }

@@ -52,9 +52,7 @@ export function PricingComparison() {
                       <span className="inline-flex flex-col items-center gap-1.5">
                         {col}
                         {i === plusIndex && plusTier && "badge" in plusTier ? (
-                          <span className="rounded-full bg-amber px-2.5 py-0.5 font-sans text-[0.6875rem] font-medium text-ink">
-                            {plusTier.badge}
-                          </span>
+                          <span className="font-sans text-xs font-medium text-amber-ink">{plusTier.badge}</span>
                         ) : null}
                       </span>
                     </th>
@@ -111,7 +109,7 @@ function Cell({ value }: { value: CellValue }) {
   if (value === true) {
     return (
       <span className="inline-flex size-6 items-center justify-center rounded-full bg-amber/20 text-amber-ink">
-        <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
+        <Check className="size-3.5" strokeWidth={2} aria-hidden="true" />
         <span className="sr-only">{copy.included}</span>
       </span>
     );
@@ -124,5 +122,5 @@ function Cell({ value }: { value: CellValue }) {
       </span>
     );
   }
-  return <span className="font-mono text-[0.8125rem] font-medium text-foreground">{value}</span>;
+  return <span className="text-[0.8125rem] font-medium text-foreground tabular-nums">{value}</span>;
 }

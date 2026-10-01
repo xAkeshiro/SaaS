@@ -1,17 +1,41 @@
 "use client";
 
 import { Fragment, useRef } from "react";
-import { motion, useReducedMotion, useScroll, useTransform, type HTMLMotionProps, type Variants } from "motion/react";
-import { ease, fadeUp, scaleIn, stagger } from "@/lib/motion";
+import { motion, useScroll, useTransform, type HTMLMotionProps, type Variants } from "motion/react";
+import { ease, stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+
+/*
+ * Hero entrance values are whole `transform` strings, not x/y/scale shorthands: motion can hand a
+ * plain transform to the compositor, so the entrance keeps its frames while hydration busies the
+ * main thread. The global MotionConfig only neutralizes shorthand keys, so every element that
+ * animates `transform` here also carries `motion-reduce:transform-none!`: reduced motion keeps
+ * the fades and drops the movement. The !important beats both motion's inline style and WAAPI.
+ */
+const REDUCE_FLAT = "motion-reduce:transform-none!";
+
+const rise: Variants = {
+  hidden: { opacity: 0, transform: "translateY(10px)" },
+  show: { opacity: 1, transform: "translateY(0px)", transition: { duration: 0.4, ease } },
+};
+
+const word: Variants = {
+  hidden: { opacity: 0, transform: "translateY(12px)", filter: "blur(4px)" },
+  show: { opacity: 1, transform: "translateY(0px)", filter: "blur(0px)", transition: { duration: 0.45, ease } },
+};
+
+const windowIn: Variants = {
+  hidden: { opacity: 0, transform: "translateY(16px) scale(0.97)" },
+  show: { opacity: 1, transform: "translateY(0px) scale(1)", transition: { duration: 0.6, ease } },
+};
 
 /**
  * Page-load stagger for the hero. Animates on mount (not on scroll):
- * eyebrow -> H1 -> sub -> form -> trust -> mock, 0.08 s apart.
+ * pill -> H1 (word by word) -> sub -> form -> link -> mock, 60 ms apart.
  */
 export function HeroStagger({ className, children, ...rest }: HTMLMotionProps<"div">) {
   return (
-    <motion.div className={cn(className)} variants={stagger(0.08, 0.05)} initial="hidden" animate="show" {...rest}>
+    <motion.div className={cn(className)} variants={stagger(0.06, 0)} initial="hidden" animate="show" {...rest}>
       {children}
     </motion.div>
   );
@@ -19,31 +43,26 @@ export function HeroStagger({ className, children, ...rest }: HTMLMotionProps<"d
 
 export function HeroItem({ className, children, ...rest }: HTMLMotionProps<"div">) {
   return (
-    <motion.div className={cn(className)} variants={fadeUp} {...rest}>
+    <motion.div className={cn(REDUCE_FLAT, className)} variants={rise} {...rest}>
       {children}
     </motion.div>
   );
 }
 
-const word: Variants = {
-  hidden: { opacity: 0, y: 18, filter: "blur(10px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease } },
-};
-
 /**
- * The headline arrives word by word, each word sharpening out of a blur, 60 ms apart.
- * The emphasised word keeps its hand-drawn underline, which draws once the words have landed.
+ * The headline arrives word by word, each word sharpening out of a light blur, 50 ms apart.
+ * The emphasised word keeps its hand-drawn underline, which draws as the last word lands.
  */
 export function HeroHeadline({ text, emphasis, className }: { text: string; emphasis: string; className?: string }) {
   const words = text.split(" ");
   return (
-    <motion.h1 className={className} variants={stagger(0.06, 0)}>
+    <motion.h1 className={className} variants={stagger(0.05, 0)}>
       {words.map((w, i) => {
         const bare = w.replace(/[.,!?]$/, "");
         const tail = w.slice(bare.length);
         return (
           <Fragment key={i}>
-            <motion.span variants={word} className="inline-block">
+            <motion.span variants={word} className={cn("inline-block", REDUCE_FLAT)}>
               {bare === emphasis ? (
                 <>
                   <UnderlinedWord>{bare}</UnderlinedWord>
@@ -62,32 +81,36 @@ export function HeroHeadline({ text, emphasis, className }: { text: string; emph
 }
 
 /**
- * The product window: it rises in last, leaning back like a screen on a desk,
- * and straightens to face you as you scroll it into view.
+ * The product window: it rises in last, leaning back slightly like a screen on a desk,
+ * and straightens within the first stretch of scroll. The lean is small (8 degrees) and done by
+ * the time the window's top reaches 60% of the viewport, so on desktop it is all but flat at first
+ * paint and the transcript stays readable. Flat under reduced motion.
  */
 export function HeroMock({ className, children, ...rest }: HTMLMotionProps<"div">) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "start 25%"] });
-  const rotateX = useTransform(scrollYProgress, [0, 1], [18, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [0.93, 1]);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "start 60%"] });
+  const rotateX = useTransform(scrollYProgress, [0, 1], [8, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [0.97, 1]);
   return (
-    <motion.div ref={ref} className={cn("[perspective:1400px]", className)} variants={scaleIn} {...rest}>
-      <motion.div style={reduce ? undefined : { rotateX, scale }} className="will-change-transform">
+    <motion.div ref={ref} className={cn("[perspective:1400px]", REDUCE_FLAT, className)} variants={windowIn} {...rest}>
+      {/* The tilt lives on its own element, so its transform never collides with the entrance's. */}
+      <motion.div style={{ rotateX, scale }} className={cn("will-change-transform", REDUCE_FLAT)}>
         {children}
       </motion.div>
     </motion.div>
   );
 }
 
+/* The underline inherits the headline's variants, so these delays count from the moment the
+   word "people" starts to rise: the main stroke draws as the word lands, the second follows. */
 const strokeMain: Variants = {
   hidden: { pathLength: 0, opacity: 0 },
   show: {
     pathLength: 1,
     opacity: 1,
     transition: {
-      pathLength: { delay: 0.7, duration: 0.7, ease },
-      opacity: { delay: 0.7, duration: 0.15 },
+      pathLength: { delay: 0.45, duration: 0.6, ease },
+      opacity: { delay: 0.45, duration: 0.15 },
     },
   },
 };
@@ -98,8 +121,8 @@ const strokeSecond: Variants = {
     pathLength: 1,
     opacity: 1,
     transition: {
-      pathLength: { delay: 1.15, duration: 0.5, ease },
-      opacity: { delay: 1.15, duration: 0.15 },
+      pathLength: { delay: 0.8, duration: 0.4, ease },
+      opacity: { delay: 0.8, duration: 0.15 },
     },
   },
 };

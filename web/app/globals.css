@@ -48,26 +48,18 @@
   --color-lavender-deep: var(--lavender-deep);
   --color-indigo-brand: var(--indigo);
 
-  /* Magic UI animation tokens */
+  /* Magic UI animation tokens: only the ones a component in components/ still references. */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-gradient: gradient 8s linear infinite;
   --animate-marquee: marquee var(--duration) infinite linear;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
   --animate-shiny-text: shiny-text 8s infinite;
   --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
   --animate-ripple: ripple var(--duration, 2s) ease calc(var(--i, 0) * 0.2s) infinite;
-  --animate-rippling: rippling var(--duration, 0.6s) ease-out;
-  --animate-line: line 2s linear infinite;
-  --animate-orbit: orbit calc(var(--duration) * 1s) linear infinite;
-  --animate-background-position-spin: background-position-spin 3000ms infinite alternate;
   --animate-shine: shine var(--duration) infinite linear;
-  --animate-pulse: pulse var(--duration) ease-out infinite;
-  --animate-rainbow: rainbow var(--speed, 2s) infinite linear;
   --animate-line-shadow: line-shadow 15s linear infinite;
   --animate-aurora: aurora 8s ease-in-out infinite alternate;
-  --animate-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
   --animate-blink-cursor: blink-cursor 1.2s step-end infinite;
   --animate-wave: wave 1.1s ease-in-out infinite;
 
@@ -81,8 +73,6 @@
   }
   @keyframes accordion-down { from { height: 0; } to { height: var(--radix-accordion-content-height); } }
   @keyframes accordion-up { from { height: var(--radix-accordion-content-height); } to { height: 0; } }
-  @keyframes background-position-spin { 0% { background-position: top center; } 100% { background-position: bottom center; } }
-  @keyframes gradient { to { background-position: var(--bg-size, 300%) 0; } }
   @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(calc(-100% - var(--gap))); } }
   @keyframes marquee-vertical { from { transform: translateY(0); } to { transform: translateY(calc(-100% - var(--gap))); } }
   @keyframes spin-around {
@@ -92,25 +82,13 @@
     100% { transform: translateZ(0) rotate(360deg); }
   }
   @keyframes ripple { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(0.9); } }
-  @keyframes rippling { 0% { opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
   @keyframes shimmer-slide { to { transform: translate(calc(100cqw - 100%), 0); } }
-  @keyframes line { 0% { mask-position-x: 0%; } 100% { mask-position-x: 100%; } }
   @keyframes shiny-text {
     0%, 90%, 100% { background-position: calc(-100% - var(--shiny-width)) 0; }
     30%, 60% { background-position: calc(100% + var(--shiny-width)) 0; }
   }
-  @keyframes orbit {
-    0% { transform: rotate(calc(var(--angle) * 1deg)) translateY(calc(var(--radius) * 1px)) rotate(calc(var(--angle) * -1deg)); }
-    100% { transform: rotate(calc(var(--angle) * 1deg + 360deg)) translateY(calc(var(--radius) * 1px)) rotate(calc((var(--angle) * -1deg) - 360deg)); }
-  }
   @keyframes shine { 0% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } to { background-position: 0% 0%; } }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 var(--pulse-color, oklch(from var(--bg) l c h / 0.5)); }
-    50% { box-shadow: 0 0 0 var(--distance) var(--pulse-color, oklch(from var(--bg) l c h / 0.5)); }
-  }
-  @keyframes rainbow { 0% { background-position: 0%; } 100% { background-position: 200%; } }
   @keyframes line-shadow { 0% { background-position: 0 0; } 100% { background-position: 100% -100%; } }
-  @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
   @keyframes wave { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
 }
 
@@ -206,15 +184,22 @@
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      /* Movement goes, but color and opacity still fade, so state changes never snap. */
+      transition-property: color, background-color, border-color, outline-color, opacity, box-shadow, fill, stroke !important;
     }
+  }
+  /* One stroke weight for every lucide icon, whatever a call site passes. */
+  svg.lucide {
+    stroke-width: 2;
   }
 }
 
 /* ---------- Brand utilities ---------- */
 @utility bg-hero-mesh {
   background-color: var(--background);
+  /* The last layer fades the mesh into the canvas, so the hero has no hard bottom edge. */
   background-image:
+    linear-gradient(180deg, transparent 80%, var(--background) 100%),
     radial-gradient(60% 50% at 20% 10%, color-mix(in oklab, var(--lavender-deep) 70%, transparent) 0%, transparent 70%),
     radial-gradient(50% 45% at 85% 5%, color-mix(in oklab, var(--peach) 75%, transparent) 0%, transparent 70%),
     radial-gradient(70% 60% at 50% 100%, color-mix(in oklab, var(--lavender) 80%, transparent) 0%, transparent 70%);
@@ -222,18 +207,27 @@
 @utility bg-band-ink {
   background-color: var(--ink);
   background-image:
-    radial-gradient(60% 70% at 15% 0%, rgba(79, 70, 229, 0.45) 0%, transparent 65%),
+    radial-gradient(60% 70% at 15% 0%, rgba(79, 70, 229, 0.32) 0%, transparent 65%),
     radial-gradient(45% 55% at 90% 100%, rgba(255, 180, 84, 0.35) 0%, transparent 60%),
     linear-gradient(180deg, #0b0f1a 0%, #131a33 100%);
 }
 @utility bg-band-lavender {
   background-image: linear-gradient(180deg, #ffffff 0%, var(--lavender) 100%);
 }
+/* A full-width section version: a lavender wash in the middle that meets the canvas at both edges. */
+@utility bg-band-lavender-soft {
+  background-image: linear-gradient(180deg, var(--background) 0%, var(--lavender) 55%, var(--background) 100%);
+}
 @utility glass {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: saturate(160%) blur(14px);
   -webkit-backdrop-filter: saturate(160%) blur(14px);
   border: 1px solid rgba(11, 15, 26, 0.08);
+  @media (prefers-reduced-transparency: reduce) {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 @utility shadow-soft {
   box-shadow: 0 1px 2px rgba(11, 15, 26, 0.04), 0 12px 40px -16px rgba(11, 15, 26, 0.14);
@@ -241,19 +235,20 @@
 @utility shadow-window {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 2px 6px rgba(11, 15, 26, 0.05), 0 40px 80px -30px rgba(29, 38, 84, 0.35);
 }
+/* A quiet sentence-case label. Inner pages use it; the home page keeps only "Not a companion". */
 @utility eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--amber-ink);
 }
 @utility display-xl {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2.75rem, 7.2vw, 5.75rem);
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  font-size: clamp(2.75rem, 5.4vw, 4.75rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 @utility display-lg {
   font-family: var(--font-display);
@@ -273,6 +268,8 @@
   font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
   line-height: 1.6;
   color: var(--muted-foreground);
+  /* Even lines instead of a one-word last line. Width stays with each call site. */
+  text-wrap: balance;
 }
 
 /* ---------- Motion utilities ---------- */
