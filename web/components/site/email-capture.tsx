@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { betaOptIn } from "@/lib/content";
 import { ease } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -118,12 +119,8 @@ export function EmailCapture({
                 <span className="min-w-0">{state.message}</span>
               </div>
             </div>
-            {/* Holds the note's line so the block keeps its height after the swap. */}
-            {note ? (
-              <p aria-hidden="true" className={cn(line("note"), "invisible")}>
-                {note}
-              </p>
-            ) : null}
+            {/* A separate yes for the private beta: joining the list alone still means one email at launch. */}
+            <BetaStep email={email} source={source} inverted={inverted} />
           </motion.div>
         ) : (
           <motion.form
@@ -189,5 +186,100 @@ export function EmailCapture({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/**
+ * After someone joins: an optional, separate opt-in to the private beta, with their campus, since the
+ * beta opens one campus at a time. It updates the same waitlist row by email.
+ */
+function BetaStep({ email, source, inverted }: { email: string; source: string; inverted: boolean }) {
+  const reduce = useReducedMotion();
+  const [campus, setCampus] = useState("");
+  const [state, setState] = useState<State>({ status: "idle" });
+  const loading = state.status === "loading";
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (loading) return;
+    setState({ status: "loading" });
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, source, campus, beta: true }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      setState(
+        res.ok && data.ok
+          ? { status: "done", message: betaOptIn.done }
+          : { status: "error", message: data.error ?? betaOptIn.error },
+      );
+    } catch {
+      setState({ status: "error", message: betaOptIn.error });
+    }
+  }
+
+  const muted = inverted ? "text-white/70" : "text-muted-foreground";
+
+  if (state.status === "done") {
+    return (
+      <motion.p
+        role="status"
+        className={cn("flex items-start gap-2 px-4 text-left text-xs leading-relaxed", muted)}
+        initial={{ opacity: 0, transform: reduce ? "none" : "translateY(4px)" }}
+        animate={{ opacity: 1, transform: "translateY(0px)" }}
+        transition={{ duration: 0.2, ease }}
+      >
+        <Check className="mt-0.5 size-3.5 shrink-0 text-amber" aria-hidden="true" />
+        <span>{state.message}</span>
+      </motion.p>
+    );
+  }
+
+  const fieldId = `beta-campus-${source}`;
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-2 text-left">
+      <p className={cn("px-4 text-xs leading-relaxed", muted)}>{betaOptIn.prompt}</p>
+      <div
+        className={cn(
+          "flex items-center gap-1 rounded-full border p-1 pl-4 transition-[box-shadow,border-color] duration-200 focus-within:ring-2 focus-within:ring-ring",
+          inverted ? "border-white/15 bg-white/10" : "border-border bg-card",
+        )}
+      >
+        <label htmlFor={fieldId} className="sr-only">
+          {betaOptIn.campusLabel}
+        </label>
+        <input
+          id={fieldId}
+          required
+          maxLength={120}
+          autoComplete="organization"
+          value={campus}
+          readOnly={loading}
+          onChange={(e) => setCampus(e.target.value)}
+          placeholder={betaOptIn.campusPlaceholder}
+          className={cn(
+            "h-9 min-w-0 flex-1 bg-transparent text-sm outline-none",
+            inverted ? "text-white placeholder:text-white/50" : "text-foreground placeholder:text-muted-foreground",
+          )}
+        />
+        <Button
+          type="submit"
+          size="sm"
+          variant={inverted ? "accent" : "outline"}
+          aria-busy={loading || undefined}
+          className={cn("shrink-0 px-3.5", loading && "cursor-wait")}
+        >
+          {loading ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
+          {loading ? betaOptIn.sending : betaOptIn.cta}
+        </Button>
+      </div>
+      {state.status === "error" ? (
+        <p role="alert" className={cn("px-4 text-xs", inverted ? "text-amber" : "text-destructive")}>
+          {state.message}
+        </p>
+      ) : null}
+    </form>
   );
 }

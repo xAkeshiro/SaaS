@@ -12,7 +12,7 @@ web
 
 - **Primary: young adults who dread a specific real conversation.** Gen Z and people 18-25, college students first, putting off conversations like getting paid back by a friend, getting a bank fee waived, asking for $18 an hour, office hours for an extension, the group project ghost, booking a doctor's appointment, telling their mom they're not coming home for Thanksgiving, saying no to a trip they can't afford. They are not in crisis; they are avoiding. *(Inferred from docs/plan/11-unmute.md §3; the owner approved this audience when choosing Unmute.)*
 - **Evidence of the problem:** 65% of Gen Z say calling a stranger makes them uncomfortable, and only a third are comfortable making calls at all (YouGov); 37% of adults 18-25 report significant anxiety, the highest adult group (Compass Health Center, 2026). *(Sourced in the brief and site footnotes.)*
-- **Secondary (Teams): career centers** running interview season, **companies** training customer-facing staff and new managers, **clinicians** running structured social-anxiety practice between sessions. *(docs/plan/11-unmute.md, launch addendum.)*
+- **Secondary (Teams): career centers**, starting with spring 2027 pilots: students rehearse interviews before the real ones; counselors see cohort trends, and individual results only when a student shares. Companies and clinicians were in the original plan, but nothing is built for them yet, so the site gives them one "talk to us" line and no feature promises. *(docs/plan/11-unmute.md, launch addendum; docs/plan/12-roadmap.md, decision D8.)*
 - **How they arrive:** a short before-and-after clip (someone's first call next to their tenth), a dare, a friend's practice room, or a career-center link during interview season, usually on a phone. *(Launch sequence in the plan.)*
 
 ## Product Purpose
@@ -36,9 +36,9 @@ Unmute lets you rehearse the conversation you are dreading, out loud, with an AI
 
 ## Capabilities and Constraints
 
-- **Stage:** pre-launch. The consumer app (Expo, voice-first) is not built yet; the web marketing site is the live surface. Early access opens campus by campus in fall 2026 (Sep-Nov). Consumer copy says "fall": no consumer scenario is an interview, so "interview season" belongs only to the Teams offer for career centers.
+- **Stage:** pre-launch. The consumer app (Expo, voice-first) is not built yet; the web marketing site is the live surface. Early access opens campus by campus in fall 2026 (Sep-Nov). Consumer copy says "fall": no consumer scenario is an interview, so "interview season" belongs only to the Teams page.
 - **Working on the site today:** a text-mode rehearsal demo backed by Claude (`/api/rehearse`; runs a labeled scripted sample when no API key is configured), a waitlist (`/api/waitlist`), and a Teams pilot request form.
-- **Pricing (set by the owner):** Free, one rehearsal a day; Plus $14.99 a month or $99 a year; Teams $3-8 per seat per month, free for career centers this interview season.
+- **Pricing (set by the owner):** Free, one rehearsal a day on any preset scenario; Plus $14.99 a month or $99 a year, for unlimited rehearsals, custom scenarios, and patterns and trends; Teams $3-8 per seat per month, starting with spring 2027 pilots for career centers. Every mood, hostile included, is free for everyone, so no plan sells a "hard mode". Real mode, calendar reps, practice rooms and dares show as "Coming soon" on Plus and in the comparison table until they ship. *(docs/plan/12-roadmap.md, decisions D5 and D8, promises P45 and P58.)*
 - **Privacy commitments:** rehearsals are private to the user, never used to train models, deleted when the user says so. Sharing a clip is always explicit.
 - **Safety commitments:** a coach, not therapy. Crisis language routes to real resources every time. No romantic roleplay; every persona is clearly synthetic.
 - **Routes to keep:** `/`, `/pricing`, `/manifesto`, `/teams`, anchors `#how-it-works`, `#try` (with `#try-panel` on the demo panel itself, where "Try a rehearsal" links land), `#scenarios`, `#early-access`, `#pilot`, and manifesto anchors `#not-a-companion`, `#privacy`, `#safety`.
@@ -62,7 +62,7 @@ Unmute lets you rehearse the conversation you are dreading, out loud, with an AI
 
 1. **Success is the user closing the app and talking to a person.** Never design for time-in-app.
 2. **Specific beats supportive.** The debrief quotes your words and hands you the next sentence; no vague encouragement.
-3. **Practice has friction on purpose.** The other person pushes back; hard mode exists; the product earns trust by being realistic, not flattering.
+3. **Practice has friction on purpose.** The other person pushes back, and anyone can pick the hostile mood; the product earns trust by being realistic, not flattering.
 4. **Private by default, shareable by choice.** Nothing about a rehearsal leaves the user without an explicit act.
 5. **A coach, never a companion or a therapist.** Clear edges: synthetic personas, crisis routing, no romance.
 

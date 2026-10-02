@@ -666,11 +666,11 @@ Owner tasks:
 - [ ] Start looking for counsel and a clinical advisor (D10).
 
 Engineering tasks:
-- [ ] PR 0, monorepo move: pnpm workspaces; `git mv web apps/web`; create `packages/core`, `packages/engine` (server only), `packages/tokens`; copy the four `.woff2` files into `apps/web/app/fonts/` (`app/layout.tsx:9,18,22,32` point into `../node_modules`); invert the scenario import at `lib/rehearse.ts:8`; add Vitest. The owner then sets the Vercel Root Directory to `apps/web`. The site must behave exactly as before.
-- [ ] Lock down `/api/rehearse` (section 5.2): presets by id, custom text out of the system prompt, a Vercel WAF rule and Upstash per-IP limit [V6][O4], model split, `max_tokens` and refusal fixes, demo traffic on the `demo` Anthropic workspace.
-- [ ] Demo safety (section 5.2): run the section 5.6 keyword screen and classifier on every user turn. On a hit, return `{stopped: "safety"}`, end the demo and show a static crisis card (988 call or text, text HOME to 741741, 911) in `live-demo.tsx`. Run the custom-scenario check on demo custom text before the first reply and refuse romance, sexual content, companion roleplay, minors and real-person targets. Sign each persona line the server returns (HMAC of demo nonce, sequence number and text) and reject unsigned persona messages.
-- [ ] Waitlist and pilot form write to Supabase tables (add `campus` and a separate "invite me to the beta" box); Teams requests email the owner through Resend; no personal data in logs.
-- [ ] GitHub Actions CI: typecheck, lint, unit tests, `next build`.
+- [ ] PR 0, monorepo move: **deferred.** Our Vercel token cannot change project settings (403 on update), and moving `web/` without switching the Root Directory would stop deploys. The app stays in `web/`; shared code is grouped so the move is mechanical later: `web/lib/demo` (wire protocol, signing, rate limits), `web/lib/safety` (screens, classifier), `web/lib/server` (Supabase, email). Vitest is added. The move to `apps/web` plus `packages/*` happens when the owner can switch the Root Directory, and before Phase 7 at the latest.
+- [x] Lock down `/api/rehearse` (section 5.2): presets resolved by id on the server; custom text travels as data and reaches the model only inside `<scenario>` tags in the first user turn, never the system prompt; per-IP limits (30 a minute and 300 a day for replies, 8 per 10 minutes and 40 a day for debriefs) on Upstash or Vercel KV when configured, in memory until then; model split (`claude-sonnet-5-5` with `between_tools` at effort low for the persona, `claude-opus-5-5` at effort low for the debrief, `claude-haiku-4-5` for checks); refusal and `max_tokens` handling; `ANTHROPIC_DEMO_API_KEY` preferred over `ANTHROPIC_API_KEY`; 24 lines per rehearsal, and the persona wraps up at its 10th reply. The Vercel WAF rule is still open (owner, dashboard).
+- [x] Demo safety (section 5.2): keyword screens on every typed line and on custom text in both modes; in live mode a Haiku classifier on each line and on custom text, plus a `[[SAFETY]]` marker the persona can answer with, which never reaches the screen. A stop returns `{stopped: "safety"}` and the demo shows a crisis card (988 call or text, text HOME to 741741, 911); a refused custom scenario returns `{stopped: "blocked", reason}`. Persona lines are HMAC-signed (nonce, scenario, position, text) with `DEMO_SIGNING_SECRET` or a key derived from the Anthropic key; unsigned or edited lines get HTTP 400. Copy is placeholder until the clinician signs off (D10).
+- [x] Waitlist and pilot form: Supabase tables (`supabase/migrations/20261002000000_waitlist.sql`, RLS on, no policies), written with the secret key when the env vars are set, the old webhook otherwise; a separate beta step after signup (campus plus "Invite me to the beta"); Teams requests email the owner through Resend when configured; emails never reach logs.
+- [x] GitHub Actions CI (`.github/workflows/ci.yml`): typecheck, lint, Vitest, `next build`, on Node 24.
 
 Site changes (Phase 0):
 - [ ] Teams page: replace the "September to November 2026" free offer and "Your people rehearse the same week" with spring 2027 pilot copy (C6, P61, P65, P66). Replace the P62 body with "Students rehearse interviews before the real ones. Counselors see cohort trends; individual results only when a student shares." (C3).
@@ -680,7 +680,7 @@ Site changes (Phase 0):
 - [ ] Mood and custom wording per D5 (C1, C2).
 - [ ] Verify `hello@unmute.app` exists or switch to the new domain (P4). Remove the placeholder social links (P5).
 
-**Done when:** the site builds from `apps/web` with identical pages; `/api/rehearse` rejects client-supplied setups for presets and rate-limits; 20 scripted crisis lines end the demo and show the card; 20 romance or companion prompts are refused; a forged persona message returns HTTP 400; a test signup lands in the `waitlist` table; all accounts in section 13.2 exist.
+**Done when:** the site builds with identical pages (from `web/` until the move); `/api/rehearse` rejects client-supplied setups for presets and rate-limits; 20 scripted crisis lines end the demo and show the card; 20 romance or companion prompts are refused; a forged persona message returns HTTP 400; a test signup lands in the `waitlist` table; all accounts in section 13.2 exist.
 **Owner reviews:** the copy diff, the Root Directory switch on a preview, the account list.
 **Duration:** 1 week. **Depends on:** approval.
 **Risks:** Apple organization enrollment timing (unverified), so start now. Switch the Root Directory on a preview first.
@@ -1247,12 +1247,12 @@ Environment variables to add in Vercel (per environment; never prefix a secret w
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | The custom domain | 0 |
 | `ANTHROPIC_API_KEY` | Anthropic Console, one per environment | 0 |
-| `ANTHROPIC_DEMO_API_KEY`, `DEMO_SIGNING_SECRET` | The `demo` workspace key; we generate the signing secret | 0 |
+| `ANTHROPIC_DEMO_API_KEY`, `DEMO_SIGNING_SECRET` | The `demo` workspace key; the signing secret is optional (without it, one is derived from the Anthropic key). Setting either key turns the site demo from scripted to live | 0 |
 | `UNMUTE_PERSONA_MODEL`, `UNMUTE_DEBRIEF_MODEL`, `UNMUTE_CLASSIFIER_MODEL` | `claude-sonnet-5-5`, `claude-opus-5-5`, `claude-haiku-4-5` | 0 |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase project settings | 0 |
-| `SUPABASE_SECRET_KEY` | Supabase (server only) | 0 |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash | 0 |
-| `RESEND_API_KEY`, `OWNER_NOTIFY_EMAIL` | Resend; the owner's address | 0 |
+| `SUPABASE_SECRET_KEY` | Supabase (server only). `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, as Vercel's Supabase integration names them, also work | 0 |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash (or `KV_REST_API_URL` and `KV_REST_API_TOKEN` from Vercel's KV integration). Without them, rate limits are per function instance | 0 |
+| `RESEND_API_KEY`, `OWNER_NOTIFY_EMAIL`, `RESEND_FROM` | Resend; the owner's address; the sender once the domain is verified (until then Resend's shared sender) | 0 |
 | `ELEVENLABS_API_KEY` | ElevenLabs user API key for this environment, with a credit quota and scope limits (a service account only on Scale or above) | 1 |
 | `LAB_ENABLED`, `LAB_ALLOWED_EMAILS` | We set; tester emails for `/lab` | 1 |
 | `ELEVENLABS_AGENT_ID_FREE`, `ELEVENLABS_AGENT_ID_PLUS` | Created in Phase 1 and 2 | 1 |

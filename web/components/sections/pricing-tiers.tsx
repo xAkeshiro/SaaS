@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useId, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check } from "lucide-react";
+import { Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pricing, pricingExtras } from "@/lib/content";
 import { ease } from "@/lib/motion";
@@ -95,8 +95,10 @@ function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Bill
 
 function TierCard({ tier, billing, headingLevel }: { tier: Tier; billing: Billing; headingLevel: HeadingLevel }) {
   const Heading = headingLevel;
+  const comingId = useId();
   const highlight = tier.highlight;
   const badge = "badge" in tier ? tier.badge : null;
+  const coming = "coming" in tier ? tier.coming : null;
   const priceLabel = "priceLabel" in tier ? tier.priceLabel : null;
   const period = billing === "yearly" && "yearlyPeriod" in tier ? tier.yearlyPeriod : tier.period;
   const amount = tier.price ? tier.price[billing] : null;
@@ -190,6 +192,26 @@ function TierCard({ tier, billing, headingLevel }: { tier: Tier; billing: Billin
           </li>
         ))}
       </ul>
+
+      {/* Not built yet: a muted second list with a clock in place of the check, so nothing here reads as included.
+          The comparison table marks the same features the same way. */}
+      {coming ? (
+        <div className="mt-6">
+          <p id={comingId} className="text-xs font-medium text-muted-foreground">
+            {pricingExtras.coming}
+          </p>
+          <ul aria-labelledby={comingId} className="mt-3 flex flex-col gap-3">
+            {coming.map((item) => (
+              <li key={item} className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-muted">
+                  <Clock className="size-3" strokeWidth={2} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 break-words">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {/* mt-auto pins every CTA to the card's bottom edge, so Free's shorter list does not leave its button floating.
           Only the highlighted tier gets a filled button, so the emphasis lands on the plan the ring points to. */}

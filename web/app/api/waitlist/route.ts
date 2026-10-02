@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { limit } from "@/lib/demo/rate-limit";
+import { notifyOwner } from "@/lib/server/notify";
+import { serviceClient } from "@/lib/server/supabase";
 
 export const runtime = "nodejs";
 
@@ -6,7 +9,7 @@ const MAX_FIELD = 500;
 const WEBHOOK_TIMEOUT_MS = 5_000;
 
 /** The only keys that leave this handler. Everything else in the body is dropped. */
-const ALLOWED = ["email", "source", "name", "org", "seats", "notes"] as const;
+const ALLOWED = ["email", "source", "name", "org", "seats", "notes", "campus"] as const;
 type Allowed = (typeof ALLOWED)[number];
 
 const EMAIL_ERROR = "Enter a valid email address.";
@@ -23,23 +26,27 @@ const WaitlistSchema = z.object({
     .toLowerCase()
     .max(254, EMAIL_ERROR)
     .pipe(z.email({ error: EMAIL_ERROR })),
-  source: Text.optional(),
+  source: Text.max(64).optional(),
   name: Text.optional(),
   org: Text.optional(),
   seats: Text.optional(),
   notes: Text.optional(),
+  campus: Text.max(120).optional(),
+  /** The separate "invite me to the beta" step; the launch email needs no opt-in beyond joining. */
+  beta: z.boolean().optional(),
 });
 
-type Payload = Partial<Record<Allowed, string>> & { email: string; source: string };
+type Payload = Partial<Record<Allowed, string>> & { email: string; source: string; beta?: boolean };
 
 const NO_STORE: HeadersInit = { "cache-control": "no-store" };
+const SAVE_ERROR = "Could not save your request right now. Try again in a minute.";
 
 function ok(): Response {
   return Response.json({ ok: true }, { headers: NO_STORE });
 }
 
-function fail(status: number, error: string): Response {
-  return Response.json({ ok: false, error }, { status, headers: NO_STORE });
+function fail(status: number, error: string, extra: Record<string, string> = {}): Response {
+  return Response.json({ ok: false, error }, { status, headers: { ...NO_STORE, ...extra } });
 }
 
 function firstIssue(error: z.ZodError): string {
@@ -48,7 +55,7 @@ function firstIssue(error: z.ZodError): string {
   return issue.path.length === 0 ? "Send a JSON object." : issue.message;
 }
 
-/** Keeps only whitelisted, non-empty strings so nothing unexpected is forwarded or logged. */
+/** Keeps only whitelisted, non-empty fields so nothing unexpected is stored or forwarded. */
 function toPayload(data: z.infer<typeof WaitlistSchema>): Payload {
   const payload: Payload = { email: data.email, source: data.source || "web" };
   for (const key of ALLOWED) {
@@ -56,7 +63,61 @@ function toPayload(data: z.infer<typeof WaitlistSchema>): Payload {
     const value = data[key];
     if (value) payload[key] = value;
   }
+  if (data.beta !== undefined) payload.beta = data.beta;
   return payload;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stores                                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Supabase: a Teams request is a row in `pilot_requests` and an email to the
+ * owner; anything else upserts `waitlist` by email, so the beta step only adds
+ * its fields to the row the first signup made.
+ */
+async function saveToSupabase(payload: Payload): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+
+  if (payload.source === "teams") {
+    const { error } = await db.from("pilot_requests").insert({
+      email: payload.email,
+      name: payload.name ?? null,
+      org: payload.org ?? null,
+      seats: payload.seats ?? null,
+      notes: payload.notes ?? null,
+    });
+    if (error) {
+      console.error("[waitlist] pilot insert failed", error.code);
+      return false;
+    }
+    await notifyOwner(
+      `Pilot request${payload.org ? `: ${payload.org}` : ""}`,
+      [
+        `Name: ${payload.name ?? ""}`,
+        `Email: ${payload.email}`,
+        `Organization: ${payload.org ?? ""}`,
+        `Seats: ${payload.seats ?? ""}`,
+        "",
+        payload.notes ?? "",
+      ].join("\n"),
+    );
+    return true;
+  }
+
+  // Only the fields this request carries, so a beta opt-in never overwrites the original source.
+  const row: Record<string, string | boolean> = { email: payload.email };
+  if (payload.beta === undefined) row.source = payload.source;
+  else row.beta_opt_in = payload.beta;
+  if (payload.campus) row.campus = payload.campus;
+
+  const { error } = await db.from("waitlist").upsert(row, { onConflict: "email" });
+  if (error) {
+    console.error("[waitlist] upsert failed", error.code);
+    return false;
+  }
+  return true;
 }
 
 /** POSTs the payload to the webhook with a hard timeout. True on a 2xx. */
@@ -93,16 +154,21 @@ export async function POST(req: Request) {
   const parsed = WaitlistSchema.safeParse(body);
   if (!parsed.success) return fail(400, firstIssue(parsed.error));
 
-  const payload = toPayload(parsed.data);
-  const webhook = process.env.WAITLIST_WEBHOOK_URL?.trim();
+  const limited = await limit("waitlist", req);
+  if (!limited.ok) return fail(429, "Too many tries. Give it a few minutes.", { "retry-after": String(limited.retryAfter) });
 
-  if (webhook) {
-    const delivered = await forward(webhook, payload);
-    if (!delivered) return fail(502, "Could not save your request right now. Try again in a minute.");
-    return ok();
+  const payload = toPayload(parsed.data);
+
+  if (serviceClient()) {
+    return (await saveToSupabase(payload)) ? ok() : fail(502, SAVE_ERROR);
   }
 
-  // No webhook configured: log and accept. Nothing is written to disk.
-  console.log("[waitlist]", payload);
+  const webhook = process.env.WAITLIST_WEBHOOK_URL?.trim();
+  if (webhook) {
+    return (await forward(webhook, payload)) ? ok() : fail(502, SAVE_ERROR);
+  }
+
+  // No store configured yet: accept, and log only that it happened. Emails never go to logs.
+  console.info("[waitlist] accepted without a store", payload.source, payload.beta ? "beta" : "");
   return ok();
 }

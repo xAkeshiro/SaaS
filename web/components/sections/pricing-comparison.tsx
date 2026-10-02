@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, Minus } from "lucide-react";
+import { Check, Clock, Minus } from "lucide-react";
 import { Container } from "@/components/site/container";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 type CellValue = (typeof pricing.comparison.rows)[number]["values"][number];
 
-const { columns, rows } = pricing.comparison;
+const { columns, rows, coming } = pricing.comparison;
 const { comparison: copy } = pricingExtras;
 const plusIndex = columns.indexOf("Plus");
 const plusTier = pricing.tiers.find((t) => t.id === "plus");
@@ -74,6 +74,37 @@ export function PricingComparison() {
               ))}
             </tbody>
 
+            {/* Not built yet: its own row group under the same "Coming soon" label and clock mark as the Plus card. */}
+            <tbody>
+              <tr>
+                {/* nowrap: on phones the scrolling table squeezes this column, and the label shouldn't split. */}
+                <th
+                  scope="rowgroup"
+                  className="px-6 pt-7 pb-2 text-left text-xs font-medium whitespace-nowrap text-muted-foreground md:px-8"
+                >
+                  {pricingExtras.coming}
+                </th>
+                {columns.map((col, i) => (
+                  <td key={col} className={cn(i === plusIndex && "bg-lavender/30")} />
+                ))}
+              </tr>
+              {coming.map((row) => (
+                <tr key={row.feature} className="border-b border-border">
+                  <th scope="row" className="px-6 py-4 text-left font-medium text-muted-foreground md:px-8">
+                    {row.feature}
+                  </th>
+                  {row.values.map((value, i) => (
+                    <td
+                      key={columns[i]}
+                      className={cn("px-4 py-4 text-center", i === plusIndex && "bg-lavender/30")}
+                    >
+                      {value ? <ComingCell /> : <Cell value={value} />}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+
             <tfoot>
               <tr>
                 <td className="px-6 py-5 md:px-8" />
@@ -118,4 +149,14 @@ function Cell({ value }: { value: CellValue }) {
     );
   }
   return <span className="text-[0.8125rem] font-medium text-foreground tabular-nums">{value}</span>;
+}
+
+/** A plan that will get a feature once it ships. Same clock as the Plus card's "Coming soon" list. */
+function ComingCell() {
+  return (
+    <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <Clock className="size-3.5" strokeWidth={2} aria-hidden="true" />
+      <span className="sr-only">{pricingExtras.coming}</span>
+    </span>
+  );
 }

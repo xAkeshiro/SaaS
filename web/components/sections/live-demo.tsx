@@ -7,7 +7,9 @@ import {
   Check,
   Info,
   Loader2,
+  MessageSquare,
   Minus,
+  Phone,
   Play,
   RotateCcw,
   Sparkles,
@@ -23,9 +25,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { demoScenarios, liveDemo, moods, type MoodId } from "@/lib/content";
+import { demoSafety, demoScenarios, liveDemo, moods, type MoodId } from "@/lib/content";
+import {
+  CUSTOM_ID,
+  MAX_CUSTOM,
+  MAX_MESSAGES,
+  MAX_TEXT,
+  MODE_HEADER,
+  TRAILER_MARK,
+  isStopped,
+  type RehearseMode,
+  type ReplyTrailer,
+  type StoppedResponse,
+  type WireMessage,
+  type WireScenario,
+} from "@/lib/demo/protocol";
 import { ease, stagger } from "@/lib/motion";
-import type { Debrief, RehearseMode } from "@/lib/rehearse";
+import type { Debrief } from "@/lib/rehearse";
 import { cn, curly } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -33,23 +49,22 @@ import { cn, curly } from "@/lib/utils";
 /* ------------------------------------------------------------------ */
 
 type Role = "persona" | "user";
-type Msg = { id: number; role: Role; text: string };
+/** `sig` is the route's signature on a persona line; it goes back with the line on every request. */
+type Msg = { id: number; role: Role; text: string; sig?: string };
 
 /** Anything on the page can load a conversation into the demo: dispatch this on `window`. */
 export const REHEARSE_EVENT = "unmute:rehearse";
 export type RehearseEventDetail = { id: string } | { custom: string };
-type Phase = "idle" | "starting" | "live" | "replying" | "debriefing" | "debrief";
-type Scenario = { id: string; label: string; who: string; setup: string; opener?: string };
-type Session = { scenario: Scenario; mood: MoodId };
+type Phase = "idle" | "starting" | "live" | "replying" | "debriefing" | "debrief" | "stopped";
+/** `custom` is set for the visitor's own scenario; presets are named by id and resolved on the server. */
+type Scenario = { id: string; label: string; who: string; opener?: string; custom?: string };
+/** `nonce` is random per rehearsal; the route binds its signatures to it. */
+type Session = { scenario: Scenario; mood: MoodId; nonce: string };
 
 const ENDPOINT = "/api/rehearse";
-const MAX_MESSAGES = 24;
-const MAX_TEXT = 800;
 const L = liveDemo.labels;
 /** Settled once no scroll event has fired for this long; also covers browsers without scrollend. */
 const SCROLL_IDLE_MS = 150;
-/** Sample mode: every script in lib/rehearse.ts has 4 replies per mood, then its closer ends the call. */
-const SAMPLE_TURNS = 5;
 
 /**
  * Bubbles grow from the corner their tail hangs off. Your own line lands fast because you
@@ -83,8 +98,17 @@ function cancelSpeech() {
 }
 
 function readMode(res: Response): RehearseMode | null {
-  const m = res.headers.get("x-unmute-mode");
+  const m = res.headers.get(MODE_HEADER);
   return m === "sample" || m === "live" ? m : null;
+}
+
+function newNonce(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID().replaceAll("-", "");
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+}
+
+function wireScenario(s: Scenario): WireScenario {
+  return s.custom ? { id: CUSTOM_ID, custom: s.custom } : { id: s.id };
 }
 
 async function responseError(res: Response, fallback: string): Promise<string> {
@@ -133,17 +157,37 @@ async function readStream(res: Response, onChunk: (text: string) => void) {
   if (tail) onChunk(tail);
 }
 
-function toWire(messages: Msg[]) {
-  return messages.slice(-MAX_MESSAGES).map((m) => ({ role: m.role, text: m.text.slice(0, MAX_TEXT) }));
+/** Lines go back exactly as the route sent them: a persona line with any other text would fail its signature. */
+function toWire(messages: Msg[]): WireMessage[] {
+  return messages.map((m) => (m.sig ? { role: m.role, text: m.text, sig: m.sig } : { role: m.role, text: m.text }));
+}
+
+/** A reply streams its line, then `TRAILER_MARK` and a JSON trailer. `onText` gets the line so far. */
+async function readReply(res: Response, onText: (text: string) => void): Promise<ReplyTrailer | null> {
+  let buf = "";
+  await readStream(res, (chunk) => {
+    buf += chunk;
+    const mark = buf.indexOf(TRAILER_MARK);
+    onText(mark === -1 ? buf : buf.slice(0, mark));
+  });
+  const mark = buf.indexOf(TRAILER_MARK);
+  if (mark === -1) return null;
+  try {
+    return JSON.parse(buf.slice(mark + TRAILER_MARK.length)) as ReplyTrailer;
+  } catch {
+    return null;
+  }
+}
+
+/** Thrown when the route stops the rehearsal, so every caller lands in the same place. */
+class Stopped extends Error {
+  constructor(readonly body: StoppedResponse) {
+    super("stopped");
+  }
 }
 
 function countIn(lines: readonly string[], re: RegExp) {
   return lines.reduce((n, line) => n + (line.match(re)?.length ?? 0), 0);
-}
-
-/** Persona replies after the opener, counted the way the server's sampleReply counts them. */
-function personaReplies(list: readonly Msg[]) {
-  return list.filter((m, i) => m.role === "persona" && i > 0).length;
 }
 
 /* ------------------------------------------------------------------ */
@@ -169,6 +213,10 @@ export function LiveDemo() {
   const [mode, setMode] = useState<RehearseMode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [debrief, setDebrief] = useState<Debrief | null>(null);
+  /** Why the route stopped the rehearsal: the crisis card or a refused custom scenario. */
+  const [halted, setHalted] = useState<StoppedResponse | null>(null);
+  /** The persona said its last line (the script ran out or the rehearsal reached its length). */
+  const [ended, setEnded] = useState(false);
   const [input, setInput] = useState("");
   const [announce, setAnnounce] = useState("");
   /** The chip a scenario card just picked; `n` replays the ring on a repeat pick. */
@@ -275,19 +323,15 @@ export function LiveDemo() {
     el.scrollTo({ top: el.scrollHeight, behavior: reduce ? "auto" : "smooth" });
   }, [messages, phase, reduce]);
 
-  // The prefix keeps the whole setup inside the API's 800-char cap.
-  const customText = custom.trim().slice(0, MAX_TEXT - L.customSetup.length - 1);
+  const customText = custom.trim().slice(0, MAX_CUSTOM);
   const preset = demoScenarios.find((s) => s.id === scenarioId) ?? demoScenarios[0];
   const selected: Scenario = customText
-    ? { id: "custom", label: L.customLabel, who: L.customWho, setup: `${L.customSetup} ${customText}` }
+    ? { id: CUSTOM_ID, label: L.customLabel, who: L.customWho, custom: customText }
     : preset;
 
   const busy = phase === "starting" || phase === "replying" || phase === "debriefing";
-  // Sample mode: once the closer lands the script is over, so the call has ended and only End remains.
-  const scriptEnded =
-    mode === "sample" &&
-    personaReplies(messages) >= SAMPLE_TURNS &&
-    messages[messages.length - 1]?.role === "persona";
+  // The persona's closing line ends the call, and so does reaching the rehearsal's length: only End remains.
+  const scriptEnded = ended || messages.length >= MAX_MESSAGES - 1;
   const canType = (phase === "live" || phase === "replying") && !scriptEnded;
   const hasExchange = messages.some((m) => m.role === "user");
   const waiting =
@@ -316,15 +360,19 @@ export function LiveDemo() {
     cancelSpeech();
   }
 
-  /** Streams the persona's next line into a new bubble and returns the full text. */
+  /**
+   * Streams the persona's next line into a new bubble and returns the line as the route signed it.
+   * Throws `Stopped` when the route ends the rehearsal instead of answering.
+   */
   async function requestReply(history: Msg[], ctx: Session, signal: AbortSignal): Promise<string> {
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         action: "reply",
-        scenario: { id: ctx.scenario.id, who: ctx.scenario.who, setup: ctx.scenario.setup },
+        scenario: wireScenario(ctx.scenario),
         mood: ctx.mood,
+        nonce: ctx.nonce,
         messages: toWire(history),
       }),
       signal,
@@ -332,41 +380,78 @@ export function LiveDemo() {
     const m = readMode(res);
     if (m) setMode(m);
     if (!res.ok) throw new Error(await responseError(res, liveDemo.errors.reply));
+    // A stop arrives as JSON in place of the stream.
+    if (res.headers.get("content-type")?.includes("application/json")) {
+      const data: unknown = await res.json();
+      if (isStopped(data)) throw new Stopped(data);
+      throw new Error(liveDemo.errors.reply);
+    }
 
     const id = nextId();
-    let full = "";
     let shown = false;
-    await readStream(res, (chunk) => {
-      full += chunk;
-      const piece = shown ? chunk : chunk.trimStart();
-      if (!piece) return;
+    const trailer = await readReply(res, (sofar) => {
+      const text = sofar.trimStart();
+      if (!text) return;
       if (!shown) {
         shown = true;
-        setMessages((prev) => [...prev, { id, role: "persona", text: piece }]);
+        setMessages((prev) => [...prev, { id, role: "persona", text }]);
       } else {
-        setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, text: msg.text + piece } : msg)));
+        setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, text } : msg)));
       }
     });
 
-    const text = full.trim();
-    if (!text) {
-      setMessages((prev) => prev.filter((msg) => msg.id !== id));
-      throw new Error(liveDemo.errors.reply);
+    const drop = () => setMessages((prev) => prev.filter((msg) => msg.id !== id));
+    if (trailer && isStopped(trailer)) {
+      drop();
+      throw new Stopped(trailer);
     }
-    setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, text } : msg)));
+    if (!trailer || "error" in trailer) {
+      drop();
+      throw new Error(trailer && "error" in trailer ? trailer.error : liveDemo.errors.reply);
+    }
+    // The trailer's line is the one the route signed; it replaces whatever streamed.
+    const { text, sig } = trailer;
+    setMessages((prev) => {
+      const line: Msg = { id, role: "persona", text, sig };
+      return prev.some((msg) => msg.id === id) ? prev.map((msg) => (msg.id === id ? line : msg)) : [...prev, line];
+    });
+    if (trailer.ended) setEnded(true);
     setAnnounce(`${ctx.scenario.who}: ${text}`);
     return text;
   }
 
+  /** The route stopped the rehearsal: show the crisis card or the refusal in the pane, and stop talking. */
+  function halt(body: StoppedResponse) {
+    cancelSpeech();
+    setHalted(body);
+    setPhase("stopped");
+    setAnnounce("");
+  }
+
+  /** Back to an empty pane with the controls ready, after a stop. */
+  function reset(focus: "start" | "custom") {
+    stop();
+    setSession(null);
+    setMessages([]);
+    setHalted(null);
+    setEnded(false);
+    setError(null);
+    setPhase("idle");
+    if (focus === "custom") customRef.current?.focus();
+    else startRef.current?.focus();
+  }
+
   async function start() {
     stop();
-    const ctx: Session = { scenario: selected, mood };
+    const ctx: Session = { scenario: selected, mood, nonce: newNonce() };
     const controller = new AbortController();
     abortRef.current = controller;
 
     setSession(ctx);
     setMessages([]);
     setDebrief(null);
+    setHalted(null);
+    setEnded(false);
     setError(null);
     setInput("");
     setAnnounce("");
@@ -395,6 +480,7 @@ export function LiveDemo() {
       setPhase("live");
     } catch (err) {
       if (controller.signal.aborted) return;
+      if (err instanceof Stopped) return halt(err.body);
       setError(messageFor(err, liveDemo.errors.start));
       setPhase("idle");
     }
@@ -404,8 +490,8 @@ export function LiveDemo() {
     e.preventDefault();
     const text = input.trim().slice(0, MAX_TEXT);
     if (!text || phase !== "live" || !session) return;
-    // Past the closer the script has nothing left; a request would only repeat it.
-    if (mode === "sample" && personaReplies(messages) >= SAMPLE_TURNS) return;
+    // Past the persona's last line there is nothing left to answer.
+    if (scriptEnded) return;
 
     cancelSpeech();
     setInput("");
@@ -423,6 +509,7 @@ export function LiveDemo() {
       setPhase("live");
     } catch (err) {
       if (controller.signal.aborted) return;
+      if (err instanceof Stopped) return halt(err.body);
       // Give the line back so one tap retries it, unless they have typed something new meanwhile.
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
       setInput((current) => (current.trim() ? current : text));
@@ -445,8 +532,9 @@ export function LiveDemo() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "debrief",
-          scenario: { id: session.scenario.id, who: session.scenario.who, setup: session.scenario.setup },
+          scenario: wireScenario(session.scenario),
           mood: session.mood,
+          nonce: session.nonce,
           messages: toWire(messages),
         }),
         signal: controller.signal,
@@ -455,6 +543,7 @@ export function LiveDemo() {
       if (m) setMode(m);
       if (!res.ok) throw new Error(await responseError(res, liveDemo.errors.debrief));
       const data: unknown = await res.json();
+      if (isStopped(data)) return halt(data);
       if (!isDebrief(data)) throw new Error(liveDemo.errors.debrief);
       setDebrief(data);
       setPhase("debrief");
@@ -548,19 +637,31 @@ export function LiveDemo() {
                 </fieldset>
 
                 <div className="min-w-0">
-                  <label htmlFor={customId} className="mb-2 block text-sm font-medium text-foreground">
-                    {L.custom}
-                  </label>
+                  <div className="mb-2 flex items-center gap-2">
+                    <label htmlFor={customId} className="text-sm font-medium text-foreground">
+                      {L.custom}
+                    </label>
+                    {/* Custom scenarios are a Plus feature in the product; the demo lets anyone try one. */}
+                    <span className="rounded-full bg-amber/25 px-2 py-px text-[0.6875rem] font-semibold text-amber-ink">
+                      {demoSafety.plusLabel}
+                    </span>
+                  </div>
                   <Textarea
                     ref={customRef}
                     id={customId}
                     rows={2}
-                    maxLength={MAX_TEXT}
+                    maxLength={MAX_CUSTOM}
                     value={custom}
                     onChange={(e) => setCustom(e.target.value)}
                     placeholder={L.customPlaceholder}
+                    aria-describedby={customText ? `${customId}-plus` : undefined}
                     className="max-h-40 min-h-[4.5rem] resize-none rounded-xl bg-card text-sm leading-relaxed"
                   />
+                  {customText ? (
+                    <p id={`${customId}-plus`} className="mt-1.5 text-xs text-muted-foreground">
+                      {demoSafety.plusNote}
+                    </p>
+                  ) : null}
                 </div>
 
                 <Tabs value={mood} onValueChange={(v) => changeMood(v as MoodId)} className="min-w-0 gap-0">
@@ -707,7 +808,22 @@ export function LiveDemo() {
                   </div>
 
                   <AnimatePresence mode="wait" initial={false}>
-                    {phase === "debrief" && debrief ? (
+                    {phase === "stopped" && halted ? (
+                      <motion.div
+                        key="stopped"
+                        className="flex min-h-0 flex-1 flex-col"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, transition: { duration: 0.15, ease } }}
+                        transition={{ duration: 0.2, ease }}
+                      >
+                        {halted.stopped === "safety" ? (
+                          <CrisisCard onRestart={() => reset("start")} />
+                        ) : (
+                          <BlockedNote reason={halted.reason} onEdit={() => reset("custom")} />
+                        )}
+                      </motion.div>
+                    ) : phase === "debrief" && debrief ? (
                       // Opacity only: the blocks inside carry the movement, so the two do not stack.
                       <motion.div
                         key="debrief"
@@ -907,6 +1023,99 @@ function IdlePreview({ scenario }: { scenario: Scenario }) {
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 text-center">
         <p className="font-display text-base font-semibold text-foreground">{L.idleTitle}</p>
         <p className="mx-auto mt-1 max-w-[34ch] text-sm text-muted-foreground">{L.idleBody}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The rehearsal stopped because something the visitor wrote suggests they may not be safe. The
+ * resources lead, as links a phone can dial or text; the title takes focus so a screen reader
+ * starts here. Placeholder copy until the clinical advisor signs off (roadmap D10).
+ */
+function CrisisCard({ onRestart }: { onRestart: () => void }) {
+  const c = demoSafety.crisis;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 sm:p-6">
+        <h3
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-display text-xl leading-tight font-semibold text-foreground focus:outline-none"
+        >
+          {c.title}
+        </h3>
+        <p className="mt-2 max-w-[52ch] text-[0.95rem] leading-relaxed text-foreground/85">{c.body}</p>
+        <ul className="mt-5 flex flex-col gap-2.5">
+          {c.resources.map((r) => (
+            <li key={r.label}>
+              <a
+                href={r.href}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3.5 shadow-xs transition-[background-color,scale] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-lavender/40 active:scale-[0.99]"
+              >
+                <span className="min-w-0">
+                  <span className="block font-semibold text-foreground">{r.label}</span>
+                  <span className="block text-sm text-muted-foreground">{r.detail}</span>
+                </span>
+                {r.href.startsWith("sms:") ? (
+                  <MessageSquare className="size-5 shrink-0 text-foreground/70" aria-hidden="true" />
+                ) : (
+                  <Phone className="size-5 shrink-0 text-foreground/70" aria-hidden="true" />
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-5 max-w-[52ch] text-sm leading-relaxed text-muted-foreground">{c.note}</p>
+      </div>
+      <div className="shrink-0 border-t border-border/70 p-3 sm:p-4">
+        <Button type="button" variant="outline" onClick={onRestart}>
+          <RotateCcw className="size-4" aria-hidden="true" />
+          {c.restart}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** A custom scenario the demo will not rehearse: why, what to try instead, and a way back to the box. */
+function BlockedNote({
+  reason,
+  onEdit,
+}: {
+  reason: keyof typeof demoSafety.blocked.reasons;
+  onEdit: () => void;
+}) {
+  const b = demoSafety.blocked;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col justify-center p-5 text-center sm:p-6">
+        <h3
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-display text-lg font-semibold text-foreground focus:outline-none"
+        >
+          {b.title}
+        </h3>
+        <p className="mx-auto mt-2 max-w-[44ch] text-sm leading-relaxed text-foreground/85">
+          {b.reasons[reason] ?? b.reasons.other}
+        </p>
+        <p className="mx-auto mt-2 max-w-[44ch] text-sm leading-relaxed text-muted-foreground">{b.hint}</p>
+      </div>
+      <div className="shrink-0 border-t border-border/70 p-3 sm:p-4">
+        <Button type="button" variant="outline" onClick={onEdit}>
+          {b.edit}
+        </Button>
       </div>
     </div>
   );

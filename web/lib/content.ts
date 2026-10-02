@@ -10,11 +10,6 @@ export const site = {
     "Rehearse the conversation you are dreading, out loud, with an AI that plays the other person and pushes back. Then get told exactly what to do differently. Three minutes a day. Not a companion.",
   status: "Early access · fall 2026",
   contactEmail: "hello@unmute.app",
-  social: {
-    x: "https://x.com",
-    tiktok: "https://tiktok.com",
-    linkedin: "https://linkedin.com",
-  },
 } as const;
 
 export const nav = {
@@ -178,7 +173,7 @@ export type DemoScenario = (typeof demoScenarios)[number];
 
 export const together = {
   title: "Practice with people, not just about them.",
-  sub: "Bring a friend into the room. It’s less weird than it sounds.",
+  sub: "After launch, bring a friend into the room. It’s less weird than it sounds.",
   features: [
     { icon: "Users", title: "Practice rooms", body: "A friend plays your manager while the AI coaches. Or the AI plays the front desk while your friends rate you." },
     { icon: "Flame", title: "Dares", body: "Small real-world reps, 30 seconds to 5 minutes. Shareable clips, voice-changed if you want." },
@@ -220,7 +215,7 @@ export const pricing = {
       price: { monthly: 0, yearly: 0 },
       period: "forever",
       blurb: "The daily rep, for everyone.",
-      features: ["One rehearsal a day, any scenario", "The debrief", "Streaks"],
+      features: ["One rehearsal a day, any preset scenario", "The debrief", "Streaks"],
       cta: { label: "Get early access", href: "/#early-access" },
       highlight: false,
     },
@@ -231,12 +226,10 @@ export const pricing = {
       period: "a month",
       yearlyPeriod: "a year",
       blurb: "For when one rep a day isn’t enough.",
-      features: [
-        "Unlimited rehearsals and custom scenarios",
-        "Hard mode, real mode, calendar reps",
-        "Your patterns and trends over time",
-        "Practice rooms and dares",
-      ],
+      /** What ships with payments. Every mood, hostile included, is free for everyone, so it is not sold here (roadmap D5). */
+      features: ["Unlimited rehearsals", "Custom scenarios", "Your patterns and trends over time"],
+      /** Not built yet: listed under `pricingExtras.coming` until each one ships, then moved up into `features`. */
+      coming: ["Real mode and calendar reps", "Practice rooms and dares"],
       cta: { label: "Get early access", href: "/#early-access" },
       highlight: true,
       /** Consumer copy says fall, not interview season: no scenario here is an interview (that pitch is Teams'). */
@@ -248,31 +241,29 @@ export const pricing = {
       price: null,
       priceLabel: "$3 to $8",
       period: "per seat, per month",
-      blurb: "Career centers, companies, clinicians.",
-      features: [
-        "Interview season for a whole campus",
-        "Customer-facing and manager practice",
-        "Structured practice programs with clinicians",
-        "Admin dashboard and cohort reports",
-      ],
+      /** The Teams page's career-center line. Companies and clinicians get "talk to us" there, not a plan here (roadmap D8). */
+      blurb: "Students rehearse interviews before the real ones.",
+      features: ["Career center pilots", "Cohort trends"],
       cta: { label: "Request a pilot", href: "/teams#pilot" },
       highlight: false,
     },
   ],
   comparison: {
     columns: ["Free", "Plus", "Teams"],
+    /** Moods are the same on every plan, so there is no hard mode row. */
     rows: [
-      { feature: "Rehearsals per day", values: ["1", "Unlimited", "Unlimited"] },
+      { feature: "Rehearsals per day", values: ["1", "Unlimited", "Pooled minutes"] },
       { feature: "Scenario library", values: [true, true, true] },
       { feature: "Custom scenarios", values: [false, true, true] },
       { feature: "Debrief after every rehearsal", values: [true, true, true] },
-      { feature: "Hard mode (hostile personas)", values: [false, true, true] },
+      { feature: "Patterns and trends", values: [false, true, true] },
+      { feature: "Cohort trends", values: [false, false, true] },
+    ],
+    /** Not built yet: a last group under `pricingExtras.coming`, matching the Plus card. `true` marks the plans that will get it. */
+    coming: [
       { feature: "Real mode: warmup + cue card", values: [false, true, true] },
       { feature: "Calendar-aware daily rep", values: [false, true, true] },
-      { feature: "Patterns and trends", values: [false, true, true] },
       { feature: "Practice rooms and dares", values: [false, true, true] },
-      { feature: "Cohorts, admin dashboard, reports", values: [false, false, true] },
-      { feature: "SSO and procurement", values: [false, false, true] },
     ],
   },
 } as const;
@@ -296,7 +287,7 @@ export const faq = [
   },
   {
     q: "Is it therapy?",
-    a: "No. Unmute is practice, not therapy or medical care. Crisis language routes to real resources, every time. Clinicians can run structured practice programs with clients on Teams.",
+    a: "No. Unmute is practice, not therapy or medical care. Crisis language routes to real resources, every time.",
   },
   {
     q: "How real is the other person?",
@@ -317,6 +308,17 @@ export const finalCta = {
   /** The launch timing is the FAQ's job (it sits right above on home and /pricing), so this line doesn't repeat it. */
   sub: "The conversation you keep putting off is still there. Practice it tonight, then go have it.",
   note: "One email when it launches. Nothing else.",
+} as const;
+
+/** The private beta step shown after someone joins the waitlist. Separate from the one launch email (P68). */
+export const betaOptIn = {
+  prompt: "Want in before launch? We’re opening a private beta one campus at a time.",
+  campusLabel: "Your school",
+  campusPlaceholder: "e.g. Ohio State",
+  cta: "Invite me to the beta",
+  sending: "Saving",
+  done: "You’re on the beta list. If your campus opens early, we’ll email you an invite.",
+  error: "That didn’t save. Try again.",
 } as const;
 
 export const footnotes = [
@@ -386,7 +388,7 @@ export const manifesto = {
       id: "safety",
       heading: "A coach, not therapy.",
       paragraphs: [
-        "Unmute is practice, not therapy or medical care. If crisis language shows up in a rehearsal, we stop rehearsing and route to real resources, every time. Clinicians who run structured social-anxiety practice with clients can use Teams for exactly that, with the clinician in the loop.",
+        "Unmute is practice, not therapy or medical care. If crisis language shows up in a rehearsal, we stop rehearsing and route to real resources, every time.",
       ],
     },
     {
@@ -409,30 +411,24 @@ export const manifesto = {
 
 export const teams = {
   title: "Interview season for a whole campus.",
-  sub: "Career centers, companies and clinicians run structured practice on Unmute. Seats from $3 to $8 a month, free for career centers this interview season.",
+  sub: "Students practice out loud and get a debrief after every rep. Career center pilots start in spring 2027. Seats from $3 to $8 a month.",
+  /** Career centers only, until Teams has more to show (roadmap D8). Individual results stay private unless a student shares. */
   audiences: [
     {
       icon: "GraduationCap",
       title: "Career centers",
-      body: "Every student gets a mock interview a day from September to November, with a debrief the counselor can see. Cohort reports show who is ready and who is stuck on the pay question.",
-      bullets: ["Campus-wide seats", "Interview and career-fair scenarios", "Counselor dashboard"],
-    },
-    {
-      icon: "Building2",
-      title: "Companies",
-      body: "Customer-facing teams and new managers rehearse the hard ones: the angry customer, the missed deadline, the performance conversation. Practice before it costs you a customer or a report.",
-      bullets: ["Custom scenarios from your playbook", "Manager and support tracks", "SSO and procurement-ready"],
-    },
-    {
-      icon: "Stethoscope",
-      title: "Clinicians",
-      body: "Structured social-anxiety practice between sessions, with the clinician setting the ladder and reviewing the debriefs. Crisis language routes to real resources, every time.",
-      bullets: ["Exposure ladders you define", "Clinician-visible debriefs", "Clear safety boundaries"],
+      body: "Students rehearse interviews before the real ones. Counselors see cohort trends; individual results only when a student shares.",
     },
   ],
+  /** One plain line under the career-center card, no feature bullets. Reads "Companies and clinicians: talk to us". */
+  otherAudiences: {
+    lead: "Companies and clinicians:",
+    link: "talk to us",
+    href: "#pilot",
+  },
   offer: {
-    title: "Career centers: free for interview season.",
-    body: "September to November 2026. Bring your students, we bring the interviewers. Tell us your campus and we will set up your cohort.",
+    title: "Spring 2027 pilots.",
+    body: "We’re picking a few career centers to pilot with students this spring. Tell us your campus and we’ll set up a time to talk.",
     cta: "Request a pilot",
   },
   form: {
@@ -660,6 +656,36 @@ export const liveDemo = {
   },
 } as const;
 
+/** The site demo's safety stops. Placeholder copy until the clinical advisor signs off (roadmap D10). */
+export const demoSafety = {
+  crisis: {
+    title: "Let’s pause here.",
+    body: "It sounds like something real might be going on. This is only practice, and you deserve to talk to a real person right now.",
+    resources: [
+      { label: "Call or text 988", detail: "Suicide & Crisis Lifeline, free, 24/7", href: "tel:988" },
+      { label: "Text HOME to 741741", detail: "Crisis Text Line, free, 24/7", href: "sms:741741?&body=HOME" },
+      { label: "Call 911", detail: "If you or someone else is in danger right now", href: "tel:911" },
+    ],
+    note: "If you were only practicing a line, that’s okay. You can start a new rehearsal any time.",
+    restart: "Start a new rehearsal",
+  },
+  blocked: {
+    title: "We can’t rehearse that one.",
+    reasons: {
+      romance: "Unmute rehearses everyday asks, not dates, flirting or romance.",
+      sexual: "Unmute doesn’t do sexual roleplay.",
+      companion: "A rehearsal has a start, an end and a debrief. Unmute isn’t for ongoing chat or company.",
+      minor: "Unmute is built for people 18 and older.",
+      harm: "We don’t rehearse conversations meant to pressure, threaten or harass someone.",
+      other: "That one is outside what Unmute rehearses.",
+    },
+    hint: "Try a call you’ve been putting off, like a refund, a schedule change or asking for more time on an assignment.",
+    edit: "Edit your scenario",
+  },
+  plusLabel: "Plus",
+  plusNote: "Custom scenarios come with Plus. Try one here free.",
+} as const;
+
 /* ---------- Pricing and FAQ (pricing.tsx, pricing-tiers.tsx, faq.tsx, /pricing) ---------- */
 
 /** Extra strings for the pricing tiers, the comparison table and the pricing page. */
@@ -676,8 +702,10 @@ export const pricingExtras = {
       monthly: "Billed monthly. Cancel any time.",
       yearly: "That’s $8.25 a month, billed once a year.",
     },
-    teams: "Free for career centers this interview season.",
+    teams: "Spring 2027 pilots for career centers.",
   },
+  /** Heads what is not built yet: the Plus card's second list and the comparison table's last group. */
+  coming: "Coming soon",
   comparison: {
     title: "Everything in each plan.",
     sub: "Start free. Every plan gets the same debrief.",
@@ -706,17 +734,14 @@ export const manifestoExtras = {
 export const teamsExtras = {
   audiencesHeading: {
     title: "Built for the people who run practice.",
-    sub: "Same rehearsal, same debrief. You set the scenarios and see the results.",
+    /** Cohort-level only: a student's own results reach the counselor only when they share them. */
+    sub: "Same rehearsal, same debrief. You pick the scenarios and see how the cohort is doing.",
   },
   pilot: {
     title: "Tell us about your campus or team.",
     sub: "A few lines is enough. A human reads every request.",
     stepsTitle: "What happens next",
-    steps: [
-      "We reply within two business days.",
-      "You pick the scenarios. We set up the cohort.",
-      "Your people rehearse the same week.",
-    ],
+    steps: ["We reply within two business days.", "You pick the scenarios. We set up the cohort."],
   },
   form: {
     notes: {

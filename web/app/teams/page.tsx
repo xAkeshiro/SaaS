@@ -1,14 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowDown,
-  ArrowRight,
-  Building2,
-  Check,
-  GraduationCap,
-  Stethoscope,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowDown, ArrowRight, GraduationCap, type LucideIcon } from "lucide-react";
 import { Nav } from "@/components/site/nav";
 import { Footer } from "@/components/site/footer";
 import { Container } from "@/components/site/container";
@@ -21,8 +13,6 @@ export const metadata: Metadata = { title: "Teams" };
 
 const icons: Record<(typeof teams.audiences)[number]["icon"], LucideIcon> = {
   GraduationCap,
-  Building2,
-  Stethoscope,
 };
 
 export default function TeamsPage() {
@@ -59,19 +49,20 @@ export default function TeamsPage() {
           </Container>
         </section>
 
-        {/* Audiences */}
+        {/* Audiences: one card for career centers, then one plain line for companies and clinicians. */}
         <section className="pt-24 pb-16 md:pt-32 md:pb-24">
           <Container>
             <SectionHeading title={teamsExtras.audiencesHeading.title} sub={teamsExtras.audiencesHeading.sub} />
 
-            <div className="mt-12 grid gap-4 md:mt-14 lg:grid-cols-3 lg:gap-5">
+            {/* One centered column under the centered heading, so a lone card doesn't stretch across 1200px. */}
+            <div className="mx-auto mt-12 flex max-w-2xl flex-col gap-6 md:mt-14">
               {teams.audiences.map((audience) => {
                 const Icon = icons[audience.icon];
                 return (
-                  // Not clickable, so no hover lift or hover border.
+                  // Not clickable, so no hover lift or hover border. From sm the icon sits beside the text.
                   <article
                     key={audience.title}
-                    className="flex h-full min-w-0 flex-col gap-5 rounded-2xl border border-border bg-card p-6 md:p-8"
+                    className="flex min-w-0 flex-col gap-5 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-start sm:gap-6 md:p-8"
                   >
                     <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
                       <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
@@ -82,19 +73,19 @@ export default function TeamsPage() {
                       </h3>
                       <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">{audience.body}</p>
                     </div>
-                    <ul className="mt-auto flex flex-col gap-2.5 border-t border-border pt-5">
-                      {audience.bullets.map((bullet) => (
-                        <li key={bullet} className="flex items-start gap-2.5 text-sm text-foreground">
-                          <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber/20 text-amber-ink">
-                            <Check className="size-3" strokeWidth={3} aria-hidden="true" />
-                          </span>
-                          <span className="min-w-0 break-words">{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
                   </article>
                 );
               })}
+
+              <p className="text-center text-[0.9375rem] leading-relaxed text-muted-foreground">
+                {teams.otherAudiences.lead}{" "}
+                <a
+                  href={teams.otherAudiences.href}
+                  className="font-medium text-foreground underline decoration-foreground/30 underline-offset-4 transition-[text-decoration-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:decoration-foreground"
+                >
+                  {teams.otherAudiences.link}
+                </a>
+              </p>
             </div>
           </Container>
         </section>
